@@ -644,7 +644,6 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		$mourner_contact_id = $dao->contact_id;
 	
 		$mourner_contact_id = $dao->contact_id;
-		//$mourner_email  = "";
 		$mourner_name =  $dao->sort_name ;
 		$deceased_year = $dao->dyear;
 		$deceased_month = $dao->dmonth;
