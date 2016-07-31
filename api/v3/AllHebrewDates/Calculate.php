@@ -31,16 +31,15 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 	$returnValues = array( // OK, return several data rows
 	);
 	 
+	require_once 'utils/HebrewCalendar.php';
 	$yahrzeit_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;    
 	 
 	 
 	$sql_create = "CREATE TABLE IF NOT EXISTS $yahrzeit_table_name (
 	mourner_contact_id int NOT NULL,
 	mourner_name varchar(500) NOT NULL,
-	mourner_email varchar(500),
 	deceased_contact_id int NOT NULL,
 	deceased_name varchar(500) NOT NULL,
-	deceased_display_name varchar(500) NOT NULL,
 	deceased_date varchar(500) NOT NULL,
 	d_before_sunset varchar(5),
 	hebrew_deceased_date varchar(256),
@@ -66,7 +65,6 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 
 	// check that table now exists
 	//$table_missing = true;
-	require_once 'utils/HebrewCalendar.php';
 	$tmpHebCal = new HebrewCalendar();
 		
 		
@@ -107,12 +105,28 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 		$dao->free();
 		 
 		// print "<br>sql cleanup: ".$sql_cleanup;
-		fillTempTable($yahrzeit_table_name, $params['contact_ids'] );
+		
+		$tmp_contact_ids = "";
+		if(isset($params['contact_ids'])){
+			$tmp_contact_ids = $params['contact_ids']; 
+		}else{
+			$tmp_contact_ids = "";
+			}
+		
+		$rtn_data = fillTempTable($yahrzeit_table_name, $tmp_contact_ids   );
+		
+		if(isset( $rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0   ){
+			throw new API_Exception("Error: ".$rtn_data['error_message'],  1234);
+			
+			
+		}else{
+			return civicrm_api3_create_success($returnValues, $params, 'AllHebrewDates', 'calculate');
+		}
 		// ALTERNATIVE: $returnValues = array(); // OK, success
 		// ALTERNATIVE: $returnValues = array("Some value"); // OK, return a single value
 
 		// Spec: civicrm_api3_create_success($values = 1, $params = array(), $entity = NULL, $action = NULL)
-		return civicrm_api3_create_success($returnValues, $params, 'AllHebrewDates', 'calculate');
+		
 	} else {
 		throw new API_Exception(/*errorMessage*/ 'Could not create yahrzeit temp table', /*errorCode*/ 1234);
 	}
@@ -120,15 +134,20 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 
 
 
-function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type, $mourner_contact_id, $mourner_name, $mourner_email, $deceased_contact_id,
-		$deceased_name, $deceased_display_name,  $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
+function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
+		$deceased_name,   $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
 		$hebrew_deceased_date, $yahrzeit_date_tmp, $yahrzeit_date_formated_tmp, $relationship_name_formated,
 		$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) {
 
 		 require_once 'utils/HebrewCalendar.php';
 		 $tmpHebCal = new HebrewCalendar();
 		 	
+		 if(isset($yahrzeit_relationship_id)){
 		 	
+		 }else{
+		 	
+		 	$yahrzeit_relationship_id = "";
+		 }
 		 //print "<br>yahrzeit date raw: ".$yahrzeit_date_tmp;
 		 $yar = explode( '-', $yahrzeit_date_tmp);
 		 $deceased_date_before_sunset = '0';
@@ -203,9 +222,9 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 
 	  }
 	  $insert_sql = "INSERT INTO $TempTableName ( mourner_contact_id,
-	  mourner_name, mourner_email,
+	  mourner_name, 
 	  deceased_contact_id,
-	  deceased_name, deceased_display_name,
+	  deceased_name, 
 	  deceased_date, d_before_sunset,
 	  hebrew_deceased_date, yahrzeit_date ,
 	  yahrzeit_hebrew_date_format_hebrew, yahrzeit_hebrew_date_format_english,
@@ -215,12 +234,12 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  yahrzeit_erev_shabbat_after , yahrzeit_shabbat_morning_after,
 	  yahrzeit_date_morning, yahrzeit_relationship_id
 	  )
-			VALUES($mourner_contact_id, %1, '$mourner_email' , $deceased_contact_id,
-			%2, %3,
+			VALUES($mourner_contact_id, %1 , $deceased_contact_id,
+			%2, 
 			'$formated_english_deceased_date', '$deceased_date_before_sunset_formated',
 			'$hebrew_deceased_date' , $yahrzeit_date_tmp,
-			%4, %5,
-			%6, '$relationship_name_formated', %7,
+			%3, %4,
+			%5, '$relationship_name_formated', %6,
 			'$mourner_observance_preference', '$plaque_location',
 			'$sql_friday_before', '$sql_saturday_before', '$sql_friday_after', '$sql_saturday_after', '$sql_yahrzeit_date_morning', '$yahrzeit_relationship_id'  )";
 	  	
@@ -241,35 +260,30 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 				$params_a[2] =  array( ' ', 'String' );
 			}
 
-			if(strlen($deceased_display_name) > 0){
-				$params_a[3] =  array($deceased_display_name, 'String');
-			}else{
-				$params_a[3] =  array( ' ', 'String' );
-
-			}
+			
 
 			if(strlen($yahrzeit_hebrew_date_format_hebrew) > 0 ){
-				$params_a[4] =  array($yahrzeit_hebrew_date_format_hebrew, 'String');
+				$params_a[3] =  array($yahrzeit_hebrew_date_format_hebrew, 'String');
+			}else{
+				$params_a[3] =  array( ' ', 'String' );
+			}
+
+			if(strlen($yahrzeit_hebrew_date_format_english) > 0 ){
+				$params_a[4] =  array($yahrzeit_hebrew_date_format_english, 'String');
 			}else{
 				$params_a[4] =  array( ' ', 'String' );
 			}
 
-			if(strlen($yahrzeit_hebrew_date_format_english) > 0 ){
-				$params_a[5] =  array($yahrzeit_hebrew_date_format_english, 'String');
+			if(strlen($yahrzeit_date_formated_tmp) > 0 ){
+				$params_a[5] =  array($yahrzeit_date_formated_tmp, 'String');
 			}else{
 				$params_a[5] =  array( ' ', 'String' );
 			}
 
-			if(strlen($yahrzeit_date_formated_tmp) > 0 ){
-				$params_a[6] =  array($yahrzeit_date_formated_tmp, 'String');
+			if(strlen($yahrzeit_type) > 0 ){
+				$params_a[6] =  array($yahrzeit_type, 'String');
 			}else{
 				$params_a[6] =  array( ' ', 'String' );
-			}
-
-			if(strlen($yahrzeit_type) > 0 ){
-				$params_a[7] =  array($yahrzeit_type, 'String');
-			}else{
-				$params_a[7] =  array( ' ', 'String' );
 			}
 				
 				
@@ -288,7 +302,9 @@ function fillTempTable($TempTableName, $contact_ids ){
 
 
 	// print "<h2>Inside fillTempTable for table name: $TempTableName </h2> ";
-	require_once('utils/util_custom_fields.php');
+	/*
+	 
+	 require_once('utils/util_custom_fields.php');
 
 	$custom_field_group_label = "Extended Date Information";
 	$custom_field_birthdate_sunset_label = "Birth Date Before Sunset";
@@ -305,7 +321,92 @@ function fillTempTable($TempTableName, $contact_ids ){
 	$extended_birth_date  =  $outCustomColumnNames[$custom_field_birthdate_sunset_label];
 	$extended_death_date  =  $outCustomColumnNames[$custom_field_deathdate_sunset_label];
 
+*/
 	//
+	
+	$extended_date_table = "";
+	$extended_birth_date  = "";
+	$extended_death_date  = "";
+	
+	
+	$result = civicrm_api3('CustomGroup', 'get', array(
+			'sequential' => 1,
+			'name' =>  HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+			'extends' => "Individual",
+	));
+	
+	
+	if($result['is_error'] <> 0 || $result['count'] == 0  ){
+		$rtn_data['error_message'] = "Could not find custom field set '". HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."' ";
+		return $rtn_data;
+			
+	}else{
+		$tmp_values = $result['values'][0];
+		$extended_date_table = $tmp_values['table_name'];
+		$set_id = $tmp_values['id'];
+			
+			
+	}
+	
+	if(strlen( $extended_date_table) == 0){
+		$rtn_data['error_message'] = "Could not get SQL table name for set '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."'";
+		return $rtn_data;
+			
+	}
+	
+	
+	
+	$eb_result = civicrm_api3('CustomField', 'get', array(
+			'sequential' => 1,
+			'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+			'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME ,
+	));
+	
+	if($eb_result['is_error'] <> 0 || $eb_result['count'] == 0  ){
+		$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."' ";
+		return $rtn_data;
+	
+	}else{
+			
+		$tmp_values = $eb_result['values'][0];
+		$extended_birth_date = $tmp_values['column_name'];
+	
+	
+	}
+	
+	if(  strlen($extended_birth_date) == 0 ){
+		$rtn_data['error_message'] = "Could not get SQL column name for '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."'";
+		return $rtn_data;
+	}
+	
+	// Now get field name for date of death before sunset
+	$ed_result = civicrm_api3('CustomField', 'get', array(
+			'sequential' => 1,
+			'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+			'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME ,
+	));
+	
+	if($ed_result['is_error'] <> 0 || $ed_result['count'] == 0  ){
+		$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME."' ";
+		return $rtn_data;
+	
+	}else{
+		$tmp_values = $ed_result['values'][0];
+		$extended_death_date = $tmp_values['column_name'];
+	
+	
+	}
+	
+	if(  strlen($extended_death_date) == 0 ){
+		$rtn_data['error_message'] = "Could not get SQL field name for '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME."'";
+		return $rtn_data;
+	}
+	
+	
+	// TODO: Use API
+	
+	
+	/*
 	$custom_field_yahrzeit_group_label = "Yahrzeit Details";
 	$custom_field_yahrzeit_details_label = "Mourner observes the English date";
 
@@ -324,11 +425,54 @@ function fillTempTable($TempTableName, $contact_ids ){
 		// print "<br>Error: There is no field with the name: '".$yahrzeit_detail_column_name."' ";
 		return;
 	}
+	*/
+	
+	$extended_yahrzeit_table = ""; 
+	$result = civicrm_api3('CustomGroup', 'get', array(
+			'sequential' => 1,
+			'name' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME,
+			'extends' => 'Relationship', 
+		
+	));
+	
+	if($result['is_error'] == 0 && $result['count'] > 0  ){	
+		//Yahrzeit_Details
+		$tmp = $result['values'][0];
+		if(isset($tmp['table_name'])){
+			$extended_yahrzeit_table = $tmp['table_name'];
+		}
+	}
+	
+	if(strlen($extended_yahrzeit_table) == 0 ){
+		$rtn_data['error_message'] = "Error on line 447: Could not get SQL table name for '".HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME."'";
+		return $rtn_data;
+	}
+	
+	
+	
+	$result = civicrm_api3('CustomField', 'get', array(
+			'sequential' => 1,
+			'custom_group_id' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME,
+			'name' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_NAME,
+	));
+	
+	$yahrzeit_detail_column_name = ""; 
+	if($result['is_error'] == 0 && $result['count'] > 0  ){	
+		$yahrzeit_detail_column_name = $result['values'][0]['column_name'];
+		
+	}
 
 
+	if(strlen($yahrzeit_detail_column_name) == 0 ){
+		$rtn_data['error_message'] = "Could not get SQL field name for '".HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_NAME."'";
+		return $rtn_data;
+	}
+	
 	if( strlen( $contact_ids) > 0){
 		$contactids_sql = " AND contact_a.id IN ( $contact_ids )";
 		 
+	}else{
+		$contactids_sql = "";
 	}
 
 	//
@@ -340,9 +484,9 @@ function fillTempTable($TempTableName, $contact_ids ){
 
 	$reltype_sql = "SELECT id as rel_type_id
 	FROM  `civicrm_relationship_type` reltype
-	WHERE reltype.label_a_b
+	WHERE reltype.name_a_b
 	IN (
-	'Yarzheit observed by'
+	'".HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME."'
 	) ";
 
 	$reltype_dao =& CRM_Core_DAO::executeQuery( $reltype_sql,   CRM_Core_DAO::$_nullArray ) ;
@@ -374,7 +518,6 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	$sql = "SELECT contact_b.id as contact_id, contact_b.sort_name as sort_name,
 	contact_a.id as deceased_contact_id,
 	contact_a.sort_name as deceased_name,
-	contact_a.display_name as deceased_display_name,
 	reltype.name_a_b , contact_a.deceased_date,
 	year(contact_a.deceased_date) as dyear,
 	month(contact_a.deceased_date) as dmonth,
@@ -389,7 +532,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	and rel.is_active = 1 and contact_a.is_deleted <> 1 AND rel.relationship_type_id = $yahr_rel_type_id
 	LEFT JOIN civicrm_contact as contact_b ON rel.contact_id_b = contact_b.id and contact_b.is_deleted <> 1
 	LEFT JOIN civicrm_relationship_type as reltype ON reltype.ID = rel.relationship_type_id
-	AND reltype.label_a_b IN ( 'Yarzheit observed by'  )
+	AND reltype.name_a_b IN ( '".HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME."'  )
 	left join $extended_yahrzeit_table as yd ON rel.id = yd.entity_id
 	WHERE contact_a.contact_type = 'Individual'
 	AND contact_a.is_deceased = 1 $contactids_sql
@@ -421,8 +564,12 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	);
 	$result = civicrm_api('CustomField', 'getsingle', $params);
 
-
-	$fid = $result['id'];
+    if( isset($result['id'])){
+		$fid = $result['id'];
+    }else{
+    	$fid = "";
+    }
+    
 	$global_pref_field_name = "custom_".$fid;
 	 
 	// print "<br><br>pref field : ".$global_pref_field_name;
@@ -434,9 +581,14 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 			'return'  =>  $global_pref_field_name,
 	);
 	$result = civicrm_api('Contact', 'get', $params);
-	$values = $result['values'];
-	 
-	$default_yahrzeit_cal_preference_raw = $values[0][$global_pref_field_name];
+	if(isset($result['values'])){
+		$values = $result['values'];
+		$default_yahrzeit_cal_preference_raw = $values[0][$global_pref_field_name];
+	}else{
+		$default_yahrzeit_cal_preference_raw = "";
+	}
+	
+	
 	$default_yahrzeit_cal_pref = "hebrew";
 	if( $default_yahrzeit_cal_preference_raw == "0"){
 		$default_yahrzeit_cal_pref = "english";
@@ -453,9 +605,13 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	);
 	$result = civicrm_api('CustomField', 'getsingle', $params);
 
-
-	$fid = $result['id'];
-	$global_pref_field_name = "custom_".$fid;
+	if(isset($result['id'])){
+		$fid = $result['id'];
+		$global_pref_field_name = "custom_".$fid;
+	}else{
+		$fid = "";
+	}
+	
 	 
 	// print "<br><br>pref field : ".$global_pref_field_name;
 
@@ -466,9 +622,15 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 			'return'  =>  $global_pref_field_name,
 	);
 	$result = civicrm_api('Contact', 'get', $params);
-	$values = $result['values'];
+	
+	if(isset($result['values'])){
+		$values = $result['values'];
+		$honor_mourner_pref  = $values[0][$global_pref_field_name];
+	}else{
+		$honor_mourner_pref = "";
+	}
 	 
-	$honor_mourner_pref  = $values[0][$global_pref_field_name];
+	
 	 
 	//  print "<br><br> honor mourner pref: ".$honor_mourner_pref;
 
@@ -480,9 +642,9 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		$deceased_name = $dao->deceased_name  ;
 		$deceased_contact_id = $dao->deceased_contact_id;
 		$mourner_contact_id = $dao->contact_id;
-		$deceased_display_name = $dao->deceased_display_name;
+	
 		$mourner_contact_id = $dao->contact_id;
-		$mourner_email  = "";
+		//$mourner_email  = "";
 		$mourner_name =  $dao->sort_name ;
 		$deceased_year = $dao->dyear;
 		$deceased_month = $dao->dmonth;
@@ -500,15 +662,17 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 			$mourner_observance_preference = "";
 		}
 			
-		require_once 'CRM/Hebrew/HebrewDates.php';
+		require_once 'utils/HebrewCalendar.php';
 		$tmpHebCal = new HebrewCalendar();
 
 		//	print "<br><br>dname: ".$deceased_display_name." dyear: ".$deceased_year." dmonth: ".$deceased_month." dday: ".$deceased_day." ddate: ".$deceased_date;
 		$hebrew_date_format = 'dd MM yy';
 		$erev_start_flag = '1';
 
-		require_once('util_families.php');
-		$relationship_name_formated = determine_relationship_name($mourner_contact_id, $deceased_contact_id  ) ;
+		//require_once('util_families.php');
+		
+		
+		$relationship_name_formated = $tmpHebCal->determine_relationship_name($mourner_contact_id, $deceased_contact_id  ) ;
 
 		$hebrew_deceased_date  = $tmpHebCal->util_convert2hebrew_date($deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $hebrew_date_format);
 
@@ -619,8 +783,12 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		);
 		$result = civicrm_api('CustomGroup', 'getsingle', $params);
 
-		$heb_cal_table_name = $result['table_name'];
-		$heb_cal_set_id = $result['id'];
+		if(isset($result['table_name'])){
+			$heb_cal_table_name = $result['table_name'];
+			$heb_cal_set_id = $result['id'];
+		}else{
+			$heb_cal_table_name = "";
+		}
 
 		if( strlen( $heb_cal_table_name) > 0 ){
 			 
@@ -694,36 +862,34 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		 
 		 
 		//print "<br><br>Yahrzeit date formatted for SQL insert: ".$yahrzeit_date_tmp_next;
-		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_hebrew, $mourner_contact_id, $mourner_name, $mourner_email, $deceased_contact_id,
-				$deceased_name, $deceased_display_name,  $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
+		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_hebrew, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
+				$deceased_name,  $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,
 				$yahrzeit_date_tmp_next,
 				$yahrzeit_date_formated_tmp_next,
 				$relationship_name_formated,
 				$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
-
-
 			
 
 			
-		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_hebrew, $mourner_contact_id, $mourner_name, $mourner_email, $deceased_contact_id,
-				$deceased_name, $deceased_display_name,  $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
+		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_hebrew, $mourner_contact_id, $mourner_name, $deceased_contact_id,
+				$deceased_name,   $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,
 				$yahrzeit_date_tmp_prev,
 				$yahrzeit_date_formated_tmp_prev,
 				$relationship_name_formated,
 				$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
 			
-		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_english, $mourner_contact_id, $mourner_name, $mourner_email, $deceased_contact_id,
-				$deceased_name, $deceased_display_name,  $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
+		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_english, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
+				$deceased_name,  $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,
 				$tmp_yahrzeit_date_observe_english_next,
 				$tmp_yahrzeit_date_observe_english_formated_next,
 				$relationship_name_formated,
 				$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
 			
-		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_english, $mourner_contact_id, $mourner_name, $mourner_email, $deceased_contact_id,
-				$deceased_name, $deceased_display_name,  $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
+		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_english, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
+				$deceased_name,  $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,
 				$tmp_yahrzeit_date_observe_english_prev,
 				$tmp_yahrzeit_date_observe_english_formated_prev,

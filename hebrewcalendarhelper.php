@@ -6,11 +6,11 @@ function hebrewcalendarhelper_civicrm_post( $op, $objectName, $objectId, &$objec
 	// if a deceased individual is being created or edited, rebuild yahrzeit data.
 
 
-	if(   $objectRef->is_deceased == "1" && $objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore' ) ){
+	if(   isset($objectRef->is_deceased) && $objectRef->is_deceased == "1" && $objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore' ) ){
 		 
 		// Recalculate Hebrew demographic dates, such as next yahrzeit date for this contact.
 		 
-		//  AllHebrewDates.Calculate
+		//  TODO: verify this is happenign using PhpMyAdmin
 		$params = array(
 				'version' => 3,
 				'sequential' => 1,

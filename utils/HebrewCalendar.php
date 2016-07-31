@@ -65,6 +65,13 @@ class HebrewCalendar{
 	const EXTENDED_DATE_CUSTOM_FIELD_DEATH_TITLE = "Death Date Before Sunset";
 	const EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME = "Death_Date_Before_Sunset";
 	
+	const YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_TITLE = "Yahrzeit Details";
+	const YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME = "Yahrzeit_Details";
+	
+	
+	const YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_TITLE = "Does mourner observe the English date?";
+	const YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_NAME = "Mourner_observes_the_English_date";
+	
 // Yahrzeit - correct spelling
 
 	// TODO: Fix older spelling issues in db. 
@@ -74,6 +81,122 @@ class HebrewCalendar{
 	
 	const YAHRZEIT_RELATIONSHIP_TYPE_B_A_TITLE =  "Yahrzeit observed in memory of";
 	const YAHRZEIT_RELATIONSHIP_TYPE_B_A_NAME = "Yahrzeit_observed_in_memory_of";
+	
+	
+	function determine_relationship_name($mourner_contact_id, $deceased_contact_id  ){
+		// print "<hr><br><hr><h2>Inside determine_relationship_name</h2>";
+	
+		if(strlen($mourner_contact_id) == 0){
+			return '';
+		}
+	
+	
+		$formated_rel_name = '';
+		$sql = "(SELECT label_b_a as label , name_b_a as rel_api_name,  civicrm_option_value.label as gender_label
+		FROM `civicrm_relationship` rel, civicrm_relationship_type reltype, civicrm_contact con
+		LEFT JOIN civicrm_option_value ON civicrm_option_value.option_group_id = 3 AND con.gender_id = civicrm_option_value.value
+		where
+		rel.relationship_type_id = reltype.id
+		and contact_id_a = $mourner_contact_id and contact_id_b = $deceased_contact_id
+		and contact_id_b = con.id
+		and rel.is_active = 1  )
+		UNION
+		(SELECT label_a_b as label , name_a_b as rel_api_name,  civicrm_option_value.label as gender_label
+		FROM `civicrm_relationship` rel, civicrm_relationship_type reltype, civicrm_contact con
+		LEFT JOIN civicrm_option_value ON civicrm_option_value.option_group_id = 3 AND con.gender_id = civicrm_option_value.value
+		where
+		rel.relationship_type_id = reltype.id
+		and contact_id_a = $deceased_contact_id and contact_id_b = $mourner_contact_id
+		and contact_id_a = con.id
+		and rel.is_active = 1)
+	
+		";
+	
+		$dao =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
+		$first_time = true;
+		while ( $dao->fetch( ) ) {
+	
+			$tmp_label = $dao->label;
+			$tmp_rel_api_name = $dao->rel_api_name;
+			$deceased_gender = $dao->gender_label;
+	
+			$seperator = ', ';
+			 
+			// print "<hr>Current relationship label from db: ".$tmp_label;
+	
+			if($tmp_rel_api_name <> HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME) {
+	
+				// print "<br>current label is not yahzeit, so need to clean up for return value. ";
+				if(strlen($formated_rel_name) > 0){
+					//  print "<br>  a) formatted rel name: ".$formated_rel_name;
+	
+	
+	
+					$formated_rel_name = $formated_rel_name.$seperator;
+					//   print "<br>  b) formatted rel name: ".$formated_rel_name ;
+				}
+				//  print "<br>Dirty current label: ".$tmp_label;
+	
+				$tmp_label = strtolower ( $tmp_label);
+				$pos = strripos($tmp_label , ' of' );
+				if($pos){
+					$tmp_label = substr( $tmp_label , 0,  $pos);
+				}
+	
+				$pos = strripos($tmp_label , ' by' );
+				if($pos){
+					$tmp_label = substr( $tmp_label , 0,  $pos);
+				}
+	
+				// print "<br>Cleaned current label. (lower cased, and of,by removed) : ".$tmp_label;
+	
+				if($deceased_gender == "Female"){
+					if($tmp_label == "parent"){ $tmp_label = "mother"; }
+					else if($tmp_label == "spouse"){ $tmp_label = "wife"; }
+					else if($tmp_label == "sibling"){ $tmp_label = "sister"; }
+					else if($tmp_label == "grandparent"){ $tmp_label = "grandmother"; }
+					else if($tmp_label == "step-parent"){ $tmp_label = "step-mother"; }
+					else if($tmp_label == "child"){ $tmp_label = "daughter"; }
+					else if($tmp_label == "step-child"){ $tmp_label = "step-daughter"; }
+					else if($tmp_label == "grandchild"){ $tmp_label = "granddaughter"; }
+					else if($tmp_label == "aunt is"){ $tmp_label = "niece";}
+					else if($tmp_label == "uncle is"){ $tmp_label = "niece";}
+					else if($tmp_label == "parent-in-law"){ $tmp_label = "mother-in-law" ; }
+					else if($tmp_label == "child-in-law"){ $tmp_label = "daughter-in-law" ; }
+					else if($tmp_label == "sibling-in-law"){ $tmp_label = "sister-in-law" ; }
+	
+	
+				}else if($deceased_gender == "Male"){
+					if($tmp_label == "parent"){ $tmp_label = "father"; }
+					else if($tmp_label == "spouse"){ $tmp_label = "husband"; }
+					else if($tmp_label == "sibling"){ $tmp_label = "brother"; }
+					else if($tmp_label == "grandparent"){ $tmp_label = "grandfather"; }
+					else if($tmp_label == "step-parent"){ $tmp_label = "step-father"; }
+					else if($tmp_label == "child"){ $tmp_label = "son"; }
+					else if($tmp_label == "step-child"){ $tmp_label = "step-son"; }
+					else if($tmp_label == "grandchild"){ $tmp_label = "grandson"; }
+					else if($tmp_label == "aunt is"){ $tmp_label = "nephew";}
+					else if($tmp_label == "uncle is"){ $tmp_label = "nephew";}
+					else if($tmp_label == "parent-in-law"){ $tmp_label = "father-in-law" ; }
+					else if($tmp_label == "child-in-law"){ $tmp_label = "son-in-law" ; }
+					else if($tmp_label == "sibling-in-law"){ $tmp_label = "brother-in-law" ; }
+	
+				}else{
+					if($tmp_label == "aunt is"){ $tmp_label = "niece/nephew";}
+					else if($tmp_label == "uncle is"){ $tmp_label = "niece/nephew";}
+				}
+	
+				$formated_rel_name = $formated_rel_name.$tmp_label;
+				$first_time = false;
+			}
+	
+	
+		}
+		$dao->free( );
+	
+		return $formated_rel_name;
+	}
+	
 	
 	
 	/******************************************************************
@@ -570,6 +693,10 @@ class HebrewCalendar{
 
    // If custom data fields does not exist, create it. Otherwise do nothing.
 	private function createCustomDataFields(){
+		
+		
+		
+		
 		$result = civicrm_api3('CustomGroup', 'get', array(
 				'sequential' => 1,
 				'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
@@ -585,6 +712,7 @@ class HebrewCalendar{
 					'extends' => "Individual",
 					'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
 					'help_pre' => "",
+					'weight' => 1, 
 			));
 				
 		}else{
@@ -634,6 +762,74 @@ class HebrewCalendar{
 			));
 		
 		}
+		
+		
+		// if needed, Create custom data set used for "relationship type" = "yahrzeit observed in memory of"
+		
+		$result = civicrm_api3('CustomGroup', 'get', array(
+				'sequential' => 1,
+				'name' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME,
+		));
+		
+		// TODO: Check that it extends correct relationship type.		
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			// we need to create it. But first we need to get the relationship type id.
+			$reltype_result = civicrm_api3('RelationshipType', 'get', array(
+					'sequential' => 1,
+					'name_a_b' => HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME,
+			));
+			
+			$yah_relationtype_id = "";
+			if($reltype_result['is_error'] <> 0 || $reltype_result['count'] > 0  ){
+				$tmp_reltype = $reltype_result['values'][0];
+				$yah_relationtype_id = $tmp_reltype['id'];
+			
+			
+			
+				// finally, we can create the custom data set.
+				$create_result = civicrm_api3('CustomGroup', 'create', array(
+						'sequential' => 1,
+						'title' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_TITLE,
+						'extends' => "Relationship",
+						'extends_entity_column_value' => $yah_relationtype_id, 
+						'name' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME,
+						'help_pre' => "",
+						'weight' => 2, 
+				));
+				
+			}else{
+				// custom relationship type does not exist. So we cannot create the custom field group.
+				
+			}
+			
+		}else{
+		
+			// Nothing to do.
+		
+		}
+		
+		// see if the custom field "mourner observes the English date" exists. If not, create it.
+		// Check if death custom field exists, create it if needed.
+		$result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_NAME,
+		));
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$result = civicrm_api3('CustomField', 'create', array(
+					'sequential' => 1,
+					'custom_group_id' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME,
+					'label' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_TITLE,
+					'name' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_NAME,
+					'data_type' => "Boolean",
+					'html_type' => "Radio",
+					'is_searchable' => "1",
+			));
+		
+		}
+		
 	}
 	
 	/*****************************************************************************
@@ -648,8 +844,8 @@ class HebrewCalendar{
 		//require_once('utils/util_custom_fields.php');
 
 		//$custom_field_group_label = "Extended Date Information";
-		$custom_field_birthdate_sunset_label = "Birth Date Before Sunset";
-		$custom_field_deathdate_sunset_label = "Death Date Before Sunset" ;
+		//$custom_field_birthdate_sunset_label = "Birth Date Before Sunset";
+		//$custom_field_deathdate_sunset_label = "Death Date Before Sunset" ;
 
 
 		//$customFieldLabels = array($custom_field_birthdate_sunset_label   , $custom_field_deathdate_sunset_label );
@@ -658,7 +854,7 @@ class HebrewCalendar{
 		$extended_death_date = "";
 		//$outCustomColumnNames = array();
 
-		// TODO: Call CiviCRM API to get db field names for custom fields. 
+		// Call CiviCRM API to get db field names for custom fields. 
 		// The following variables are used in an SQL statement:  $extended_date_table $extended_birth_date $extended_death_date
 		$result = civicrm_api3('CustomGroup', 'get', array(
 				'sequential' => 1,
