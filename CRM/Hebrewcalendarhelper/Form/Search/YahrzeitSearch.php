@@ -16,6 +16,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   function __construct( &$formValues ) {
   	
   	//parent::__construct($formValues);
+  	
+  	require_once( 'utils/HebrewCalendar.php');
   	$this->_formValues = $formValues;
   
   	/**
@@ -89,11 +91,11 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	/**
   	 * You can define a custom title for the search form
   	 */
-  	$this->setTitle('Find Upcoming Yahrzeits');
+  	$this->setTitle('Find Yahrzeits');
   
   	 
-  	require_once('utils/Entitlement.php');
-  	$tmpEntitlement = new Entitlement();
+  	//require_once('utils/Entitlement.php');
+  	//$tmpEntitlement = new Entitlement();
   
   
   	$date_options = array(
@@ -106,9 +108,9 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	$form->addDate('end_date', ts('...Through'), false, array( 'formatType' => 'custom' ) );
   
-  	require_once('utils/CustomSearchTools.php');
-  	$searchTools = new CustomSearchTools();
-  	// $group_ids = $searchTools->getRegularGroupsforSelectList();
+  	//require_once('utils/CustomSearchTools.php');
+  	//$searchTools = new CustomSearchTools();
+  	
   
   	$group_ids =   CRM_Core_PseudoConstant::group();
   
@@ -116,10 +118,11 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			, '5' => '5 Months From Now', '6' => '6 Months From Now', '7' => '7 Months From Now', '8' => '8 Months From Now', '9' => '9 Months From Now', '10' => '10 Months From Now'
   			, '11' => '11 Months From Now', '12' => '12 Months From Now'  );
   
+  	// TODO: get all mem ids, and org ids
   
-  	$mem_ids = $searchTools->getMembershipsforSelectList();
+  	//$mem_ids = $searchTools->getMembershipsforSelectList();
   
-  	$org_ids = $searchTools->getMembershipOrgsforSelectList();
+  	//$org_ids = $searchTools->getMembershipOrgsforSelectList();
   	 
   	 
   
@@ -127,7 +130,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	//   $tmp_in_out_mem = array( '' =>  '-- select --', 'IN' => 'Has Membership Type(s)', 'NOT IN' => 'Does Not Have Membership Type(s)');
   
-  	if( $tmpEntitlement->isRunningCiviCRM_4_5()){
+  	
   
   		$select2style = array(
   				'multiple' => TRUE,
@@ -167,26 +170,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   
   
-  	}else{
-  		$form->add('select', 'group_of_contact', ts('Mourner group(s)'), $group_ids, FALSE,
-  				array('id' => 'group_of_contact', 'multiple' => 'multiple', 'title' => ts('-- select --'))
-  				);
-  
-  
-  
-  		$form->add('select', 'membership_org_of_contact', ts('Mourner has Membership In'), $org_ids, FALSE,
-  				array('id' => 'membership_org_of_contact', 'multiple' => 'multiple', 'title' => ts('-- select --'))
-  				);
-  
-  		$form->add('select', 'membership_type_of_contact', ts('Mourner Membership Type(s)'), $mem_ids, FALSE,
-  				array('id' => 'membership_type_of_contact', 'multiple' => 'multiple', 'title' => ts('-- select --'))
-  				);
-  
-  		$form->add('select', 'relative_time', ts('Timeframe relative to today'), $relative_times_choices, FALSE,
-  				array('id' => 'relative_time', 'multiple' => 'multiple', 'title' => ts('-- select --'))
-  				);
-  
-  	}
+  	
   
   
   
@@ -245,9 +229,9 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			$gender_options,
   			false);
   	 
-  	//  $comm_prefs_test = CRM_Core_PseudoConstant::pcm();
   
-  	$comm_prefs =  $searchTools->getCommunicationPreferencesForSelectList();
+  // TODO: Get commprefs from API
+  //	$comm_prefs =  $searchTools->getCommunicationPreferencesForSelectList();
   
   	$comm_prefs_select = $form->add  ('select', 'comm_prefs', ts('Communication Preference'),
   			$comm_prefs,
@@ -269,16 +253,9 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
    * Define the smarty template used to layout the search form and results listings.
    */
   function templateFile( ) {
-  	require_once('utils/Entitlement.php');
-  	$tmpEntitlement = new Entitlement();
-  
-  	if( $tmpEntitlement->isRunningCiviCRM_4_5()){
   		 
   		return 'CRM/Contact/Form/Search/Custom.tpl';
-  	}else{
-  		return 'CRM/Contact/Form/Search/Custom/Sample.tpl';
-  
-  	}
+  	
   }
    
   /**
@@ -770,7 +747,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	return $dao->N;
   }
    
-  function contactIDs( $offset = 0, $rowcount = 0, $sort = null) {
+  
+  function contactIDs( $offset = 0, $rowcount = 0, $sort = null, $returnSQL = false) {
   	return $this->all( $offset, $rowcount, $sort, false, true );
   }
    

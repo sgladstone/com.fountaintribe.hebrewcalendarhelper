@@ -11,7 +11,7 @@ return array (
     'params' => 
     array (
       'version' => 3,
-      'label' => 'YahrzeitSearch',
+      'label' => 'Yahrzeit Search',
       'description' => 'YahrzeitSearch (com.fountaintribe.hebrewcalendarhelper)',
       'class_name' => 'CRM_Hebrewcalendarhelper_Form_Search_YahrzeitSearch',
     ),
