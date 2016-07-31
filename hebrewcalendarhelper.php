@@ -376,6 +376,15 @@ function hebrewcalendarhelper_civicrm_enable() {
  */
 function hebrewcalendarhelper_civicrm_disable() {
   _hebrewcalendarhelper_civix_civicrm_disable();
+  
+  
+  // This only removes temp stuff, ie stuff that is safely re-created when the extension is re-enabled.
+  // Things that the organization is using to store their data is NOT removed.
+  // ie extension-created CiviCRM custom data sets, relationship types, etc are left in place.
+  require_once( 'utils/HebrewCalendar.php');
+  $tmp_cal = new HebrewCalendar();
+  $tmp_cal->removeExtensionConfigs();  
+  
 }
 
 /**

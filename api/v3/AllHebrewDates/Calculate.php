@@ -34,7 +34,7 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 	require_once 'utils/HebrewCalendar.php';
 	$yahrzeit_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;    
 	 
-	 
+	 /*
 	$sql_create = "CREATE TABLE IF NOT EXISTS $yahrzeit_table_name (
 	mourner_contact_id int NOT NULL,
 	mourner_name varchar(500) NOT NULL,
@@ -61,7 +61,7 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 
 	$dao =& CRM_Core_DAO::executeQuery( $sql_create,   CRM_Core_DAO::$_nullArray ) ;
 	$dao->free();
-
+    */
 
 	// check that table now exists
 	//$table_missing = true;

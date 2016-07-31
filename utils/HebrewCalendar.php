@@ -653,12 +653,70 @@ class HebrewCalendar{
 		return $output_time_formated;
 	}
 
-	
+	// This is normally called whenever this extension is enabled. 
 	function createExtensionConfigs(){
 		$this->createRelationshipType();
 		$this->createCustomDataFields();
+		$this->createYahrzeitTempTable();
 		
 	}
+	
+	// This is normally called whenever this extension is disabled.
+	function removeExtensionConfigs(){
+		$this->removeYahrzeitTempTable();
+		
+	}
+	
+	private function removeYahrzeitTempTable(){
+		
+		$yahrzeit_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
+		
+		$sql_drop = "DROP TABLE IF EXISTS ".$yahrzeit_table_name;
+		
+		$dao =& CRM_Core_DAO::executeQuery( $sql_drop,   CRM_Core_DAO::$_nullArray ) ;
+		$dao->free();
+		
+	}
+	
+	
+	private function createYahrzeitTempTable(){
+		
+		
+		$this->removeYahrzeitTempTable();
+		
+		$yahrzeit_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
+		
+		$sql_create = "CREATE TABLE $yahrzeit_table_name (
+		mourner_contact_id int NOT NULL,
+		mourner_name varchar(500) NOT NULL,
+		deceased_contact_id int NOT NULL,
+		deceased_name varchar(500) NOT NULL,
+		deceased_date varchar(500) NOT NULL,
+		d_before_sunset varchar(5),
+		hebrew_deceased_date varchar(256),
+		yahrzeit_date datetime,
+		yahrzeit_hebrew_date_format_hebrew varchar(256),
+		yahrzeit_hebrew_date_format_english varchar(256),
+		yahrzeit_date_display varchar(256),
+		relationship_name_formatted varchar(256),
+		yahrzeit_type varchar(256),
+		mourner_observance_preference varchar(256),
+		plaque_location varchar(500),
+		yahrzeit_erev_shabbat_before datetime,
+		yahrzeit_shabbat_morning_before datetime,
+		yahrzeit_erev_shabbat_after datetime,
+		yahrzeit_shabbat_morning_after datetime,
+		yahrzeit_date_morning datetime,
+		yahrzeit_relationship_id varchar(25),
+		created_date TIMESTAMP  ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
+		
+		$dao =& CRM_Core_DAO::executeQuery( $sql_create,   CRM_Core_DAO::$_nullArray ) ;
+		$dao->free();
+		
+		
+		
+	}
+	
 	
 	private function createRelationshipType(){
 		
