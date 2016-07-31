@@ -519,33 +519,61 @@ class HebrewCalendar{
 
 		$record_found = false;
 
-		require_once('utils/util_custom_fields.php');
+		//require_once('utils/util_custom_fields.php');
 
 		$custom_field_group_label = "Extended Date Information";
 		$custom_field_birthdate_sunset_label = "Birth Date Before Sunset";
 		$custom_field_deathdate_sunset_label = "Death Date Before Sunset" ;
 
 
-		$customFieldLabels = array($custom_field_birthdate_sunset_label   , $custom_field_deathdate_sunset_label );
+		//$customFieldLabels = array($custom_field_birthdate_sunset_label   , $custom_field_deathdate_sunset_label );
 		$extended_date_table = "";
-		$outCustomColumnNames = array();
+		$extended_birth_date  = "";
+		$extended_death_date = "";
+		//$outCustomColumnNames = array();
 
+		// TODO: Call CiviCRM API to get db field names for custom fields. 
+		// The following variables are used in an SQL statement:  $extended_date_table $extended_birth_date $extended_death_date
+		$result = civicrm_api3('CustomGroup', 'get', array(
+				'sequential' => 1,
+				'title' => $custom_field_group_label,
+				'extends' => "Individual",
+		));
+		
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$rtn_data['error_message'] = "Could not find custom field set '".$custom_field_group_label."' ";
+			return $rtn_data;
+			
+		}else{
+			
+			
+			
+		}
+		
+		
+		//$error_msg = getCustomTableFieldNames($custom_field_group_label, $customFieldLabels, $extended_date_table, $outCustomColumnNames ) ;
 
-		$error_msg = getCustomTableFieldNames($custom_field_group_label, $customFieldLabels, $extended_date_table, $outCustomColumnNames ) ;
-
-		$extended_birth_date  =  $outCustomColumnNames[$custom_field_birthdate_sunset_label];
-		$extended_death_date  =  $outCustomColumnNames[$custom_field_deathdate_sunset_label];
+		//$extended_birth_date  =  $outCustomColumnNames[$custom_field_birthdate_sunset_label];
+		//$extended_death_date  =  $outCustomColumnNames[$custom_field_deathdate_sunset_label];
 
 
 		 
 		//list($error_msg, $extended_date_table,  $extended_birth_date , $extended_death_date) = getCustomTableFieldNames();
 
+		if(strlen( $extended_date_table) == 0 ||  strlen($extended_birth_date) == 0 || strlen( $extended_death_date) == 0 ){
+			$rtn_data['error_message'] = "Could not get SQL table name or field names for required custom data.(Needed to calculate Hebrew dates)";
+			return $rtn_data;
+				
+		}
+		
 		if($error_msg <> ''){
 			//$screen->assign("hebrew_date_of_birth", $error_msg );
-			$rtn_data["hebrew_date_of_birth"] = $error_msg;
+			$rtn_data['error_message'] = $error_msg;
 			return $rtn_data;
 		}
 
+		
 		// fetch the details about the individual.
 		$query = "
 		SELECT civicrm_contact.first_name as first_name,
@@ -597,7 +625,7 @@ class HebrewCalendar{
 			$gender = $dao->gender_label;
 			$rtn_data["contact_type"] = $dao->contact_type;
 			 
-
+			
 
 			if(  $is_deceased  ){
 				$rtn_data["is_deceased"] = true;

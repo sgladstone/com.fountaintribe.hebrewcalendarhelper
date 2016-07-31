@@ -2,7 +2,7 @@
 
 require_once 'hebrewcalendarhelper.civix.php';
 
-function hebrewcalendar_civicrm_post( $op, $objectName, $objectId, &$objectRef ){
+function hebrewcalendarhelper_civicrm_post( $op, $objectName, $objectId, &$objectRef ){
 	// if a deceased individual is being created or edited, rebuild yahrzeit data.
 
 
@@ -27,42 +27,48 @@ function hebrewcalendar_civicrm_post( $op, $objectName, $objectId, &$objectRef )
 
 
 
-function hebrewcalendar_civicrm_summary( $contactID, &$content, &$contentPlacement ) {
-
+function hebrewcalendarhelper_civicrm_summary( $contactID, &$content, &$contentPlacement ) {
+	
 	
 		// Add Hebrew date of death, Hebrew birthday and add this info 
 		// to the back-office summary tab.
-		require_once 'utils/HebrewDates.php';
+		require_once 'utils/HebrewCalendar.php';
 		
+		$contentPlacement = CRM_Utils_Hook::SUMMARY_BELOW; 
+		$tmpHebCal = new HebrewCalendar();
+		$hebrew_data = $tmpHebCal->retrieve_hebrew_demographic_dates( $contactID);
+
 		
-		$contentPlacement = CRM_Utils_Hook::SUMMARY_BELOW ;
-		$content = "<br>Hello everyone";
-
-		if($hebrew_data['contact_type'] == 'Individual' ){
-			$tmpHebCal = new HebrewCalendar();
-			$hebrew_data = $tmpHebCal::retrieve_hebrew_demographic_dates( $contactID);
-			
-
-			// print_r($hebrew_data);
-
-			$contentPlacement = CRM_Utils_Hook::SUMMARY_BELOW ;
-
+		$tmp_error_message  = $hebrew_data['error_message'] ;
+		if( strlen($tmp_error_message) > 0 ){
+				
+			$begin_content = contact_summary_determine_beginning_content();
+			$middle_content = "<tr><td>Error Occured: ".$hebrew_data['error_message']."</td></tr>";
+			$end_content = contact_summary_determine_ending_content();
+				
+			$content = $begin_content.$middle_content.$end_content;
+				
+		}else if( isset( $hebrew_data['contact_type']  ) && $hebrew_data['contact_type'] == 'Individual' ){
+		
+	
 			$begin_content = contact_summary_determine_beginning_content();
 			$middle_content = contact_summary_determine_middle_content( $hebrew_data  ) ;
 			$end_content = contact_summary_determine_ending_content();
 
 			$content = $begin_content.$middle_content.$end_content;
+        
 
 		}else{
+		
 			$content = "";
 
-		} // end of else
-
+		 } // end of else
+	
 	
 }
 
 
-function hebrewcalendar_civicrm_alterContent(  &$content, $context, $tplName, &$object ){
+function hebrewcalendarhelper_civicrm_alterContent(  &$content, $context, $tplName, &$object ){
 
 	
 
@@ -81,7 +87,7 @@ function hebrewcalendar_civicrm_alterContent(  &$content, $context, $tplName, &$
 }
 
 
-function hebrewcalendar_civicrm_tokens( &$tokens ){
+function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 
 
 		$tokens['dates']['dates.today___hebrew_trans'] =  'Dates: Today (Hebrew transliterated)';
@@ -111,9 +117,9 @@ function hebrewcalendar_civicrm_tokens( &$tokens ){
 
 }
  
-function hebrewcalendar_civicrm_tokenValues( &$values, &$contactIDs, $job = null, $tokens = array(), $context = null) {
+function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job = null, $tokens = array(), $context = null) {
 	if(!empty($tokens['dates'])){
-		require_once 'utils/HebrewDates.php';
+		require_once 'utils/HebrewCalendar.php';
 		$hebrew_format = 'dd MM yy';
 
 		$tmpHebCal = new HebrewCalendar();
@@ -155,7 +161,7 @@ function hebrewcalendar_civicrm_tokenValues( &$values, &$contactIDs, $job = null
 			$partial_token =  $token_as_array[0];
 
 			if( $partial_token ==  'birth_date_hebrew_trans' || $partial_token ==  'birth_date_hebrew' ){
-				require_once 'utils/HebrewDates.php';
+				require_once 'utils/HebrewCalendar.php';
 
 				$tmpHebCal = new HebrewCalendar();
 
@@ -203,7 +209,7 @@ function hebrewcalendar_civicrm_tokenValues( &$values, &$contactIDs, $job = null
 		$token_yah_shabbat_morning_after = 'yahrzeit.shabbat_morning_after' ;
 		$token_yah_english_date_morning = 'yahrzeit.morning_format_english';
 
-		require_once('utils/HebrewDates.php');
+		require_once('utils/HebrewCalendar.php');
 		$tmpHebCal = new HebrewCalendar();
 		$tmpHebCal->process_yahrzeit_tokens( $values, $contactIDs ,  $token_yahrzeits_all,  $token_yahrzeits_short, $token_yah_dec_name, $token_yah_english_date, $token_yah_hebrew_date, $token_yah_dec_death_english_date,  $token_yah_dec_death_hebrew_date ,   $token_yah_relationship_name,
 				$token_yah_erev_shabbat_before ,
