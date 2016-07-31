@@ -12,7 +12,7 @@ return array (
     array (
       'version' => 3,
       'name' => 'Call AllHebrewDates.Calculate API',
-      'description' => 'Call AllHebrewDates.Calculate API',
+      'description' => 'Recalculate all yahrzeits, Hebrew birthdays, and other observances tied to the Hebrew calendar.',
       'run_frequency' => 'Hourly',
       'api_entity' => 'AllHebrewDates',
       'api_action' => 'Calculate',

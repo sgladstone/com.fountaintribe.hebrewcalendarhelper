@@ -33,6 +33,8 @@ class HebrewCalendar{
 
 	// Should always be set to false in a production environment.
 	const ALWAYS_CLEAR_TEMP_TABLE = false;
+	
+	const YAHRZEIT_TEMP_TABLE_NAME = "civicrm_fountaintribe_yahrzeits_temp";  //  old table name: "pogstone_temp_yahrzeits";
 
 	// After how many minutes should yahrzeit cache data be recalculated?
 	// In a production environment this is typically 12 hours, ie 720 minutes.
@@ -52,8 +54,28 @@ class HebrewCalendar{
 	const HEBREW_MONTH_TAMUZ = "11";
 	const HEBREW_MONTH_AV    = "12";
 	const HEBREW_MONTH_ELUL  = "13";
+	
+	
+	const EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE = "Extended Date Information";
+	const EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME = "Extended_Date_Information";
+	
+	const EXTENDED_DATE_CUSTOM_FIELD_BIRTH_TITLE = "Birth Date Before Sunset";
+	const EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME = "Birth_Date_Before_Sunset";
+	
+	const EXTENDED_DATE_CUSTOM_FIELD_DEATH_TITLE = "Death Date Before Sunset";
+	const EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME = "Death_Date_Before_Sunset";
+	
+// Yahrzeit - correct spelling
 
-
+	// TODO: Fix older spelling issues in db. 
+// Yarzheit - incorrect spelling, fix via SQL as needed.  also spaces used to be used in the 'name'
+	const YAHRZEIT_RELATIONSHIP_TYPE_A_B_TITLE = "Yahrzeit observed by";
+	const YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME = "Yahrzeit_observed_by";
+	
+	const YAHRZEIT_RELATIONSHIP_TYPE_B_A_TITLE =  "Yahrzeit observed in memory of";
+	const YAHRZEIT_RELATIONSHIP_TYPE_B_A_NAME = "Yahrzeit_observed_in_memory_of";
+	
+	
 	/******************************************************************
 	 *   This function takes in a English date, and returns the name of
 	 *   the Jewish holiday. If there is no holiday, then  an empty
@@ -508,8 +530,112 @@ class HebrewCalendar{
 		return $output_time_formated;
 	}
 
+	
+	function createExtensionConfigs(){
+		$this->createRelationshipType();
+		$this->createCustomDataFields();
+		
+	}
+	
+	private function createRelationshipType(){
+		
+		// It does not make sense to have a household observe a yahrzeit, as
+		// then its impossible to track how the mourner is related to the dececased person.
+		// Such as "Spouse of", "Child of", etc which are commonly used in yahrzeit letters/emails.
+		
+		$result = civicrm_api3('RelationshipType', 'get', array(
+				'sequential' => 1,
+				'name_a_b' => HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME,
+		));
+		
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			
+		
+				$result = civicrm_api3('RelationshipType', 'create', array(
+						'sequential' => 1,
+						'name_a_b' => HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME,
+						'label_a_b' => HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_A_B_TITLE,
+						'name_b_a' => HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_B_A_NAME,
+						'label_b_a' => HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_B_A_TITLE,
+						'contact_type_a' => "Individual",
+						'contact_type_b' => "Individual",
+				));
+		}else{
+			// nothing to do, relationship type already exists.
+			
+		}
+		
+	}
 
-
+   // If custom data fields does not exist, create it. Otherwise do nothing.
+	private function createCustomDataFields(){
+		$result = civicrm_api3('CustomGroup', 'get', array(
+				'sequential' => 1,
+				'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+		));
+		
+		// TODO: Check that it extends individual. 
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			// create it custom data set.
+			$create_result = civicrm_api3('CustomGroup', 'create', array(
+					'sequential' => 1,
+					'title' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE,
+					'extends' => "Individual",
+					'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+					'help_pre' => "",
+			));
+				
+		}else{
+				
+			// Nothing to do. 	
+				
+		}
+		
+		
+		// Check if birth custom field exists, create it if needed.
+		$result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME,
+		));
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$result = civicrm_api3('CustomField', 'create', array(
+					'sequential' => 1,
+					'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+					'label' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_TITLE,
+					'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME,
+					'data_type' => "Boolean",
+					'html_type' => "Radio",
+					'is_searchable' => "1",
+			));
+		
+		}
+		
+		
+		// Check if death custom field exists, create it if needed.
+		$result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME,
+		));
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$result = civicrm_api3('CustomField', 'create', array(
+					'sequential' => 1,
+					'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+					'label' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_TITLE,
+					'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME,
+					'data_type' => "Boolean",
+					'html_type' => "Radio",
+					'is_searchable' => "1",
+			));
+		
+		}
+	}
+	
 	/*****************************************************************************
 	 *
 	 * This function queries info from the CiviCRM database and returns
@@ -521,7 +647,7 @@ class HebrewCalendar{
 
 		//require_once('utils/util_custom_fields.php');
 
-		$custom_field_group_label = "Extended Date Information";
+		//$custom_field_group_label = "Extended Date Information";
 		$custom_field_birthdate_sunset_label = "Birth Date Before Sunset";
 		$custom_field_deathdate_sunset_label = "Death Date Before Sunset" ;
 
@@ -536,38 +662,81 @@ class HebrewCalendar{
 		// The following variables are used in an SQL statement:  $extended_date_table $extended_birth_date $extended_death_date
 		$result = civicrm_api3('CustomGroup', 'get', array(
 				'sequential' => 1,
-				'title' => $custom_field_group_label,
+				'name' =>  HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
 				'extends' => "Individual",
 		));
 		
 		
 		if($result['is_error'] <> 0 || $result['count'] == 0  ){
-			$rtn_data['error_message'] = "Could not find custom field set '".$custom_field_group_label."' ";
+			$rtn_data['error_message'] = "Could not find custom field set '". HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."' ";
 			return $rtn_data;
 			
 		}else{
-			
+			$tmp_values = $result['values'][0];
+			$extended_date_table = $tmp_values['table_name'];
+			$set_id = $tmp_values['id'];
 			
 			
 		}
 		
-		
+		if(strlen( $extended_date_table) == 0){
+			$rtn_data['error_message'] = "Could not get SQL table name for set '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."'";
+			return $rtn_data;
+			
+		}
 		//$error_msg = getCustomTableFieldNames($custom_field_group_label, $customFieldLabels, $extended_date_table, $outCustomColumnNames ) ;
 
 		//$extended_birth_date  =  $outCustomColumnNames[$custom_field_birthdate_sunset_label];
-		//$extended_death_date  =  $outCustomColumnNames[$custom_field_deathdate_sunset_label];
-
-
-		 
-		//list($error_msg, $extended_date_table,  $extended_birth_date , $extended_death_date) = getCustomTableFieldNames();
-
-		if(strlen( $extended_date_table) == 0 ||  strlen($extended_birth_date) == 0 || strlen( $extended_death_date) == 0 ){
-			$rtn_data['error_message'] = "Could not get SQL table name or field names for required custom data.(Needed to calculate Hebrew dates)";
+		$eb_result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME , 
+		));
+		
+		if($eb_result['is_error'] <> 0 || $eb_result['count'] == 0  ){
+			$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."' ";
 			return $rtn_data;
+				
+		}else{
+			
+			$tmp_values = $eb_result['values'][0];
+			$extended_birth_date = $tmp_values['column_name'];
+				
 				
 		}
 		
-		if($error_msg <> ''){
+		if(  strlen($extended_birth_date) == 0 ){
+			$rtn_data['error_message'] = "Could not get SQL column name for '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."'";
+			return $rtn_data;
+		}
+		//$extended_death_date  =  $outCustomColumnNames[$custom_field_deathdate_sunset_label];
+		$ed_result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME ,
+		));
+		
+		if($ed_result['is_error'] <> 0 || $ed_result['count'] == 0  ){
+			$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME."' ";
+			return $rtn_data;
+		
+		}else{
+			$tmp_values = $ed_result['values'][0];
+			$extended_death_date = $tmp_values['column_name'];
+		
+		
+		}
+		
+		if(  strlen($extended_death_date) == 0 ){
+			$rtn_data['error_message'] = "Could not get SQL field name for '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME."'";
+			return $rtn_data;
+		}
+
+		
+
+		
+		
+		if( isset($error_msg) && $error_msg <> ''){
 			//$screen->assign("hebrew_date_of_birth", $error_msg );
 			$rtn_data['error_message'] = $error_msg;
 			return $rtn_data;
@@ -1151,13 +1320,28 @@ class HebrewCalendar{
 	 *********************************************************************/
 	function  util_get_bar_bat_mizvah_date(&$iyear, &$imonth, &$iday, &$ibeforesunset, &$erev_start_flag,  &$bar_bat_mitzvah_flag, &$gregorian_date_format  ){
 
-		date_default_timezone_set('America/Chicago');
+		//date_default_timezone_set('America/Chicago');
 		$heb_format_tmp = 'mm/dd/yy';
 		$birthdate_hebrew = self::util_convert2hebrew_date($iyear, $imonth, $iday, $ibeforesunset, $heb_format_tmp );
 
 		//  birthdate_hebrew ( will be used for bar bat Mitzvah calculation: $birthdate_hebrew ;
 
-		list($hebrewbirthMonth, $hebrewbirthDay, $hebrewbirthYear) = split('/',$birthdate_hebrew);
+		$dob_heb_array = explode( '/',$birthdate_hebrew);   // 
+		//list($hebrewbirthMonth, $hebrewbirthDay, $hebrewbirthYear) = split('/',$birthdate_hebrew);
+		
+		if(count( $dob_heb_array ) == 3){
+			$hebrewbirthMonth = $dob_heb_array[0];
+			$hebrewbirthDay = $dob_heb_array[1];
+			$hebrewbirthYear = $dob_heb_array[2];
+		}else{
+			$hebrewbirthMonth = "";
+			$hebrewbirthDay = "";
+			$hebrewbirthYear = "";
+			
+		}
+		
+		
+		
 
 		$bar_bat_mitzvah_year = '';
 		if(  $bar_bat_mitzvah_flag == 'bat'){
