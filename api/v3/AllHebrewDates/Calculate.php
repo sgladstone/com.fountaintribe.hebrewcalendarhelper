@@ -505,7 +505,7 @@ LEFT JOIN civicrm_relationship as rel ON rel.contact_id_a = contact_a.id and rel
 AND rel.relationship_type_id = $yahr_rel_type_id
 LEFT JOIN civicrm_contact as contact_b ON rel.contact_id_b = contact_b.id and contact_b.is_deleted <> 1
 LEFT JOIN civicrm_relationship_type as reltype ON reltype.ID = rel.relationship_type_id
-AND reltype.label_a_b IN ( 'Yarzheit observed by' )
+AND reltype.name_a_b IN ( '".HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME."' )
 left join ".$extended_yahrzeit_table." as yd ON rel.id = yd.entity_id AND rel.contact_id_b is NOT NULL
 WHERE contact_a.contact_type = 'Individual' AND contact_a.is_deceased = 1 AND contact_a.is_deleted <> 1 $contactids_sql
 AND (contact_b.id IS NULL or contact_b.is_deleted <> 1 )

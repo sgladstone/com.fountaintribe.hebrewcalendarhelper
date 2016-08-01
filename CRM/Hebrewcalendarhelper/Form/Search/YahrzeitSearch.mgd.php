@@ -12,7 +12,7 @@ return array (
     array (
       'version' => 3,
       'label' => 'Yahrzeit Search',
-      'description' => 'YahrzeitSearch (com.fountaintribe.hebrewcalendarhelper)',
+      'description' => 'Yahrzeit Search (com.fountaintribe.hebrewcalendarhelper)',
       'class_name' => 'CRM_Hebrewcalendarhelper_Form_Search_YahrzeitSearch',
     ),
   ),
