@@ -30,39 +30,21 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 	// if (array_key_exists('magicword', $params) && $params['magicword'] == 'sesame') {
 	$returnValues = array( // OK, return several data rows
 	);
+	
+	
+	
+	$tmp_contact_ids = "";
+	if(isset($params['contact_ids'])){
+		$tmp_contact_ids = $params['contact_ids'];
+	}else{
+		$tmp_contact_ids = "";
+	}
+	
 	 
 	require_once 'utils/HebrewCalendar.php';
 	$yahrzeit_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;    
 	 
-	 /*
-	$sql_create = "CREATE TABLE IF NOT EXISTS $yahrzeit_table_name (
-	mourner_contact_id int NOT NULL,
-	mourner_name varchar(500) NOT NULL,
-	deceased_contact_id int NOT NULL,
-	deceased_name varchar(500) NOT NULL,
-	deceased_date varchar(500) NOT NULL,
-	d_before_sunset varchar(5),
-	hebrew_deceased_date varchar(256),
-	yahrzeit_date datetime,
-	yahrzeit_hebrew_date_format_hebrew varchar(256),
-	yahrzeit_hebrew_date_format_english varchar(256),
-	yahrzeit_date_display varchar(256),
-	relationship_name_formatted varchar(256),
-	yahrzeit_type varchar(256),
-	mourner_observance_preference varchar(256),
-	plaque_location varchar(500),
-	yahrzeit_erev_shabbat_before datetime,
-	yahrzeit_shabbat_morning_before datetime,
-	yahrzeit_erev_shabbat_after datetime,
-	yahrzeit_shabbat_morning_after datetime,
-	yahrzeit_date_morning datetime,
-	yahrzeit_relationship_id varchar(25),
-	created_date TIMESTAMP  ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
-
-	$dao =& CRM_Core_DAO::executeQuery( $sql_create,   CRM_Core_DAO::$_nullArray ) ;
-	$dao->free();
-    */
-
+	
 	// check that table now exists
 	//$table_missing = true;
 	$tmpHebCal = new HebrewCalendar();
@@ -89,8 +71,62 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 	 
 	 
 	$table_dao->free();
+	
 	if( $table_exists){
 
+		
+		// deal with getting general stuff, ie table that tracks if individual was born/died before sunset or not. 
+		$result = civicrm_api3('CustomGroup', 'get', array(
+				'sequential' => 1,
+				'name' =>  HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+				'extends' => "Individual",
+		));
+		
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$rtn_data['error_message'] = "Could not find custom field set '". HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."' ";
+			//return $rtn_data;
+				
+		}else{
+			$tmp_values = $result['values'][0];
+			$extended_date_table = $tmp_values['table_name'];
+			//$set_id = $tmp_values['id'];
+		
+			if(strlen( $extended_date_table) == 0){
+				$rtn_data['error_message'] = "Could not get SQL table name for custom field set '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."'";
+				//return $rtn_data;
+					
+			}
+		}
+		
+		
+		
+		// Now deal with birthday-related stuff.
+		
+		$rtn_data = $tmpHebCal->scrubBirthCalculatedFields( $tmp_contact_ids );
+		
+		if(isset( $rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0   ){
+			throw new API_Exception("Hebrew Birthday Error: ".$rtn_data['error_message'],  1234);
+		}
+		
+
+		
+		
+		$rtn_data = $tmpHebCal->calculateBirthDates( $extended_date_table,  $tmp_contact_ids);
+		
+		if( isset( $rtn_data['error_message'] )  && strlen($rtn_data['error_message']) > 0 ){
+			//return $rtn_data;
+			$rtn_data['error_message_birthday_calcs'] = $rtn_data['error_message'];
+			throw new API_Exception("Error: ".$rtn_data['error_message'],  1234);
+		}
+		
+		// Should be poplulated now: $rtn_data['contacts_updated_birthdays']  ;
+		$record_count_birthdays = $rtn_data['contacts_updated_birthdays'] ; 
+		// All done with birthday calculations. 
+		
+		
+		
+		// Now deal with yahrzeit data
 		if( array_key_exists('contact_ids', $params) && strlen($params['contact_ids'])  > 0   ){
 			 
 			// no need to truncate table, as we will do a surgical update for the impacted contacts.
@@ -99,37 +135,43 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 		}else{
 			// clean temp table
 			$sql_cleanup = "TRUNCATE TABLE $yahrzeit_table_name";
-		}
-		 
+		}			
 		$dao =& CRM_Core_DAO::executeQuery( $sql_cleanup,   CRM_Core_DAO::$_nullArray ) ;
 		$dao->free();
-		 
-		// print "<br>sql cleanup: ".$sql_cleanup;
 		
-		$tmp_contact_ids = "";
-		if(isset($params['contact_ids'])){
-			$tmp_contact_ids = $params['contact_ids']; 
-		}else{
-			$tmp_contact_ids = "";
-			}
 		
-		$rtn_data = fillTempTable($yahrzeit_table_name, $tmp_contact_ids   );
-		
+		$rtn_data = $tmpHebCal->scrubDeceasedCalculatedFields( $tmp_contact_ids  );
+			
 		if(isset( $rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0   ){
-			throw new API_Exception("Error: ".$rtn_data['error_message'],  1234);
-			
-			
+			throw new API_Exception("Yahrzeit Error: ".$rtn_data['error_message'],  1234);
+				
+				
 		}else{
-			return civicrm_api3_create_success($returnValues, $params, 'AllHebrewDates', 'calculate');
+			
+				$rtn_data = fillYahrzeitTempTable( $tmpHebCal, $extended_date_table , $yahrzeit_table_name, $tmp_contact_ids   );
+			
+				$rtn_data['record_count_birthdays'] = $record_count_birthdays; 
+				
+				if( isset( $rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0   ){
+					throw new API_Exception("Error: ".$rtn_data['error_message'],  1234);
+				
+				
+				}else if(isset($rtn_data['error_message_birthday_calcs']) && strlen( $rtn_data['error_message_birthday_calcs'] ) > 0    ){
+					throw new API_Exception("Error: ".$rtn_data['error_message'],  1234);
+					
+				}else{
+				 	$returnValues =  $rtn_data ; 
+					return civicrm_api3_create_success($returnValues, $params, 'AllHebrewDates', 'calculate');
+				}
+					// ALTERNATIVE: $returnValues = array(); // OK, success
+					// ALTERNATIVE: $returnValues = array("Some value"); // OK, return a single value
+			
+					// Spec: civicrm_api3_create_success($values = 1, $params = array(), $entity = NULL, $action = NULL)
+				}
+		} else {
+			throw new API_Exception(/*errorMessage*/ 'Could not create yahrzeit temp table', /*errorCode*/ 1234);
 		}
-		// ALTERNATIVE: $returnValues = array(); // OK, success
-		// ALTERNATIVE: $returnValues = array("Some value"); // OK, return a single value
-
-		// Spec: civicrm_api3_create_success($values = 1, $params = array(), $entity = NULL, $action = NULL)
-		
-	} else {
-		throw new API_Exception(/*errorMessage*/ 'Could not create yahrzeit temp table', /*errorCode*/ 1234);
-	}
+	
 }
 
 
@@ -297,87 +339,20 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 }
 
 
-function fillTempTable($TempTableName, $contact_ids ){
+ 
 
 
 
-	// print "<h2>Inside fillTempTable for table name: $TempTableName </h2> ";
-	/*
-	 
-	 require_once('utils/util_custom_fields.php');
 
-	$custom_field_group_label = "Extended Date Information";
-	$custom_field_birthdate_sunset_label = "Birth Date Before Sunset";
-	$custom_field_deathdate_sunset_label = "Death Date Before Sunset" ;
-
-
-	$customFieldLabels = array($custom_field_birthdate_sunset_label   , $custom_field_deathdate_sunset_label );
-	$extended_date_table = "";
-	$outCustomColumnNames = array();
-
-
-	$error_msg = getCustomTableFieldNames($custom_field_group_label, $customFieldLabels, $extended_date_table, $outCustomColumnNames ) ;
-
-	$extended_birth_date  =  $outCustomColumnNames[$custom_field_birthdate_sunset_label];
-	$extended_death_date  =  $outCustomColumnNames[$custom_field_deathdate_sunset_label];
-
-*/
-	//
+function fillYahrzeitTempTable($tmpHebCal , $extended_date_table,  $TempTableName, $contact_ids ){
 	
-	$extended_date_table = "";
-	$extended_birth_date  = "";
+	$rtn_data = array(); 
+	
+	
+	//$extended_birth_date  = "";
 	$extended_death_date  = "";
 	
 	
-	$result = civicrm_api3('CustomGroup', 'get', array(
-			'sequential' => 1,
-			'name' =>  HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
-			'extends' => "Individual",
-	));
-	
-	
-	if($result['is_error'] <> 0 || $result['count'] == 0  ){
-		$rtn_data['error_message'] = "Could not find custom field set '". HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."' ";
-		return $rtn_data;
-			
-	}else{
-		$tmp_values = $result['values'][0];
-		$extended_date_table = $tmp_values['table_name'];
-		$set_id = $tmp_values['id'];
-			
-			
-	}
-	
-	if(strlen( $extended_date_table) == 0){
-		$rtn_data['error_message'] = "Could not get SQL table name for set '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."'";
-		return $rtn_data;
-			
-	}
-	
-	
-	
-	$eb_result = civicrm_api3('CustomField', 'get', array(
-			'sequential' => 1,
-			'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
-			'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME ,
-	));
-	
-	if($eb_result['is_error'] <> 0 || $eb_result['count'] == 0  ){
-		$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."' ";
-		return $rtn_data;
-	
-	}else{
-			
-		$tmp_values = $eb_result['values'][0];
-		$extended_birth_date = $tmp_values['column_name'];
-	
-	
-	}
-	
-	if(  strlen($extended_birth_date) == 0 ){
-		$rtn_data['error_message'] = "Could not get SQL column name for '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."'";
-		return $rtn_data;
-	}
 	
 	// Now get field name for date of death before sunset
 	$ed_result = civicrm_api3('CustomField', 'get', array(
@@ -401,9 +376,6 @@ function fillTempTable($TempTableName, $contact_ids ){
 		$rtn_data['error_message'] = "Could not get SQL field name for '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME."'";
 		return $rtn_data;
 	}
-	
-	
-	// TODO: Use API
 	
 	
 	/*
@@ -444,7 +416,7 @@ function fillTempTable($TempTableName, $contact_ids ){
 	}
 	
 	if(strlen($extended_yahrzeit_table) == 0 ){
-		$rtn_data['error_message'] = "Error on line 447: Could not get SQL table name for '".HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME."'";
+		$rtn_data['error_message'] = "Error: Could not get SQL table name for '".HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME."'";
 		return $rtn_data;
 	}
 	
@@ -512,22 +484,30 @@ AND (contact_b.id IS NULL or contact_b.is_deleted <> 1 )
 GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = contact_a.id ";
 
 
+	
+	
 	// Only include the record listing the deceased with no mourner IF the deceased has no mourners.
 	$mourner_count_where = " AND ( contact_b.id IS NOT NULL OR ( contact_b.id is NULL AND mourner_count.mourner_count = 0 )   ) ";
 
+	$tmp_subtype_name = HebrewCalendar::YAH_DECEASED_CONTACT_TYPE_NAME ; 
+	//$tmp_subtype_name = "Deceased";
+	
+	
+	
 	$sql = "SELECT contact_b.id as contact_id, contact_b.sort_name as sort_name,
 	contact_a.id as deceased_contact_id,
+	contact_a.contact_sub_type LIKE '%".$tmp_subtype_name."%' as deceased_subtype_is_good,  
 	contact_a.sort_name as deceased_name,
 	reltype.name_a_b , contact_a.deceased_date,
 	year(contact_a.deceased_date) as dyear,
 	month(contact_a.deceased_date) as dmonth,
 	day(contact_a.deceased_date) as dday,
 	contact_a.deceased_date as ddate,
-	$extended_date_table.$extended_death_date as d_before_sunset,
+	edt.$extended_death_date  as d_before_sunset,
 	yd.$yahrzeit_detail_column_name as mourner_preference,
 	rel.id as relationship_id
 	FROM civicrm_contact AS contact_a ".$mourner_count_join."
-	LEFT JOIN $extended_date_table ON contact_a.id = $extended_date_table.entity_id
+	LEFT JOIN $extended_date_table edt ON contact_a.id = edt.entity_id
 	LEFT JOIN civicrm_relationship as rel ON rel.contact_id_a = contact_a.id
 	and rel.is_active = 1 and contact_a.is_deleted <> 1 AND rel.relationship_type_id = $yahr_rel_type_id
 	LEFT JOIN civicrm_contact as contact_b ON rel.contact_id_b = contact_b.id and contact_b.is_deleted <> 1
@@ -536,12 +516,9 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	left join $extended_yahrzeit_table as yd ON rel.id = yd.entity_id
 	WHERE contact_a.contact_type = 'Individual'
 	AND contact_a.is_deceased = 1 $contactids_sql
-	AND contact_a.is_deleted <> 1  ".$mourner_count_where;
+	AND contact_a.is_deleted <> 1  ".$mourner_count_where ;
 
 
-
-
-	//	print "<br><br>".$sql;
 	$config = CRM_Core_Config::singleton( );
 
 	$tmp_system_date_format = 	$config->dateInputFormat;
@@ -633,7 +610,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	
 	 
 	//  print "<br><br> honor mourner pref: ".$honor_mourner_pref;
-
+    $mourner_contacts_count = 0; 
+	
 	$dao =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
 	while ( $dao->fetch( ) ) {
 
@@ -642,6 +620,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		$deceased_name = $dao->deceased_name  ;
 		$deceased_contact_id = $dao->deceased_contact_id;
 		$mourner_contact_id = $dao->contact_id;
+		$is_contact_subtype_good = $dao->deceased_subtype_is_good;
+
 	
 		$mourner_contact_id = $dao->contact_id;
 		$mourner_name =  $dao->sort_name ;
@@ -667,9 +647,76 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		//	print "<br><br>dname: ".$deceased_display_name." dyear: ".$deceased_year." dmonth: ".$deceased_month." dday: ".$deceased_day." ddate: ".$deceased_date;
 		$hebrew_date_format = 'dd MM yy';
 		$erev_start_flag = '1';
-
-		//require_once('util_families.php');
 		
+	//	$rtn_data['error_message'] = "contact id $deceased_contact_id - About to deal with subtype";
+	//	return $rtn_data;
+		// If the deceased contact does NOT have the contact subtype of "Deceased" then fix it.
+		if(	$is_contact_subtype_good <> "1"){
+		    // get all existing subtypes for this contact.
+		    
+		    $con_sub_result = civicrm_api3('Contact', 'get', array(
+					'sequential' => 1,
+					'id' => $deceased_contact_id,
+			));  
+			
+			
+			//$rtn_data['error_message'] = "subtypes for id $deceased_contact_id : is good? ".$is_contact_subtype_good;
+			//return $rtn_data;
+			if($con_sub_result['is_error']  == 0 && $con_sub_result['count']  == 1 ){
+				
+				$tmp_contact_subtypes = $con_sub_result['values'][0]['contact_sub_type'];
+		      
+				
+				
+				
+				$clean_contact_subtypes = array();
+				
+				if(is_array( $tmp_contact_subtypes ) == false && strlen( $tmp_contact_subtypes ) == 0 ){
+					// this is because there is no contact subtype yet.
+					$clean_contact_subtypes = array(); 
+				}else if( is_array( $tmp_contact_subtypes ) == false && strlen( $tmp_contact_subtypes ) > 0 ){
+					
+					$tmp = $tmp_contact_subtypes;
+					$clean_contact_subtypes[] = $tmp ;
+				}else if(is_array( $tmp_contact_subtypes )  ){
+					$clean_contact_subtypes = $tmp_contact_subtypes ;
+				}
+				
+				
+				
+				
+				
+				//$rtn_data['error_message'] = "Stuff: ".$clean_contact_subtypes_as_str;
+				//return $rtn_data;
+				 
+				$clean_contact_subtypes[] = HebrewCalendar::YAH_DECEASED_CONTACT_TYPE_NAME;
+				
+				//$clean_contact_subtypes_as_str = implode(", ", $clean_contact_subtypes);
+				//$rtn_data['error_message'] = "After update Stuff: ".$clean_contact_subtypes_as_str;
+				//return $rtn_data;
+				
+				$subtypes_for_api = CRM_Utils_Array::implodePadded($clean_contact_subtypes);
+				
+				//$tmp_str = implode(", ", $subtypes_for_api );
+				//$rtn_data['error_message'] = "API Stuff: ".$subtypes_for_api;
+				//return $rtn_data;
+		  
+		
+			$con_update_result = civicrm_api3('Contact', 'create', array(
+					'sequential' => 1,
+					'id' => $deceased_contact_id,
+					'contact_sub_type' => $subtypes_for_api,
+			));
+			
+			if($con_update_result['is_error'] <> 0 )
+			    
+			    $rtn_data['error_message'] = "API error on update of contact id  $deceased_contact_id : ".$con_update_result['error_message'];
+			    return $rtn_data;
+			}
+		}else{
+		  // Nothing to do, contact already has 'Deceased' as a subtype. 
+		
+		}
 		
 		$relationship_name_formated = $tmpHebCal->determine_relationship_name($mourner_contact_id, $deceased_contact_id  ) ;
 
@@ -778,7 +825,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		$params = array(
 		  'version' => 3,
 		  'sequential' => 1,
-		  'name' => 'Hebrew_Calendar_Demographics',
+		  'name' => HebrewCalendar::YAH_DECEASED_CUSTOM_FIELD_GROUP_NAME,
 		);
 		$result = civicrm_api('CustomGroup', 'getsingle', $params);
 
@@ -789,75 +836,109 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 			$heb_cal_table_name = "";
 		}
 
-		if( strlen( $heb_cal_table_name) > 0 ){
+		if( strlen( $heb_cal_table_name) > 0){
 			 
 
 			$params = array(
 			  'version' => 3,
 			  'sequential' => 1,
 			  'custom_group_id' =>  $heb_cal_set_id,
-			  'name' => 'Next_Hebrew_Yahrzeit',
+			  'name' => HebrewCalendar::YAH_NEXT_HEB_YAHRZEIT_NAME,
 			);
 			$result = civicrm_api('CustomField', 'getsingle', $params);
-				
-			$col_name_next_heb_yahrzeit = $result['column_name'];
-
-
-			$params = array(
-			  'version' => 3,
-			  'sequential' => 1,
-			  'custom_group_id' =>  $heb_cal_set_id,
-			  'name' => 'Next_English_Yahrzeit',
-			);
-			$result = civicrm_api('CustomField', 'getsingle', $params);
-				
-			$col_name_next_english_yahrzeit = $result['column_name'];
-			 
-			$params = array(
-			  'version' => 3,
-			  'sequential' => 1,
-			  'custom_group_id' =>  $heb_cal_set_id,
-			  'name' => 'Hebrew_Date_of_Death',
-			);
-			$result = civicrm_api('CustomField', 'getsingle', $params);
-				
-			$col_name_hebrew_date_of_death = $result['column_name'];
-
-			$dao_exists =& CRM_Core_DAO::executeQuery( "select count(*) as count from $heb_cal_table_name where entity_id =  $deceased_contact_id ",   CRM_Core_DAO::$_nullArray ) ;
-
-			$rec_exists = false;
-			if($dao_exists->fetch()){
-				if( $dao_exists->count == "1" ){
-					$rec_exists = true;
-				}else{
-					$rec_exists = false;
-				}
-
-			}
-			 
-			//   $hebrew_data = $tmpHebCal::retrieve_hebrew_demographic_dates( $deceased_contact_id);
-			if( $rec_exists){
-				$sql_deceased_contact_record	= "UPDATE $heb_cal_table_name SET
-				$col_name_next_heb_yahrzeit  = '".$yahrzeit_date_tmp_next."',
-				$col_name_next_english_yahrzeit = date_add( '$tmp_yahrzeit_date_observe_english_next' , INTERVAL 1 day),
-				$col_name_hebrew_date_of_death = '".$hebrew_deceased_date."'
-				WHERE entity_id =  $deceased_contact_id ";
-
+			
+			if( isset ( $result['column_name'])){
+				$col_name_next_heb_yahrzeit = $result['column_name'];
 			}else{
-				$sql_deceased_contact_record = "INSERT INTO $heb_cal_table_name (entity_id , $col_name_next_heb_yahrzeit, $col_name_next_english_yahrzeit, $col_name_hebrew_date_of_death   )
-				VALUES( $deceased_contact_id , '".$yahrzeit_date_tmp_next."', date_add( '$tmp_yahrzeit_date_observe_english_next' , INTERVAL 1 day),
-				'".$hebrew_deceased_date."'
- )  ";
+				$col_name_next_heb_yahrzeit = "";
+				
 			}
 
+
+			$params = array(
+			  'version' => 3,
+			  'sequential' => 1,
+			  'custom_group_id' =>  $heb_cal_set_id,
+			  'name' => HebrewCalendar::YAH_NEXT_ENGLISH_YAHRZEIT_NAME,
+			);
+			$result = civicrm_api('CustomField', 'getsingle', $params);
+			
+			if( isset ( $result['column_name'])){
+				$col_name_next_english_yahrzeit = $result['column_name'];
+			}else{
+				$col_name_next_english_yahrzeit = "";
+			}
 			 
-			$dao_update_dececased =& CRM_Core_DAO::executeQuery( $sql_deceased_contact_record,   CRM_Core_DAO::$_nullArray ) ;
-			$dao_update_dececased->free();
+			$params = array(
+			  'version' => 3,
+			  'sequential' => 1,
+			  'custom_group_id' =>  $heb_cal_set_id,
+			  'name' => HebrewCalendar::YAH_HEB_DEATH_DATE_NAME,
+			);
+			$result = civicrm_api('CustomField', 'getsingle', $params);
+				
+			if( isset ( $result['column_name'])){
+				$col_name_hebrew_date_of_death = $result['column_name'];
+			}else{
+				$col_name_hebrew_date_of_death = ""; 
+			}
+			
+			
+			if( strlen($col_name_next_heb_yahrzeit) > 0 && strlen($col_name_next_english_yahrzeit) > 0  ){   
+					$dao_exists =& CRM_Core_DAO::executeQuery(
+							"select count(*) as count from $heb_cal_table_name where entity_id =  $deceased_contact_id ", 
+							CRM_Core_DAO::$_nullArray ) ;
+		
+					$rec_exists = false;
+					if($dao_exists->fetch()){
+						if( $dao_exists->count == "1" ){
+							$rec_exists = true;
+						}else{
+							$rec_exists = false;
+						}
+		
+					}
+					 
+					
+					
+					$yah_date_cleaned_for_sql  = "null";
+					// 'Cannot determine yahrzeit date'
+					if(  is_numeric (substr($yahrzeit_date_tmp_next, 0 , 4)) ){
+						$yah_date_cleaned_for_sql = "'".$yahrzeit_date_tmp_next."'" ;
+						
+					}else{
+						// all years must be numeric
+						$yah_date_cleaned_for_sql  = "null";
+						
+					}
+					
+					//   $hebrew_data = $tmpHebCal::retrieve_hebrew_demographic_dates( $deceased_contact_id);
+					if( $rec_exists){
+						$sql_deceased_contact_record	= "UPDATE $heb_cal_table_name SET
+						$col_name_next_heb_yahrzeit  = $yah_date_cleaned_for_sql,
+						$col_name_next_english_yahrzeit = date_add( '$tmp_yahrzeit_date_observe_english_next' , INTERVAL 1 day),
+						$col_name_hebrew_date_of_death = '".$hebrew_deceased_date."'
+						WHERE entity_id =  $deceased_contact_id ";
+		
+					}else{
+						$sql_deceased_contact_record = "INSERT INTO $heb_cal_table_name (entity_id , $col_name_next_heb_yahrzeit, $col_name_next_english_yahrzeit, $col_name_hebrew_date_of_death   )
+						VALUES( $deceased_contact_id , $yah_date_cleaned_for_sql , date_add( '$tmp_yahrzeit_date_observe_english_next' , INTERVAL 1 day),
+						'".$hebrew_deceased_date."'
+		 )  ";
+					}
+					 
+					$dao_update_dececased =& CRM_Core_DAO::executeQuery( $sql_deceased_contact_record,   CRM_Core_DAO::$_nullArray ) ;
+					$dao_update_dececased->free();
 			 
 			 
 		}
+	}
 		 
-		 
+		 if(isset($deceased_date_before_sunset_formated)){
+		 	// do nothing.
+		 }else{
+		 	$deceased_date_before_sunset_formated = "";
+		 }
 		 
 		 
 		//print "<br><br>Yahrzeit date formatted for SQL insert: ".$yahrzeit_date_tmp_next;
@@ -894,10 +975,18 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 				$tmp_yahrzeit_date_observe_english_formated_prev,
 				$relationship_name_formated,
 				$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
+		
+		$mourner_contacts_count = $mourner_contacts_count + 1; 
 
 	}
 
 	$dao->free( );
+	
+	$rtn_data['mourner_contacts_count'] = $mourner_contacts_count; 
+	
+	return $rtn_data;
+	
+	
 
 }
 

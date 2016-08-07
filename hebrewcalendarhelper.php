@@ -5,29 +5,49 @@ require_once 'hebrewcalendarhelper.civix.php';
 function hebrewcalendarhelper_civicrm_post( $op, $objectName, $objectId, &$objectRef ){
 	// if a deceased individual is being created or edited, rebuild yahrzeit data.
 
-
-	if(   isset($objectRef->is_deceased) && $objectRef->is_deceased == "1" && $objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore' ) ){
+	
+	
+	// 
+	if(  isset($objectRef->death_date) && strlen($objectRef->death_date) > 0 &&  $objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore' ) ){
 		 
 		// Recalculate Hebrew demographic dates, such as next yahrzeit date for this contact.
-		 
-		//  TODO: verify this is happenign using PhpMyAdmin
 		$params = array(
 				'version' => 3,
 				'sequential' => 1,
 				'contact_ids' => $objectId,
 		);
-		$result = civicrm_api('AllHebrewDates', 'Calculate', $params);
-
-		 
-		 
+		$result = civicrm_api('AllHebrewDates', 'calculate', $params);
+		
+        
+		
+	}else if(  $objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore' )){
+		// Recalculate Hebrew demographic dates, such as next hebrew birthday date for this contact.
+		
+		$tmp_Obj = new ReflectionClass($objectRef);
+		
+		var_dump($tmp_Obj->getProperty('custom_40')->getValue());
+		//CRM_Core_Error( "test logg");
+		
+		if( isset( $objectRef->birth_date )  && strlen($objectRef->birth_date) > 0 && isset($objectRef->custom_40 ) && strlen($objectRef->custom_40) == 0){
+			//$tst = $djals[dada];
+			//CRM_Core_Error:log("Current obj ref:",  );
+			//CRM_Core_Error:debug("Current obj ref:",  $objectRef );
+			$params = array(
+					'version' => 3,
+					'sequential' => 1,
+					'contact_ids' => $objectId,
+			);
+		// results in infinite loop as API below tries to update this contact. 	
+		$result = civicrm_api('AllHebrewDates', 'calculate', $params);
+		}
 	}
 
 
 }
 
 
-
-function hebrewcalendarhelper_civicrm_summary( $contactID, &$content, &$contentPlacement ) {
+// This functionality is now handled by read-only custom fields. 
+function XXXhebrewcalendarhelper_civicrm_summary( $contactID, &$content, &$contentPlacement ) {
 	
 	
 		// Add Hebrew date of death, Hebrew birthday and add this info 
@@ -224,13 +244,13 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 	 
 }
  
-function contact_summary_determine_middle_content( &$hebrew_data ){
+function XXXcontact_summary_determine_middle_content( &$hebrew_data ){
 
 	$heb_date_of_birth =  $hebrew_data['hebrew_date_of_birth'];
 	if(isset($hebrew_data['bar_bat_mitzvah_label'])){
 		$bar_bat_mitzvah_label = $hebrew_data['bar_bat_mitzvah_label'] ;
 	}else{
-		$bar_bat_mitzvah_label = "";
+		$bar_bat_mitzvah_label = "Bar/Bat Mitzvah";
 	}
 	if(isset($hebrew_data['earliest_bar_bat_mitzvah_date'])){
 		$earliest_bar_bat_mitzvah_date = $hebrew_data['earliest_bar_bat_mitzvah_date'];
@@ -238,6 +258,8 @@ function contact_summary_determine_middle_content( &$hebrew_data ){
 		$earliest_bar_bat_mitzvah_date = "";
 	}
 	
+	
+	/*
 	if(isset($hebrew_data['is_deceased'])){   
 		$is_deceased = $hebrew_data['is_deceased'];
 	}
@@ -256,20 +278,23 @@ function contact_summary_determine_middle_content( &$hebrew_data ){
 		$next_yehrzeit_date_html     = " <tr> <td class='label'>Next Hebrew Yahrzeit</td> <td class='html-adjust'>$yahrzeit_date_observe_hebrew</td> </tr> \n
 		<tr> <td class='label'>Next English Yahrzeit</td> <td class='html-adjust'>$yahrzeit_date_observe_english</td> </tr> \n ";
 	}
-	
+	*/
 	
 
 	$heb_date_of_birth_html = " <tr> <td class='label'>Hebrew Date of Birth</td> <td class='html-adjust'> $heb_date_of_birth </td>  </tr> \n  ";
 	$earliest_bar_bat_date_html  = " <tr> <td class='label'>Earliest Possible $bar_bat_mitzvah_label Date</td><td class='html-adjust'>$earliest_bar_bat_mitzvah_date </td> </tr> \n";
 	
 	
-
+/*
 	if($is_deceased){
 		$middle_html = $heb_date_of_birth_html.$hebrew_date_of_death_html.$next_yehrzeit_date_html ;
 	}else{
 		$middle_html = $heb_date_of_birth_html.$earliest_bar_bat_date_html;
 	}
-
+	*/
+	
+	$middle_html = $heb_date_of_birth_html.$earliest_bar_bat_date_html;
+	
 	return $middle_html;
 
 }

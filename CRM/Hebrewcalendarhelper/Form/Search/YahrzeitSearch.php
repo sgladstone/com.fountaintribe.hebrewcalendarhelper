@@ -265,8 +265,9 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   		$includeContactIDs = false, $onlyIDs = false ) {
   
   			// SELECT clause must include contact_id as an alias for civicrm_contact.id
-  			require_once('utils/util_custom_fields.php');
+  			//require_once('utils/util_custom_fields.php');
   
+  			/*
   			$custom_field_group_label = "Extended Date Information";
   			$custom_field_birthdate_sunset_label = "Birth Date Before Sunset";
   			$custom_field_deathdate_sunset_label = "Death Date Before Sunset" ;
@@ -287,7 +288,87 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   				print "<br><h2>Configuration Problem: ".$error_msg."</h2>" ;
   				return '';
   			}
+  			*/
+  			$extended_date_table = "";
+  			$extended_birth_date  = "";
+  			$extended_death_date  = "";
+  			
+  			
+  			$result = civicrm_api3('CustomGroup', 'get', array(
+  					'sequential' => 1,
+  					'name' =>  HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+  					'extends' => "Individual",
+  			));
+  			
+  			
+  			if($result['is_error'] <> 0 || $result['count'] == 0  ){
+  				$rtn_data['error_message'] = "Could not find custom field set '". HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."' ";
+  				return $rtn_data;
+  					
+  			}else{
+  				$tmp_values = $result['values'][0];
+  				$extended_date_table = $tmp_values['table_name'];
+  				$set_id = $tmp_values['id'];
+  					
+  					
+  			}
+  			
+  			if(strlen( $extended_date_table) == 0){
+  				$rtn_data['error_message'] = "Could not get SQL table name for set '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."'";
+  				return $rtn_data;
+  					
+  			}
+  			
+  			
+  			
+  			$eb_result = civicrm_api3('CustomField', 'get', array(
+  					'sequential' => 1,
+  					'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+  					'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME ,
+  			));
+  			
+  			if($eb_result['is_error'] <> 0 || $eb_result['count'] == 0  ){
+  				$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."' ";
+  				return $rtn_data;
+  			
+  			}else{
+  					
+  				$tmp_values = $eb_result['values'][0];
+  				$extended_birth_date = $tmp_values['column_name'];
+  			
+  			
+  			}
+  			
+  			if(  strlen($extended_birth_date) == 0 ){
+  				$rtn_data['error_message'] = "Could not get SQL column name for '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."'";
+  				return $rtn_data;
+  			}
+  			
+  			// Now get field name for date of death before sunset
+  			$ed_result = civicrm_api3('CustomField', 'get', array(
+  					'sequential' => 1,
+  					'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+  					'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME ,
+  			));
+  			
+  			if($ed_result['is_error'] <> 0 || $ed_result['count'] == 0  ){
+  				$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME."' ";
+  				return $rtn_data;
+  			
+  			}else{
+  				$tmp_values = $ed_result['values'][0];
+  				$extended_death_date = $tmp_values['column_name'];
+  			
+  			
+  			}
+  			
+  			if(  strlen($extended_death_date) == 0 ){
+  				$rtn_data['error_message'] = "Could not get SQL field name for '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME."'";
+  				return $rtn_data;
+  			}
   
+  
+  			/*
   			// Get SQL table info for table with Hebrew name.
   			$custom_religious_field_group_label = "Religious";
   			$custom_hebrewname_field_label = "Hebrew Name";
@@ -302,7 +383,11 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   				print "<br><h2>Configuration Problem: ".$error_msg."</h2>" ;
   				return '';
   			}
+  			*/
+  			
   
+  			
+  			/*
   			// Get SQL table info for plaque table.
   			$custom_plaque_field_group_label = "Memorial Plaque Info";
   			$custom_plaque_location_field_label = "Plaque Location";
@@ -320,15 +405,18 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   				print "<br><h2>Configuration Problem: ".$error_msg."</h2>" ;
   				return '';
   			}
+  			
+  			*/
   			/******************************************************************************/
   			// Get data for contacts
   
   			// make sure selected smart groups are cached in the cache table
   			$group_of_contact = $this->_formValues['group_of_contact'];
   
-  			require_once('utils/CustomSearchTools.php');
-  			$searchTools = new CustomSearchTools();
-  			$searchTools::verifyGroupCacheTable($group_of_contact ) ;
+  			// TODO: refesh smart group cache.
+  			//require_once('utils/CustomSearchTools.php');
+  			//$searchTools = new CustomSearchTools();
+  			//$searchTools::verifyGroupCacheTable($group_of_contact ) ;
   
   
   			$where = $this->where( $includeContactIDs );
@@ -465,7 +553,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	$tmp_cal = $this->_localHebrewCalendar;
   	$tmp_sql_table_name = $tmp_cal::get_sql_table_name() ;
   
-  
+  /*
   	// Get SQL table info for table with Hebrew name.
   	$custom_religious_field_group_label = "Religious";
   	$custom_hebrewname_field_label = "Hebrew Name";
@@ -475,8 +563,9 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	$error_msg = getCustomTableFieldNames($custom_religious_field_group_label , $customFieldLabels, $extended_religious_table, $outCustomColumnNames ) ;
   
   	$extended_hebrewname  =  $outCustomColumnNames[$custom_hebrewname_field_label];
+  */
   
-  
+  	/*
   	// Get SQL table info for plaque table.
   	$custom_plaque_field_group_label = "Memorial Plaque Info";
   	$custom_plaque_location_field_label = "Plaque Location";
@@ -489,7 +578,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	$extended_plaque_location  =  $outCustomColumnNames[$custom_plaque_location_field_label];
   	$extended_has_plaque =  $outCustomColumnNames[$custom_has_plaque_field_label];
   
-  
+  */
   
   	$tmp_group_join = "";
   	if(count( $this->_formValues['group_of_contact'] ) > 0 ){
