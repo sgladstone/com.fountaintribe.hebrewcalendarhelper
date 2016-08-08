@@ -121,7 +121,6 @@ class HebrewCalendar{
 	
 	
 	function determine_relationship_name($mourner_contact_id, $deceased_contact_id  ){
-		// print "<hr><br><hr><h2>Inside determine_relationship_name</h2>";
 	
 		if(strlen($mourner_contact_id) == 0){
 			return '';
@@ -185,7 +184,7 @@ class HebrewCalendar{
 					$tmp_label = substr( $tmp_label , 0,  $pos);
 				}
 	
-				// print "<br>Cleaned current label. (lower cased, and of,by removed) : ".$tmp_label;
+				// Cleaned current label. (lower cased, and of,by removed) : $tmp_label;
 	
 				if($deceased_gender == "Female"){
 					if($tmp_label == "parent"){ $tmp_label = "mother"; }
@@ -332,15 +331,15 @@ class HebrewCalendar{
 			$this->jewish_holidays_major['yom_hazikaron'] = "9/5";
 		}
 		/************************************************************************/
-		// At this point, we have the correct adjusted dates for yom_haatzmaut and yom_hazikaron
+		// At this point, we have the correct adjusted dates for purim, yom_haatzmaut and yom_hazikaron
 
 
 
-		// Now we may need to adjust the last 2 nighs of Hannuka, if there is no "Kislev 30" this year.
-		$heb_kislev_month = '3';
+		// Now we may need to adjust the last 2 nighs of Hannukah, if there is no "Kislev 30" this year.
+		//$heb_kislev_month = '3';
 		$heb_kislev_last_day = '30';
 
-		if(!( self::verify_hebrew_date( $heb_year  , $heb_kislev_month, $heb_kislev_last_day) ) ) {
+		if(!( self::verify_hebrew_date( $heb_year  , HebrewCalendar::HEBREW_MONTH_KISLEV, $heb_kislev_last_day) ) ) {
 			$this->jewish_holidays_major['hannukah_7'] = "4/1";
 			$this->jewish_holidays_major['hannukah_8'] = "4/2";
 		}
@@ -2225,20 +2224,65 @@ class HebrewCalendar{
 	 *********************************************************************/
 	function util_get_hebrew_month_name( &$julian_date, &$hebrew_date){
 
+		/* TODO: Use month spellings from HebCal.com for all months.
+		PHP spellings (hebcal.com spellings):
+		[1] => Tishri  (Tishrei)
+		[2] => Heshvan (Cheshvan)
+		[3] => Kislev ()
+		[4] => Tevet ()
+		[5] => Shevat (Sh'vat)
+            [6] => AdarI (Adar I)
+            [7] => AdarII (Adar II)
+            [8] => Nisan ()
+            [9] => Iyyar ()
+            [10] => Sivan ()
+            [11] => Tammuz (Tamuz)
+            [12] => Av ()
+            [13] => Elul
+            */
+		
 		list($hebrewMonth, $hebrewDay, $hebrewYear) = split('/',$hebrew_date);
 
-		if( $hebrewMonth == '6' ){
+		if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_TISHREI){
+			return ts("Tishrei");	
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_HESHVAN){
+			return ts("Cheshvan");
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_KISLEV){
+			return ts("Kislev");
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_TEVET){
+			return ts("Tevet");
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_SHEVAT){
+			return ts("Sh'vat");
+		}else if( $hebrewMonth == HebrewCalendar::HEBREW_MONTH_ADAR ){
 			/* Its Adar or AdarI */
 			
 			$hebrew_leap_year = $this->is_hebrew_year_leap_year($hebrewYear);
 			if( $hebrew_leap_year){
-				return 'AdarI';
+				return ts("Adar I");
 			}else{
-				return 'Adar';
+				return ts("Adar");
 			}
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_ADAR_2){
+			return ts("Adar II");
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_NISAN){
+			return ts("Nisan");
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_IYYAR){
+			return ts("Iyyar");
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_SIVAN){
+			return ts("Sivan");
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_TAMUZ){
+			return ts("Tamuz");
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_AV){
+			return ts("Av");
+		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_ELUL){
+			return ts("Elul");
 		}else{
-			/* Its not Adar, so just use the PHP function to get the month name. */
-			return jdmonthname($julian_date,4);
+			 
+			 //Old logic: just use the PHP function to get the month name. */
+			//return jdmonthname($julian_date,4);
+			
+			// something went wrong,
+			return "Unknown Month";
 		}
 
 	}
@@ -2497,8 +2541,8 @@ class HebrewCalendar{
 				
 	//	CRM_Core_Error::debug("Inside util_adjust_hebrew_date function for Hebrew date: original year: ".$original_hyear , $ihyear."-".$original_hmonth."-".$original_hday);
 		
-		// is it Adar, AdarI or AdarII ?
-		if( $original_hmonth == '6' || $original_hmonth == '7' ){
+		// is it Adar, AdarI or AdarII ( ie is month = '6' or '7'? )
+		if( $original_hmonth == HebrewCalendar::HEBREW_MONTH_ADAR || $original_hmonth == HebrewCalendar::HEBREW_MONTH_ADAR_2 ){
 				$is_original_leap_year_tmp = $this->is_hebrew_year_leap_year($original_hyear);
 				$is_leap_year_tmp = $this->is_hebrew_year_leap_year($ihyear);
 				
@@ -2520,17 +2564,17 @@ class HebrewCalendar{
 					
 					if( $purpose == "barbat" || $purpose == "birthday"){
 						// Adar (non-leap) birthdays are observed in AdarII. 
-						$tmp_hmonth = '7';
+						$tmp_hmonth = HebrewCalendar::HEBREW_MONTH_ADAR_2;
 					}else if( $purpose == "yahrzeit" ){
 						// Adar (non-leap) yahrzeits are observed in AdarI. 
-						$tmp_hmonth = '6';
+						$tmp_hmonth = HebrewCalendar::HEBREW_MONTH_ADAR;
 						
 					}
 					
 	
 				}else if($is_original_leap_year_tmp == true &&  $is_leap_year_tmp <> true){
 					// D) birth/death occured in a LEAP year YET observance is a non-leap year. 
-					if( $original_hmonth == '6' && $original_hday == '30' ) {
+					if( $original_hmonth == HebrewCalendar::HEBREW_MONTH_ADAR && $original_hday == '30' ) {
 						// Original date was Adar I 30 , ie Rosh Hodesh Adar II during a leap year. 
 						//This means move date back to Shevat 30, which is also Rosh Hodesh Adar, or move 
 						// up one day.
@@ -2539,8 +2583,8 @@ class HebrewCalendar{
 					}
 					
 					// Since its non-leap, current observance is Adar.  
-					if( $original_hmonth == '7'){
-						$tmp_hmonth = '6';
+					if( $original_hmonth == HebrewCalendar::HEBREW_MONTH_ADAR_2){
+						$tmp_hmonth = HebrewCalendar::HEBREW_MONTH_ADAR;
 					}
 					
 					
@@ -2550,7 +2594,7 @@ class HebrewCalendar{
 		}  // done with Adar, AdarI and AdarII stuff.
 		
 		// Is original Hebrew month Chesvan or Kislev? (has nothing to do with leap year or non-leap year. )
-		if( $original_hmonth == '2' || $original_hmonth == '3'  ){
+		if( $original_hmonth == HebrewCalendar::HEBREW_MONTH_HESHVAN || $original_hmonth == HebrewCalendar::HEBREW_MONTH_KISLEV  ){
 			// ONLY do this when 30th does not occur in observance year. 
 			if($original_hday == '30'){
 				// Does the 30th of the input month occur in the observance year?
@@ -2926,7 +2970,8 @@ class HebrewCalendar{
 
 			//CRM_Core_Error::debug("Debug: Inside convert_hebrew2gregorian: Hebrew date provided: ",  $iyear."-".$imonth."-".$iday);
 			
-			if( $imonth == "2"  ||  $imonth == "3"){ // if Chesvan or Kislev, these are the only 2 months where we do not know if the length is 29 or 30. 
+			if( $imonth == HebrewCalendar::HEBREW_MONTH_HESHVAN  ||  $imonth == HebrewCalendar::HEBREW_MONTH_KISLEV){ 
+				// if Chesvan or Kislev, these are the only 2 months where we do not know if the length is 29 or 30. 
 				if( $iday == "30"){
 					$valid_hebrew_date  = self::verify_hebrew_date($iyear , $imonth, $iday);
 		
