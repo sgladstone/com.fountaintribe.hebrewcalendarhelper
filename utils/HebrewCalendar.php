@@ -2503,16 +2503,20 @@ class HebrewCalendar{
 				$is_leap_year_tmp = $this->is_hebrew_year_leap_year($ihyear);
 				
 				// deal with leap year stuff.   4 possibilies:  
+				// A) The original year and the observance year are both LEAP years.
+				// B) The original year and the observance year are both non-leap years. 
+				// C) The original year is a non-leap year, yet the observance year is a LEAP year
+				// D) The original year is a LEAP year, yet the observance year is a non-leap year
 				if( $is_original_leap_year_tmp == true &&  $is_leap_year_tmp == true){
-					// birth/death occured in a LEAP year, and current observance is also a LEAP year. 
+					// A) birth/death occured in a LEAP year, and current observance is also a LEAP year. 
 					// No need to touch AdarI or AdarII dates.	
 					
 				}else if( $is_original_leap_year_tmp <> true &&  $is_leap_year_tmp <> true ){
-					// birth/death occured in a non-leap year AND current observance is also a non-leap year.
+					// B) birth/death occured in a non-leap year AND current observance is also a non-leap year.
 					// No need to touch AdarI or AdarII dates.
 					
 				}else if(  $is_original_leap_year_tmp <> true &&  $is_leap_year_tmp == true){
-					// birth/death occured in a non-leap year YET observance is a LEAP year.
+					// C) birth/death occured in a non-leap year YET observance is a LEAP year.
 					
 					if( $purpose == "barbat" || $purpose == "birthday"){
 						// Adar (non-leap) birthdays are observed in AdarII. 
@@ -2525,7 +2529,7 @@ class HebrewCalendar{
 					
 	
 				}else if($is_original_leap_year_tmp == true &&  $is_leap_year_tmp <> true){
-					// birth/death occured in a LEAP year YET observance is a non-leap year. 
+					// D) birth/death occured in a LEAP year YET observance is a non-leap year. 
 					if( $original_hmonth == '6' && $original_hday == '30' ) {
 						// Original date was Adar I 30 , ie Rosh Hodesh Adar II during a leap year. 
 						//This means move date back to Shevat 30, which is also Rosh Hodesh Adar, or move 
