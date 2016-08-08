@@ -23,12 +23,7 @@ function hebrewcalendarhelper_civicrm_post( $op, $objectName, $objectId, &$objec
 	}else if(  $objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore' )){
 		// Recalculate Hebrew demographic dates, such as next hebrew birthday date for this contact.
 		
-		$tmp_Obj = new ReflectionClass($objectRef);
-		
-		var_dump($tmp_Obj->getProperty('custom_40')->getValue());
-		//CRM_Core_Error( "test logg");
-		
-		if( isset( $objectRef->birth_date )  && strlen($objectRef->birth_date) > 0 && isset($objectRef->custom_40 ) && strlen($objectRef->custom_40) == 0){
+		if( isset( $objectRef->birth_date )  && strlen($objectRef->birth_date) > 0 ){
 			//$tst = $djals[dada];
 			//CRM_Core_Error:log("Current obj ref:",  );
 			//CRM_Core_Error:debug("Current obj ref:",  $objectRef );
@@ -38,7 +33,7 @@ function hebrewcalendarhelper_civicrm_post( $op, $objectName, $objectId, &$objec
 					'contact_ids' => $objectId,
 			);
 		// results in infinite loop as API below tries to update this contact. 	
-		$result = civicrm_api('AllHebrewDates', 'calculate', $params);
+		//$result = civicrm_api('AllHebrewDates', 'calculate', $params);
 		}
 	}
 
