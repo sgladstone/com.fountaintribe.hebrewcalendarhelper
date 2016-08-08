@@ -2512,7 +2512,7 @@ class HebrewCalendar{
 					// No need to touch AdarI or AdarII dates.
 					
 				}else if(  $is_original_leap_year_tmp <> true &&  $is_leap_year_tmp == true){
-					// birth/death occured in a non-leap year YET current observance is a LEAP year.
+					// birth/death occured in a non-leap year YET observance is a LEAP year.
 					
 					if( $purpose == "barbat" || $purpose == "birthday"){
 						// Adar (non-leap) birthdays are observed in AdarII. 
@@ -2525,10 +2525,11 @@ class HebrewCalendar{
 					
 	
 				}else if($is_original_leap_year_tmp == true &&  $is_leap_year_tmp <> true){
-					// birth/death occured in a LEAP year YET current observance is a non-leap year. 
+					// birth/death occured in a LEAP year YET observance is a non-leap year. 
 					if( $original_hmonth == '6' && $original_hday == '30' ) {
 						// Original date was Adar I 30 , ie Rosh Hodesh Adar II during a leap year. 
-						//This means move date back to Shevat 30, which is also Rosh Hodesh Adar.
+						//This means move date back to Shevat 30, which is also Rosh Hodesh Adar, or move 
+						// up one day.
 						// TODO: verify this with a rabbi
 						$tmp_hmonth = '5';			
 					}
@@ -2542,7 +2543,7 @@ class HebrewCalendar{
 				}else{	
 					return "An impossible situation occured during comparison of leap year vs non-leap year. ";	
 				}
-		}
+		}  // done with Adar, AdarI and AdarII stuff.
 		
 		// Is original Hebrew month Chesvan or Kislev? (has nothing to do with leap year or non-leap year. )
 		if( $original_hmonth == '2' || $original_hmonth == '3'  ){
