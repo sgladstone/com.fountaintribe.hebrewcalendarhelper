@@ -113,7 +113,7 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 		$tokens['dates']['dates.today___hebrew'] = 'Dates: Today (Hebrew)' ;
 		$tokens['dates']['dates.birth_date_hebrew_trans'] = 'Birth Date (Hebrew - transliterated)' ;
 		$tokens['dates']['dates.birth_date_hebrew'] = 'Birth Date (Hebrew)' ;
-		 
+		   
 		 
 		$tokens['yahrzeit'] = array(
 				'yahrzeit.all' => 'Yahrzeit: All Yahrzeits', 
