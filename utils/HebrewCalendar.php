@@ -2576,10 +2576,10 @@ class HebrewCalendar{
 					// D) birth/death occured in a LEAP year YET observance is a non-leap year. 
 					if( $original_hmonth == HebrewCalendar::HEBREW_MONTH_ADAR && $original_hday == '30' ) {
 						// Original date was Adar I 30 , ie Rosh Hodesh Adar II during a leap year. 
-						//This means move date back to Shevat 30, which is also Rosh Hodesh Adar, or move 
-						// up one day.
-						// TODO: verify this with a rabbi
-						$tmp_hmonth = '5';			
+						// This means move date back one day, to Shevat 30, which is also Rosh Hodesh Adar
+						// This logic holds for borth birthdays and yahrzeits. 
+						$tmp_hmonth = HebrewCalendar::HEBREW_MONTH_SHEVAT;	
+						$tmp_hday  = '30';
 					}
 					
 					// Since its non-leap, current observance is Adar.  
@@ -2601,8 +2601,22 @@ class HebrewCalendar{
 				$valid_hebrew_date  = self::verify_hebrew_date($ihyear , $original_hmonth, $original_hday);
 				
 				if( $valid_hebrew_date == 0){
-					// 30th does not occur, move back 1 day.
-					// TODO: some situations mean move ahead one day. 
+					
+					
+					// 30th does not occur, move back 1 day. OR move ahead one day, depending on what happens on 1st yahrzeit/1st birthday
+					// TODO: some situations mean move ahead one day. (same logic for birthdays and yahrzeits) 
+					/*
+					A) there IS NO Cheshvan 30 for the first yahrzeit, then the Yahrtzeit falls on 
+					Kislev 1 and all the following Yahrtzeits will be on the 
+					1st day of Rosh Hodesh. Meaning on Cheshvan 30 when it exists 
+					and on Kislev 1 when Cheshvan 30 doesn’t exist.
+					OR
+					B) There IS Cheshvan 30, then the Yahrtzeit falls on
+					 Cheshvan 30 and all the following Yahrtzeits will 
+					 fall on the last day of Cheshvan. Meaning on Cheshvan 
+					 30 (1st day Rosh Hodesh) when it exists and 
+					 on Cheshvan 29 when Cheshvan 30 doesn’t exist.
+						*/
 					$tmp_hday  = '29';
 				}else{
 					// 30th occurs in observance year.
