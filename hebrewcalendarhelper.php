@@ -116,14 +116,10 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 		 
 		 
 		$tokens['yahrzeit'] = array(
-				'yahrzeit.all' => 'Yahrzeit: All Yahrzeits',
-				//'yahrzeit.erev_shabbat_before' => 'Yahrzeit: Erev (evening) of the Shabbat Before',
-				//'yahrzeit.shabbat_morning_before' => 'Yahrzeit: Morning of the Shabbat Before',
-				//'yahrzeit.erev_shabbat_after' => 'Yahrzeit: Erev (evening) of the Shabbat After',
-				//'yahrzeit.shabbat_morning_after' => 'Yahrzeit: Morning of the Shabbat After',
-				
-				 
+				'yahrzeit.all' => 'Yahrzeit: All Yahrzeits', 
 		);
+		
+		// 'communitynews.upcomingevents___day_7' =>   'Events in the next 7 days :: Events', 
 		
 		$partial_tokens_for_each_date = array(
 			'deceased_name' => 'Yahrzeit: Name of Deceased',
@@ -133,11 +129,16 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 			'dec_death_english_date' => 'Yahrzeit: English Date of Death',
 			'dec_death_hebrew_date' => 'Yahrzeit: Hebrew Date of Death',
 			'relationship_name'  => 'Yahrzeit: Relationship to Mourner',
+				//'yahrzeit.erev_shabbat_before' => 'Yahrzeit: Erev (evening) of the Shabbat Before',
+				//'yahrzeit.shabbat_morning_before' => 'Yahrzeit: Morning of the Shabbat Before',
+				//'yahrzeit.erev_shabbat_after' => 'Yahrzeit: Erev (evening) of the Shabbat After',
+				//'yahrzeit.shabbat_morning_after' => 'Yahrzeit: Morning of the Shabbat After',
 		);
 		
-		$partial_date_choices = array(
-				
-				''
+		$partial_date_choices = array(		
+				'___day_7' => 'in exactly 7 days',
+				'___day_14' => 'in exactly 14 days',
+				'___day_30' => 'in exactly 30 days',		
 		);
 
 	
