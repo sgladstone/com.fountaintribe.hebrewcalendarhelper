@@ -2597,14 +2597,36 @@ class HebrewCalendar{
 		if( $original_hmonth == HebrewCalendar::HEBREW_MONTH_HESHVAN || $original_hmonth == HebrewCalendar::HEBREW_MONTH_KISLEV  ){
 			// ONLY do this when 30th does not occur in observance year. 
 			if($original_hday == '30'){
-				// Does the 30th of the input month occur in the observance year?
+				// Does the 30th of the input month occur in this observance year?
 				$valid_hebrew_date  = self::verify_hebrew_date($ihyear , $original_hmonth, $original_hday);
 				
 				if( $valid_hebrew_date == 0){
+				   // the 30 does not occur in this observance year, need to decide to move it up or move it back.
+				   $first_observance_heb_year = $original_hyear + 1;
+					$is_first_observance_valid_hebrew_date = self::verify_hebrew_date( $first_observance_heb_year, $original_hmonth, $original_hday);
 					
-					
-					// 30th does not occur, move back 1 day. OR move ahead one day, depending on what happens on 1st yahrzeit/1st birthday
-					// TODO: some situations mean move ahead one day. (same logic for birthdays and yahrzeits) 
+					if( $is_first_observance_valid_hebrew_date == 0 ){
+						// since there is NO 30th for the first observance year, 
+						// so move observance forward by one day (eg no Chesvan 30 on first observance
+						// so observe yahrzeit/birthay on Kiselv 1. (which is also 1st day of Rosh Hodesh)
+						// Meaning on Cheshvan 30 when it exists
+						// and on Kislev 1 when Cheshvan 30 doesn’t exist.
+						// for example: for a person that died/born on Chesvan 30, this means observe the yarzeit/birthday on Kislev 1.
+						// for example: for a person that died/born on Kiselv 30, this means observe the yarzeit/birthday on Tevet 1.
+						$tmp_hmonth = $original_hmonth + 1; 
+						$tmp_hday  = '1';
+						
+					}else{
+						// There IS a 30th for the first observance, so move move observance back
+						// for example: for a person that died/born on Chesvan 30, this means observe the yarzeit/birthday on Cheshvan 29.
+						// for example:for a person that died/born on Kiselv 30, this means observe the yarzeit/birthday on Kiselv 29.
+						$tmp_hmonth = $original_hmonth;
+						$tmp_hday  = '29';
+						
+						
+					}
+					// 30th does not occur, move back 1 day. OR move ahead one day, depending on 
+					// what happens on 1st yahrzeit/birthday
 					/*
 					A) there IS NO Cheshvan 30 for the first yahrzeit, then the Yahrtzeit falls on 
 					Kislev 1 and all the following Yahrtzeits will be on the 
@@ -2617,10 +2639,7 @@ class HebrewCalendar{
 					 30 (1st day Rosh Hodesh) when it exists and 
 					 on Cheshvan 29 when Cheshvan 30 doesn’t exist.
 						*/
-					$tmp_hday  = '29';
-				}else{
-					// 30th occurs in observance year.
-					$tmp_hday  = '30';
+					
 				}
 			}
 		}

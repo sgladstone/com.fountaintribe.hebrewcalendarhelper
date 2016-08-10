@@ -87,7 +87,7 @@ function XXXhebrewcalendarhelper_civicrm_summary( $contactID, &$content, &$conte
 
 function hebrewcalendarhelper_civicrm_alterContent(  &$content, $context, $tplName, &$object ){
 
-	
+	/*
 
 	if( $tplName ==  'CRM/Mailing/Form/Upload.tpl' ){
 		
@@ -101,6 +101,8 @@ function hebrewcalendarhelper_civicrm_alterContent(  &$content, $context, $tplNa
 
 
 	}
+	
+	*/
 }
 
 
@@ -115,18 +117,27 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 		 
 		$tokens['yahrzeit'] = array(
 				'yahrzeit.all' => 'Yahrzeit: All Yahrzeits',
-				'yahrzeit.deceased_name' => 'Yahrzeit: Name of Deceased',
-				'yahrzeit.english_date' => 'Yahrzeit: English Date of the evening to light the candle (based on mourner preference)',
-				'yahrzeit.hebrew_date' => 'Yahrzeit: Hebrew Date (based on mourner preference)',
-				'yahrzeit.dec_death_english_date' => 'Yahrzeit: English Date of Death',
-				'yahrzeit.dec_death_hebrew_date' => 'Yahrzeit: Hebrew Date of Death',
-				'yahrzeit.relationship_name'  => 'Yahrzeit: Relationship to Mourner',
-				'yahrzeit.erev_shabbat_before' => 'Yahrzeit: Erev (evening) of the Shabbat Before',
-				'yahrzeit.shabbat_morning_before' => 'Yahrzeit: Morning of the Shabbat Before',
-				'yahrzeit.erev_shabbat_after' => 'Yahrzeit: Erev (evening) of the Shabbat After',
-				'yahrzeit.shabbat_morning_after' => 'Yahrzeit: Morning of the Shabbat After',
-				'yahrzeit.morning_format_english' => 'Yahrzeit: English Date of the morning after candle is lit',
+				//'yahrzeit.erev_shabbat_before' => 'Yahrzeit: Erev (evening) of the Shabbat Before',
+				//'yahrzeit.shabbat_morning_before' => 'Yahrzeit: Morning of the Shabbat Before',
+				//'yahrzeit.erev_shabbat_after' => 'Yahrzeit: Erev (evening) of the Shabbat After',
+				//'yahrzeit.shabbat_morning_after' => 'Yahrzeit: Morning of the Shabbat After',
+				
 				 
+		);
+		
+		$partial_tokens_for_each_date = array(
+			'deceased_name' => 'Yahrzeit: Name of Deceased',
+			'english_date' => 'Yahrzeit: English Date of the evening to light the candle (based on mourner preference)',
+			'hebrew_date' => 'Yahrzeit: Hebrew Date (based on mourner preference)',
+			'morning_format_english' => 'Yahrzeit: English Date of the morning after candle is lit',
+			'dec_death_english_date' => 'Yahrzeit: English Date of Death',
+			'dec_death_hebrew_date' => 'Yahrzeit: Hebrew Date of Death',
+			'relationship_name'  => 'Yahrzeit: Relationship to Mourner',
+		);
+		
+		$partial_date_choices = array(
+				
+				''
 		);
 
 	
