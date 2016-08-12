@@ -1,6 +1,6 @@
 # Hebrew Calendar Helper CiviCRM extension
 
-Has a variety of functionality related to the Hebrew calendar. This includes mail merge tokens, demographic information, Hebrew date of birth, yahrzeits, APIs and more</description>
+Has a variety of functionality related to the Hebrew calendar. This includes mail merge tokens, demographic information, Hebrew date of birth, yahrzeits, APIs and more.
   
 # Features added by this extension
 
