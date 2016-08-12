@@ -22,6 +22,9 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
 
 "Yahrzeit Search"
 
+
+---
+
 # CiviCRM Configurations created by this extension
 
 ## Custom Data Sets
@@ -41,6 +44,8 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
 ## CiviCRM Scheduled Jobs
 
 "Call AllHebrewDates.Calculate API"   --- Recalculates all yahrzeits, Hebrew birthdays, and other observances tied to the Hebrew calendar.
+
+---
 
 ## MySQL tables
 
