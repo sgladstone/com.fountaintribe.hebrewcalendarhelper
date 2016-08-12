@@ -2,6 +2,16 @@
 
 Has a variety of functionality related to the Hebrew calendar. This includes mail merge tokens, demographic information, Hebrew date of birth, yahrzeits, APIs and more</description>
   
+# Features added by this extension
+
+## Custom Tokens
+- aa
+- bb
+- cc
+
+## Custom Searches
+
+
 # CiviCRM Configurations created by this extension
 
 ## Custom Data Sets
@@ -13,11 +23,7 @@ Has a variety of functionality related to the Hebrew calendar. This includes mai
 
 ## CiviCRM Scheduled Jobs
 
-# Features added by this extension
 
-## Custom Tokens
-
-## Custom Searches
 
 ########################################
 ## WARNING
