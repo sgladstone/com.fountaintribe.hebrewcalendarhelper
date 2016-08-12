@@ -7,9 +7,16 @@ Has a variety of functionality related to the Hebrew calendar. This includes mai
 User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
 
 ## Custom Tokens
-- aa
-- bb
-- cc
+
+### In the token section "Yahrzeits for this Mourner"
+
+ - "Name of Deceased in exactly X days"
+ - "English Yarzeit Date (evening) in exactly X days"
+ - "English Yahrzeit Date (morning) in exactly X days"
+ - "Hebrew Yahrzeit Date in exactly X days"
+ - "English Date of Death in exactly X days"
+ - "Hebrew Date of Death in exactly X days"
+ - "Relationship of Deceased to Mourner in exactly X days"
 
 ## Custom Searches
 
