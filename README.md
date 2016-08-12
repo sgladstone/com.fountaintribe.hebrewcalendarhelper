@@ -35,6 +35,10 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
 
 "Call AllHebrewDates.Calculate API"   --- Recalculates all yahrzeits, Hebrew birthdays, and other observances tied to the Hebrew calendar.
 
+## MySQL tables
+
+"civicrm_fountaintribe_yahrzeits_temp"  - This table gets frequently truncated and repopulated. 
+
 ########################################
 ## WARNING
 ########################################
