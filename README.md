@@ -13,6 +13,12 @@ Has a variety of functionality related to the Hebrew calendar. This includes mai
 
 ## CiviCRM Scheduled Jobs
 
+# Features added by this extension
+
+## Custom Tokens
+
+## Custom Searches
+
 ########################################
 ## WARNING
 ########################################
