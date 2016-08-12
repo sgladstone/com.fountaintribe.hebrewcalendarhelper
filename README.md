@@ -4,6 +4,8 @@ Has a variety of functionality related to the Hebrew calendar. This includes mai
   
 # Features added by this extension
 
+User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
+
 ## Custom Tokens
 - aa
 - bb
@@ -11,22 +13,27 @@ Has a variety of functionality related to the Hebrew calendar. This includes mai
 
 ## Custom Searches
 
+"Yahrzeit Search"
 
 # CiviCRM Configurations created by this extension
 
 ## Custom Data Sets
--  aa
-- bb
-- cc
-- dd
+- "Extended Date Information"
+- "Yahrzeit Preferences"
+- "Yahrzeit Dates (Calculated Automatically)"
+- "Hebrew Birth Dates (Calculated Automatically)"
 
 ## Custom Contact Types
 
+"Deceased" based on Individual
+
 ## Custom Relationship Types
+
+"Yahrzeit observed by"  --- "Yahrzeit observed in memory of"
 
 ## CiviCRM Scheduled Jobs
 
-
+"Call AllHebrewDates.Calculate API"   --- Recalculates all yahrzeits, Hebrew birthdays, and other observances tied to the Hebrew calendar.
 
 ########################################
 ## WARNING
