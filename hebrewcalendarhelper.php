@@ -107,7 +107,8 @@ function hebrewcalendarhelper_civicrm_alterContent(  &$content, $context, $tplNa
 
 
 function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
-
+	
+	$token_category_label  = " :: Yahrzeits for this Mourner ";
 
 		$tokens['dates']['dates.today___hebrew_trans'] =  'Dates: Today (Hebrew transliterated)';
 		$tokens['dates']['dates.today___hebrew'] = 'Dates: Today (Hebrew)' ;
@@ -116,19 +117,21 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 		     
 		 
 		$tokens['yahrzeit'] = array(
-				'yahrzeit.all' => 'Yahrzeit: All Yahrzeits', 
+				'yahrzeit.all' => "All Yahrzeits".$token_category_label, 
 		);
 		
 		// 'communitynews.upcomingevents___day_7' =>   'Events in the next 7 days :: Events', 
 		
+	
+		
 		$partial_tokens_for_each_date = array(
-			'deceased_name' => 'Yahrzeit: Name of Deceased',
-			'english_date' => 'Yahrzeit: English Date of the evening to light the candle (based on mourner preference)',
-			'hebrew_date' => 'Yahrzeit: Hebrew Date (based on mourner preference)',
-			'morning_format_english' => 'Yahrzeit: English Date of the morning after candle is lit',
-			'dec_death_english_date' => 'Yahrzeit: English Date of Death',
-			'dec_death_hebrew_date' => 'Yahrzeit: Hebrew Date of Death',
-			'relationship_name'  => 'Yahrzeit: Relationship to Mourner',
+			'deceased_name' => 'Name of Deceased',
+			'english_date' => 'English Yarzeit Date (evening)',
+			'morning_format_english' => 'English Yahrzeit Date (morning)',
+			'hebrew_date' => 'Hebrew Yahrzeit Date',	
+			'dec_death_english_date' => 'English Date of Death',
+			'dec_death_hebrew_date' => 'Hebrew Date of Death',
+			'relationship_name'  => 'Relationship of Deceased to Mourner',
 				//'yahrzeit.erev_shabbat_before' => 'Yahrzeit: Erev (evening) of the Shabbat Before',
 				//'yahrzeit.shabbat_morning_before' => 'Yahrzeit: Morning of the Shabbat Before',
 				//'yahrzeit.erev_shabbat_after' => 'Yahrzeit: Erev (evening) of the Shabbat After',
@@ -141,7 +144,17 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 				'___day_30' => 'in exactly 30 days',		
 		);
 
-	
+		
+		foreach( $partial_date_choices as $cur_date_choice => $date_label){
+	    	foreach( $partial_tokens_for_each_date as $cur_partial_token => $partial_label ){    	
+	    		
+	    		$tmp_full_token = "yahrzeit.".$cur_partial_token."___".$cur_date_choice; 
+	    		$tmp_full_label = $partial_label." ".$date_label." ".$token_category_label ;
+	    		$tokens['yahrzeit'][$tmp_full_token] = $tmp_full_label;	
+	    		
+	    	}	    	
+	    	
+	    }
 
 
 }

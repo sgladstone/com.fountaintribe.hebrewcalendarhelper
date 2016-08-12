@@ -41,7 +41,6 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
 
 ########################################
 ## WARNING
-########################################
-
-DO NOT remove or move any of the custom fields, or this extension will NOT WORK. Changing the labels for the custom fields, contact types, and relationship types has NOT been tested.  In any case changing labels is NOT RECOMMENED as your environment will no longer match the user documentation/videos. 
+ - DO NOT remove or move any of the custom fields, or this extension will NOT WORK. Changing the labels for the custom fields, contact types, and relationship types has NOT been tested.  
+ - Changing labels is NOT RECOMMENED as your environment will no longer match the user documentation/videos. 
   
