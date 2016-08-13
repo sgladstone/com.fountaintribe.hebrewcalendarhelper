@@ -76,7 +76,7 @@ What is left:
   
 # What happens when this extension is disabled, then re-enabled? Or uninstalled then re-installed?
 
-During enablement, the extension checks for the existance of the various CiviCRM Configurations described in this README. If everything already exists, then nothing is changed. If anything is missing, then it is created.
+During enablement, the extension checks for the existence of the various CiviCRM configurations described in this README. If everything already exists, then nothing is changed. If anything is missing, then it is created.
 
 For example: 
  - The custom relationship type "Yahrzeit observed by" does not exist. Yet all the other configurations exist, such as all the custom fields already exist.
