@@ -870,7 +870,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
 	  			$rel_time_str = $rel_time_str." ( month($date_sql_field_name) =  MONTH( date_add( now() ,  INTERVAL $interval_count MONTH) )
 	  			AND year( $date_sql_field_name )  = YEAR ( date_add( now() ,  INTERVAL $interval_count MONTH) ) ) " ;
   			}else if($interval_type == "day"){
-  				$rel_time_str = $rel_time_str." date( $date_sql_field_name )  = date( date_add( now() ,  INTERVAL $interval_count day) ) ";
+  				$rel_time_str = $rel_time_str." date( $date_sql_field_name )  = date( date_add( now() ,  INTERVAL $interval_count DAY) ) ";
   				
   			}else{
   				$rel_time_str = " 1=1 ";

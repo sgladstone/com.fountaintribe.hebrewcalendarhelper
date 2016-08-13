@@ -18,7 +18,8 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
  - "Hebrew Date of Death in exactly X days"
  - "Relationship of Deceased to Mourner in exactly X days"
  
- If you are planning to use these tokens to create a PDF letter, you need to install "wkhtmltopdf" and let CiviCRM know where it is. 
+ If you are planning to use these tokens to create a PDF letter, you need to install "wkhtmltopdf" and configure CiviCRM to use it. If this is not done,
+ tokens that use Hebrew letters will show as ????? in the PDF.  
  
 
 ## Custom Searches
