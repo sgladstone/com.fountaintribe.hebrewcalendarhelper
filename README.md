@@ -60,8 +60,8 @@ What is removed:
  - The tokens described in this README
  - The APIs described in this README
  
- What is left:
-  - The CiviCRM custom field sets, custom fields, and other CiviCRM configurations described in this README. 
+What is left:
+ - The CiviCRM custom field sets, custom fields, and other CiviCRM configurations described in this README. 
   
 # What happens when this extension is disabled, then re-enabled? Or uninstalled then re-installed?
 
