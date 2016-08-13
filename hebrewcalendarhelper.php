@@ -105,14 +105,20 @@ function hebrewcalendarhelper_civicrm_alterContent(  &$content, $context, $tplNa
 
 function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 	
-	$token_category_label  = " :: Yahrzeits for this Mourner ";
+	
 
-	$dates_category_label = " :: Hebrew Dates ";
-		$tokens['dates']['dates.today___hebrew_trans'] =  'Today (Hebrew transliterated)'.$dates_category_label;
-		$tokens['dates']['dates.today___hebrew'] = 'Dates: Today (Hebrew)'.$dates_category_label ;
-		$tokens['dates']['dates.birth_date_hebrew_trans'] = 'Birth Date (Hebrew - transliterated)'.$dates_category_label ;
-		$tokens['dates']['dates.birth_date_hebrew'] = 'Birth Date (Hebrew)'.$dates_category_label ;
+	$dates_category_label = " :: Today ";
+	
+	$tokens['dates']['dates.today___hebrew_trans'] =  'Today (Hebrew transliterated)'.$dates_category_label;
+	$tokens['dates']['dates.today___hebrew'] = 'Today (Hebrew)'.$dates_category_label ;
 		
+		// Next 2 are now available as read-only custom fields, which means CiviCRM core makes them available as tokens. 
+	//	$tokens['dates']['dates.birth_date_hebrew_trans'] = 'Birth Date (Hebrew - transliterated)'.$dates_category_label ;
+	//	$tokens['dates']['dates.birth_date_hebrew'] = 'Birth Date (Hebrew)'.$dates_category_label ;
+		
+		
+		
+	$token_category_label  = " :: Yahrzeits for this Mourner ";
 		 
 		$tokens['yahrzeit'] = array(
 			//	'yahrzeit.all' => "All Yahrzeits".$token_category_label, 
@@ -159,6 +165,7 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 }
  
 function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job = null, $tokens = array(), $context = null) {
+	
 	if(!empty($tokens['dates'])){
 		require_once 'utils/HebrewCalendar.php';
 		$hebrew_format = 'dd MM yy';
@@ -177,7 +184,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 
 		}
 
-
+		/*
 		// CiviCRM is buggy here, if token is being used in CiviMail, we need to use the key
 		// as the token. Otherwise ( PDF Letter, one-off email, etc) we
 		// need to use the value.
@@ -193,7 +200,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 			}
 
 			$token_to_fill = 'dates.'.$cur_token;
-			//print "<br><br>Token to fill: ".$token_to_fill."<br>";
+			
 
 			$token_as_array = explode("___",  $cur_token );
 
@@ -231,19 +238,28 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 			// $tokens['dates']['dates.birth_date___hebrew']
 			next($tokens['dates']);
 		}
+		*/
 
 	}
 
+	
 	if(!empty($tokens['yahrzeit']) ){
 		 
-		$token_yahrzeits_all = 'yahrzeit.all';
-		$token_yahrzeits_short = 'yahrzeit.all' ; // Try to eliminate this variable.
+		
+		// Since we are going to fill in all possible yahrzeit tokens, even if the user did not selet them
+		// we need to make sure that the unused tokens are not empty strings.
+		// All the token data is in the  database table, and were do not want to query it for each token.
+		// We will query it once for all yahrzeit tokens. 
+		
+		$token_yahrzeits_all = 'yahrzeit.all'; // all yahrzeits for this mourner (entire year)
+		// $token_yahrzeits_short = 'yahrzeit.all' ;
 		$token_yah_dec_name  = 'yahrzeit.deceased_name' ;
 		$token_yah_english_date = 'yahrzeit.english_date';
 		$token_yah_hebrew_date = 'yahrzeit.hebrew_date' ;
 		$token_yah_dec_death_english_date = 'yahrzeit.dec_death_english_date';
 		$token_yah_dec_death_hebrew_date = 'yahrzeit.dec_death_hebrew_date';
 		$token_yah_relationship_name = 'yahrzeit.relationship_name';
+		
 		$token_yah_erev_shabbat_before = 'yahrzeit.erev_shabbat_before';
 		$token_yah_shabbat_morning_before = 'yahrzeit.shabbat_morning_before';
 		$token_yah_erev_shabbat_after = 'yahrzeit.erev_shabbat_after' ;
@@ -315,12 +331,19 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		
 		require_once('utils/HebrewCalendar.php');
 		$tmpHebCal = new HebrewCalendar();
-		$tmpHebCal->process_yahrzeit_tokens( $values, $contactIDs ,  $token_yahrzeits_all,  $token_yahrzeits_short, $token_yah_dec_name, $token_yah_english_date, $token_yah_hebrew_date, $token_yah_dec_death_english_date,  $token_yah_dec_death_hebrew_date ,   $token_yah_relationship_name,
+		$tmpHebCal->process_yahrzeit_tokens( $values, $contactIDs , 
+				$token_yahrzeits_all, 
+				$token_yah_dec_name, $token_yah_english_date,
+				$token_yah_hebrew_date, 
+				$token_yah_dec_death_english_date, 
+				$token_yah_dec_death_hebrew_date ,  
+				$token_yah_relationship_name,
 				$token_yah_erev_shabbat_before ,
 				$token_yah_shabbat_morning_before ,
 				$token_yah_erev_shabbat_after ,
 				$token_yah_shabbat_morning_after,
-				$token_yah_english_date_morning, $token_date_portion  ) ;
+				$token_yah_english_date_morning, 
+				$token_date_portion  ) ;
 		
 
 	}
@@ -383,7 +406,8 @@ function XXXcontact_summary_determine_middle_content( &$hebrew_data ){
 }
 
 
-function contact_summary_determine_beginning_content(){
+/*
+function XXXcontact_summary_determine_beginning_content(){
 
 	$html_rtn = "   <div id='customFields'>
 		                    <div class='contact_panel'>
@@ -400,11 +424,12 @@ function contact_summary_determine_beginning_content(){
 
 
 }
+*/
 
 
+/*
 
-
-function contact_summary_determine_ending_content(){
+function XXXcontact_summary_determine_ending_content(){
 
 	$html_rtn = " </table>
 		            </div>
@@ -423,7 +448,7 @@ function contact_summary_determine_ending_content(){
 
 }
 
-
+*/
 
 
 /**

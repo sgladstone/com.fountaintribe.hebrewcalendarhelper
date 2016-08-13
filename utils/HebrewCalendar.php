@@ -1937,12 +1937,16 @@ class HebrewCalendar{
 	 **
 	 **
 	 *****************************************************************/
-	function process_yahrzeit_tokens( &$values, &$contactIDs ,  &$token_yahrzeits_long, &$token_yahrzeits_short, 
-			&$token_yah_dec_name, &$token_yah_english_date,  &$token_yah_hebrew_date, &$token_yah_dec_death_english_date,  &$token_yah_dec_death_hebrew_date ,  
+	function process_yahrzeit_tokens( &$values, &$contactIDs ,  &$token_yahrzeits_long, 
+			&$token_yah_dec_name, &$token_yah_english_date,  &$token_yah_hebrew_date, 
+			&$token_yah_dec_death_english_date,  &$token_yah_dec_death_hebrew_date ,  
 			&$token_yah_relationship_name,
-			&$token_yah_erev_shabbat_before, &$token_yah_shabbat_morning_before, &$token_yah_erev_shabbat_after, &$token_yah_shabbat_morning_after,
+			&$token_yah_erev_shabbat_before, &$token_yah_shabbat_morning_before, 
+			&$token_yah_erev_shabbat_after, &$token_yah_shabbat_morning_after,
 			&$token_yah_english_date_morning ,  &$token_date_portion ){
 
+				
+				// old parm: $token_yahrzeits_short
 				//  yahrzeit_morning_format_english
 				// print "<br><br>Inside process yahrzeit tokens: ".$token_yah_english_date_morning ;
 
@@ -2081,7 +2085,7 @@ class HebrewCalendar{
 						if ( $prev_cid != ""){
 							// Wrap up table for previous contact.
 							$cur_cid_html = $cur_cid_html.$html_table_end;
-							$values[$prev_cid][$token_yahrzeits_long] = $values[$prev_cid][$token_yahrzeits_short] = $cur_cid_html;
+							$values[$prev_cid][$token_yahrzeits_long] =  $cur_cid_html;
 						}
 
 						// start html table for this contact
@@ -2138,7 +2142,7 @@ class HebrewCalendar{
 					$cur_cid_html = $cur_cid_html.$yahrzeit_html_row;
 					//if(array_key_exists($mourner_contact_id,  $values)){
 					 
-					// $values[$mourner_contact_id][$token_yahrzeits_long] = $values[$mourner_contact_id][$token_yahrzeits_short] = $html_table_begin.$yahrzeit_html_row.$html_table_end;
+					// $values[$mourner_contact_id][$token_yahrzeits_long]  = $html_table_begin.$yahrzeit_html_row.$html_table_end;
 
 
 					//	 }
@@ -2158,7 +2162,7 @@ class HebrewCalendar{
 				foreach ( $contactIDs as $cid ) {
 					if(array_key_exists($cid,  $values)){
 						if ( $values[$cid][$token_yahrzeits_long] == ""){
-							$values[$cid][$token_yahrzeits_long] = $values[$cid][$token_yahrzeits_short] = "No yahrzeits found.";
+							$values[$cid][$token_yahrzeits_long]  = "No yahrzeits found.";
 
 						}
 

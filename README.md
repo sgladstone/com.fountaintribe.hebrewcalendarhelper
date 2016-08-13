@@ -8,6 +8,11 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
 
 ## Custom Tokens
 
+### In the token section "Today"
+
+- "Today (Hebrew transliterated)"
+- "Today (Hebrew)"
+ 
 ### In the token section "Yahrzeits for this Mourner"
 
  - "Name of Deceased in exactly X days"
@@ -19,7 +24,7 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
  - "Relationship of Deceased to Mourner in exactly X days"
  
  If you are planning to use these tokens to create a PDF letter, you need to install "wkhtmltopdf" and configure CiviCRM to use it. If this is not done,
- tokens that use Hebrew letters will show as ????? in the PDF.  
+ tokens that use Hebrew letters will show as ????? in the PDF document. 
  
 
 ## Custom Searches
