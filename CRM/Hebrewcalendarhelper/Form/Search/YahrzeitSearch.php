@@ -91,7 +91,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	/**
   	 * You can define a custom title for the search form
   	 */
-  	$this->setTitle('Find Yahrzeits');
+  	$this->setTitle('Yahrzeit Search');
   
   	 
   	//require_once('utils/Entitlement.php');
@@ -114,17 +114,24 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	$group_ids =   CRM_Core_PseudoConstant::group();
   
-  	$relative_times_choices = array( '0' => 'Current Month', '1' => 'Next Month', '2' => '2 Months From Now' , '3' => '3 Months From Now', '4' => '4 Months From Now'
-  			, '5' => '5 Months From Now', '6' => '6 Months From Now', '7' => '7 Months From Now', '8' => '8 Months From Now', '9' => '9 Months From Now', '10' => '10 Months From Now'
-  			, '11' => '11 Months From Now', '12' => '12 Months From Now'  );
+  	$relative_times_choices = array( '1_day' => 'In Exactly 1 Day',
+  			'6_day' => 'In Exactly 6 Days', 
+  			'7_day' => 'In Exactly 7 Days', 
+  			'8_day' => 'In Exactly 8 Days',
+  			'14_day' => 'In Exactly 14 Days',
+  			'0_month' => 'Current Month', '1_month' => 'Next Month', '2_month' => '2 Months From Now' , '3_month' => '3 Months From Now',
+  			'4_month' => '4 Months From Now'
+  			, '5_month' => '5 Months From Now', '6_month' => '6 Months From Now', 
+  			'7_month' => '7 Months From Now', '8_month' => '8 Months From Now', '9_month' => '9 Months From Now', '10_month' => '10 Months From Now'
+  			, '11_month' => '11 Months From Now', '12_month' => '12 Months From Now'  );
   
   	// TODO: get all mem ids, and org ids
   
   	//$mem_ids = $searchTools->getMembershipsforSelectList();
   
   	//$org_ids = $searchTools->getMembershipOrgsforSelectList();
-  	 
-  	 
+  	$mem_ids = array();
+  	$org_ids = array();
   
   	//  $tmp_in_out_group = array( '' =>  '-- select --', 'IN' => 'In Group(s)', 'NOT IN' => 'Not In Group(s)');
   
@@ -147,6 +154,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   				$select2style
   				);
   
+  		
   		$form->add('select', 'membership_org_of_contact',
   				ts('Mourner has Membership In'),
   				$org_ids,
@@ -232,7 +240,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   // TODO: Get commprefs from API
   //	$comm_prefs =  $searchTools->getCommunicationPreferencesForSelectList();
-  
+  	$comm_prefs = array();
+  	
   	$comm_prefs_select = $form->add  ('select', 'comm_prefs', ts('Communication Preference'),
   			$comm_prefs,
   			false);
@@ -411,7 +420,9 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			// Get data for contacts
   
   			// make sure selected smart groups are cached in the cache table
-  			$group_of_contact = $this->_formValues['group_of_contact'];
+  			if( isset($this->_formValues['group_of_contact'])){
+  				$group_of_contact = $this->_formValues['group_of_contact'];
+  			}
   
   			// TODO: refesh smart group cache.
   			//require_once('utils/CustomSearchTools.php');
@@ -447,19 +458,33 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	  	 
   	  }
   
-  
+    if(isset($extended_hebrewname) && strlen($extended_hebrewname) > 0 ){
+    	
+    	$heb_name_sql = $extended_hebrewname." as hebrew_name, ";
+    }else{
+    	$heb_name_sql = " '' as hebrew_name, ";
+    	
+    }
+    
+    if(isset( $extended_plaque_location ) && strlen($extended_plaque_location) > 0 && isset($extended_has_plaque ) && strlen( $extended_has_plaque ) > 0  ){
+    	$plaque_sql = $extended_plaque_location." as plaque_location, if(".$extended_has_plaque." OR length(".$extended_plaque_location.") > 0, 'Yes', 'No') as has_plaque, ";
+    }else{
+    	$plaque_sql = " '' as  plaque_location, '' as has_plaque, ";
+    }
   
   	  $full_select = " mourner_contact_id as contact_id, mourner_contact_id as id, mourner_name as sort_name,
-	deceased_name as deceased_name, deceased_display_name as deceased_display_name, deceased_contact_id,
-	mourner_email, date_format(contact_deceased.deceased_date, '".$nice_date_format."' )  as deceased_date , d_before_sunset, yahrzeit_hebrew_date_format_hebrew, yahrzeit_hebrew_date_format_english,
+	deceased_name as deceased_name, contact_deceased.display_name as deceased_display_name, deceased_contact_id,
+	 date_format(contact_deceased.deceased_date, '".$nice_date_format."' )  as deceased_date , 
+			d_before_sunset, yahrzeit_hebrew_date_format_hebrew, yahrzeit_hebrew_date_format_english,
 	hebrew_deceased_date, date_format(yahrzeit_date, '%Y-%m-%d' ) as yahrzeit_date_sort  ,
 	date_format(yahrzeit_date, '".$nice_date_format."' ) as yahrzeit_date_display, ".$mem_cols."
-	relationship_name_formatted, yahrzeit_type, if( mourner_observance_preference, 'English', 'Hebrew') as mourner_observance_preference,
-	 contact_deceased.nick_name, ".$extended_hebrewname." as hebrew_name,
-	if( mourner_observance_preference, date_format(yahrzeit_date_morning ,'".$nice_date_format."' )   ,
+	relationship_name_formatted, yahrzeit_type,
+	if( mourner_observance_preference, 'English', 'Hebrew') as mourner_observance_preference,
+	 contact_deceased.nick_name, ".$heb_name_sql.
+	" if( mourner_observance_preference, date_format(yahrzeit_date_morning ,'".$nice_date_format."' )   ,
 	  date_format( yahrzeit_date_morning, '".$nice_date_format."'   )) as yahrzeit_morning_format_english,
-	".$extended_plaque_location." as plaque_location, if(".$extended_has_plaque." OR length(".$extended_plaque_location.") > 0, 'Yes', 'No') as has_plaque,
-	civicrm_email.email, civicrm_phone.phone, civicrm_address.street_address,
+	".$plaque_sql.
+	" civicrm_email.email, civicrm_phone.phone, civicrm_address.street_address,
 		 civicrm_address.supplemental_address_1, civicrm_address.city , civicrm_address.postal_code,
 		 civicrm_state_province.abbreviation,
 		 date_format( yahrzeit_erev_shabbat_before, '".$nice_date_format."' ) as yah_erev_shabbat_before ,
@@ -493,11 +518,13 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	  WHERE $where
   	  ".$tmp_group_by ;
   
-  	  $downstream_sql = "SELECT $full_select
+  	  /*
+  	  $downstream_sql = "SELECTxx $full_select
   	  FROM $from
   	  WHERE $where
   	  ".$tmp_group_by.
   	  " ORDER BY yahrzeit_date, deceased_name ASC ";
+  	  */
   
   
   	   
@@ -533,17 +560,13 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	  	$sql .= " LIMIT $offset, $rowcount ";
   	  }
   
-  	  /****  Put the sql statemetn in the session so it is avilable to downstream logic   ****/
-  	  //  print "<br>downstream sql: $downstream_sql ";
-  	  $_SESSION['yahrzeit_sql'] ='';
-  	  $_SESSION['yahrzeit_sql'] =  $downstream_sql;
-  	  //    $_SESSION['yahrzeit_temp_tablename'] = $this->_tableName ;
+  	  //  Put the sql statemetn in the session so it is avilable to downstream logic for tokens.  
+  	  
+  	 //  $_SESSION['yahrzeit_sql'] ='';
+  	 //  $_SESSION['yahrzeit_sql'] =  $downstream_sql;
+  	
   
-  	  $yahrzeit_data= $_SESSION['yahrzeit_sql'];
-  
-  	  //   print "<br><br>sql from session: ".$yahrzeit_data;
-  	  /************      *****/
-  
+  	 //  $yahrzeit_data= $_SESSION['yahrzeit_sql'];
   
   	  return $sql;
   }
@@ -551,8 +574,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   function from(){
   	 
   	$tmp_cal = $this->_localHebrewCalendar;
-  	$tmp_sql_table_name = $tmp_cal::get_sql_table_name() ;
-  
+  //	$tmp_sql_table_name = $tmp_cal::get_sql_table_name() ;
+  	$tmp_sql_table_name = HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
   /*
   	// Get SQL table info for table with Hebrew name.
   	$custom_religious_field_group_label = "Religious";
@@ -581,7 +604,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   */
   
   	$tmp_group_join = "";
-  	if(count( $this->_formValues['group_of_contact'] ) > 0 ){
+  	if(isset( $this->_formValues['group_of_contact'] ) && count( $this->_formValues['group_of_contact'] ) > 0 ){
   		$tmp_group_join = "LEFT JOIN civicrm_group_contact as groups on contact_b.mourner_contact_id = groups.contact_id
   		 LEFT JOIN civicrm_group_contact_cache as groupcache ON contact_b.mourner_contact_id = groupcache.contact_id ";
   		 
@@ -589,7 +612,20 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 
   	 
   	$tmp_mem_join = "";
-  	if( count( $this->_formValues['membership_type_of_contact'] ) > 0 || count( $this->_formValues['membership_org_of_contact'] ) > 0     ){
+  	
+  	if( isset ($this->_formValues['membership_type_of_contact'] ) ){
+  		$tmp_mem_types_of_contact = $this->_formValues['membership_type_of_contact'];
+  	}else{
+  		$tmp_mem_types_of_contact = array(); 
+  	}
+  	
+  	
+  	if(isset( $this->_formValues['membership_org_of_contact']) ){
+  		$tmp_mem_orgs_of_contact = $this->_formValues['membership_org_of_contact'];
+  	}else{
+  		$tmp_mem_orgs_of_contact = array();
+  	}
+  	if( count( $tmp_mem_types_of_contact ) > 0 || count( $tmp_mem_orgs_of_contact ) > 0     ){
   		$tmp_mem_join = "LEFT JOIN civicrm_membership as memberships on contact_b.mourner_contact_id = memberships.contact_id
 	 	LEFT JOIN civicrm_membership_status as mem_status on memberships.status_id = mem_status.id
 	 	LEFT JOIN civicrm_membership_type mt ON memberships.membership_type_id = mt.id
@@ -602,7 +638,17 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	$tmp_from_sql_hh_join = " LEFT JOIN civicrm_relationship rel ON contact_b.mourner_contact_id = rel.contact_id_a AND rel.is_active = 1 AND rel.relationship_type_id IN ( ".$tmp_rel_type_ids." ) ";
   
   
+  if( isset($extended_religious_table) &&  strlen( $extended_religious_table ) > 0 ){
+  	$religious_sql = " LEFT JOIN ".$extended_religious_table." extra_religious on contact_deceased.id = extra_religious.entity_id ";
+  }else{
+  	$religious_sql = ""; 
+  }
   
+  if(isset( $extended_plaque_table ) && strlen($extended_plaque_table) > 0  ){
+  	  $plaque_sql =  " LEFT JOIN ".$extended_plaque_table." extra_plaque on contact_deceased.id = extra_plaque.entity_id "; 
+  }else{
+  	$plaque_sql = ""; 
+  }
   
   	$tmp_from = "$tmp_sql_table_name contact_b
   	LEFT JOIN civicrm_contact contact_a ON contact_a.id =  contact_b.mourner_contact_id
@@ -610,10 +656,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	left JOIN civicrm_relationship rd ON rd.id = contact_b.yahrzeit_relationship_id
   	left join civicrm_note rnote ON rnote.entity_id = contact_b.yahrzeit_relationship_id AND rnote.entity_table = 'civicrm_relationship'
   	$tmp_from_sql_hh_join
-  	LEFT JOIN civicrm_contact as hh ON rel.contact_id_b = hh.id AND hh.is_deleted <> 1
-  	LEFT JOIN ".$extended_religious_table." extra_religious on contact_deceased.id = extra_religious.entity_id
-	 LEFT JOIN ".$extended_plaque_table." extra_plaque on contact_deceased.id = extra_plaque.entity_id
-  	 left join civicrm_email on contact_a.id = civicrm_email.contact_id AND civicrm_email.is_primary = 1
+  	LEFT JOIN civicrm_contact as hh ON rel.contact_id_b = hh.id AND hh.is_deleted <> 1 ".$religious_sql.$plaque_sql.	
+  	" left join civicrm_email on contact_a.id = civicrm_email.contact_id AND civicrm_email.is_primary = 1
   	 left join civicrm_phone on contact_a.id = civicrm_phone.contact_id AND civicrm_phone.is_primary = 1
   	 left join civicrm_address on contact_a.id = civicrm_address.contact_id AND civicrm_address.is_primary = 1
   	 left join civicrm_state_province on civicrm_address.state_province_id = civicrm_state_province.id
@@ -631,7 +675,10 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	$clauses[] = "( contact_a.id is null OR contact_a.is_deleted <> 1 ) ";
   
   
+  	// TODO: get Plaque table via API
+  	
   	// Get SQL table info for plaque table.
+  	/*
   	$custom_plaque_field_group_label = "Memorial Plaque Info";
   	$custom_plaque_location_field_label = "Plaque Location";
   	$custom_has_plaque_field_label = "Has Plaque";
@@ -643,22 +690,27 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	$extended_plaque_location  =  $outCustomColumnNames[$custom_plaque_location_field_label];
   	$extended_has_plaque =  $outCustomColumnNames[$custom_has_plaque_field_label];
   
+   */
   
   
-  	$groups_of_individual = $this->_formValues['group_of_contact'];
-  
-  	require_once('utils/CustomSearchTools.php');
-  	$searchTools = new CustomSearchTools();
-  
-  
-  
-  	$comm_prefs = $this->_formValues['comm_prefs'];
-  
-  	$searchTools->updateWhereClauseForCommPrefs($comm_prefs, $clauses ) ;
+  	if( isset($this->_formValues['group_of_contact'])){
+  		$groups_of_individual = $this->_formValues['group_of_contact'];
+  	}else{
+  		$groups_of_individual = array();
+  	}
+  //	require_once('utils/CustomSearchTools.php');
+  //	$searchTools = new CustomSearchTools();
   
   
   
-  	$tmp_sql_list = $searchTools->getSQLStringFromArray($groups_of_individual);
+  //	$comm_prefs = $this->_formValues['comm_prefs'];
+  
+  	//$searchTools->updateWhereClauseForCommPrefs($comm_prefs, $clauses ) ;
+  
+  
+   $tmp_sql_list = implode( ", ", $groups_of_individual);
+  
+  	//$tmp_sql_list = $searchTools->getSQLStringFromArray($groups_of_individual);
   
   
   
@@ -671,15 +723,25 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	}
   
-  	$membership_types_of_con = $this->_formValues['membership_type_of_contact'];
+  	if(isset($this->_formValues['membership_type_of_contact'])){
+  		$membership_types_of_con = $this->_formValues['membership_type_of_contact'];
+  	}else{
+  		$membership_types_of_con = array();
+  	}
   
-  	$mem_type_IN_OR_NOT = $this->_formValues['membership_type_in_notin'];
+  	if( isset($this->_formValues['membership_type_in_notin'] )){
+  		$mem_type_IN_OR_NOT = $this->_formValues['membership_type_in_notin'];
+  	}else{
+  		$mem_type_IN_OR_NOT = ""; 
+  	}
   
   
   
   
   
-  	$tmp_membership_sql_list = $searchTools->convertArrayToSqlString( $membership_types_of_con ) ;
+  //	$tmp_membership_sql_list = $searchTools->convertArrayToSqlString( $membership_types_of_con ) ;
+  	$tmp_membership_sql_list = implode( ", ", $membership_types_of_con );
+  	
   	if(strlen($tmp_membership_sql_list) > 0 ){
   		$in_tmp = "IN";
   		if(strcmp ($mem_type_IN_OR_NOT, "NOT IN" ) == 0){
@@ -693,8 +755,14 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	}
   
   	// 'membership_org_of_contact'
-  	$membership_org_of_con = $this->_formValues['membership_org_of_contact'];
-  	$tmp_membership_org_sql_list = $searchTools->convertArrayToSqlString( $membership_org_of_con ) ;
+  	if( isset($this->_formValues['membership_org_of_contact']) ){
+  		$membership_org_of_con = $this->_formValues['membership_org_of_contact'];
+  	}else{
+  		$membership_org_of_con = array();
+  	}
+  	//$tmp_membership_org_sql_list = $searchTools->convertArrayToSqlString( $membership_org_of_con ) ;
+  	$tmp_membership_org_sql_list = implode( ", ", $membership_org_of_con );
+  	
   	if(strlen($tmp_membership_org_sql_list) > 0 ){
   		// print "<br>membership orgs: <br>".$tmp_membership_org_sql_list;
   			
@@ -728,7 +796,11 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	}
   
   
-  	$gender_choice =   $this->_formValues['gender_choice'];
+  	if( isset( $this->_formValues['gender_choice'] )){
+  		$gender_choice =   $this->_formValues['gender_choice'];
+  	}else{
+  		$gender_choice = "";
+  	}
   	if( strlen( $gender_choice) > 0 ){
   		$clauses[] = "contact_a.gender_id = $gender_choice";
   
@@ -742,11 +814,18 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 
   	$clauses[] = "(yahrzeit_type = mourner_observance_preference) " ;
   
+   if( isset( $this->_formValues['start_date'])){
+  		$startDate = CRM_Utils_Date::processDate( $this->_formValues['start_date'] );
+   }else{
+   		$startDate = "";
+   }
   
-  	$startDate = CRM_Utils_Date::processDate( $this->_formValues['start_date'] );
-  
-  	$date_to_filter = $this->_formValues['date_to_filter'];
-  	 
+   if(isset( $this->_formValues['date_to_filter'] )){
+  		$date_to_filter = $this->_formValues['date_to_filter'];
+   }else{
+   		$date_to_filter = ""; 
+   }
+   
   	$date_sql_field_name = "";
   	if( strlen($date_to_filter) > 0 ){
   		$date_sql_field_name = $date_to_filter;
@@ -756,19 +835,24 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	}
   
   
-  	if ( $startDate ) {
+  	if ( strlen($startDate) > 0  ) {
   		$clauses[] = $date_sql_field_name." >= $startDate";
   	}
   
-  	$endDate = CRM_Utils_Date::processDate( $this->_formValues['end_date'] );
-  	if ( $endDate ) {
+  	if(isset( $this->_formValues['end_date'])){
+  		$endDate = CRM_Utils_Date::processDate( $this->_formValues['end_date'] );
+  	}else{
+  		$endDate = "";
+  	}
+  	if ( strlen($endDate) > 0  ) {
   		$clauses[] = $date_sql_field_name." <= $endDate";
   	}
   
   
-  	$relative_time_array = $this->_formValues['relative_time'];
+  	if( isset( $this->_formValues['relative_time'] )){
+  		$relative_time_array = $this->_formValues['relative_time'];
   
-  	if( is_array( $relative_time_array ) && count($relative_time_array) > 0){
+  		if( is_array( $relative_time_array ) && count($relative_time_array) > 0){
   		 
   		$i = 0;
   		foreach( $relative_time_array as $relative_time){
@@ -777,15 +861,29 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			}else if( $i > 0 && strlen($rel_time_str) > 2 ){
   				$rel_time_str = $rel_time_str." OR ";
   			}
-  			$rel_time_str = $rel_time_str." ( month($date_sql_field_name) =  MONTH( date_add( now() ,  INTERVAL $relative_time MONTH) )
-  			AND year( $date_sql_field_name )  = YEAR ( date_add( now() ,  INTERVAL $relative_time MONTH) ) ) " ;
+  			
+  			$parm_as_arr = explode("_", $relative_time);
+  			$interval_count = $parm_as_arr[0];
+  			$interval_type = $parm_as_arr[1];
+  			
+  			if( $interval_type == "month" ){
+	  			$rel_time_str = $rel_time_str." ( month($date_sql_field_name) =  MONTH( date_add( now() ,  INTERVAL $interval_count MONTH) )
+	  			AND year( $date_sql_field_name )  = YEAR ( date_add( now() ,  INTERVAL $interval_count MONTH) ) ) " ;
+  			}else if($interval_type == "day"){
+  				$rel_time_str = $rel_time_str." date( $date_sql_field_name )  = date( date_add( now() ,  INTERVAL $interval_count day) ) ";
+  				
+  			}else{
+  				$rel_time_str = " 1=1 ";
+  			}
+  		
   			$i = $i + 1;
   
   		}
   	}
-  	if( strlen( $rel_time_str) > 0){
+  	if( isset( $rel_time_str ) &&  strlen( $rel_time_str) > 0){
   		$rel_time_str = $rel_time_str.")";
   		$clauses[] = $rel_time_str;
+  	}
   	}
   	 
   	 

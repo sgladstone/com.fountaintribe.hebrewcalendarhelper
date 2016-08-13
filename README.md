@@ -17,6 +17,9 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
  - "English Date of Death in exactly X days"
  - "Hebrew Date of Death in exactly X days"
  - "Relationship of Deceased to Mourner in exactly X days"
+ 
+ If you are planning to use these tokens to create a PDF letter, you need to install "wkhtmltopdf" and let CiviCRM know where it is. 
+ 
 
 ## Custom Searches
 
@@ -32,6 +35,8 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
 - "Yahrzeit Preferences"
 - "Yahrzeit Dates (Calculated Automatically)"
 - "Hebrew Birth Dates (Calculated Automatically)"
+- "Memorial Plaque Info" used for track information, such as if a deceased person has a memorial plaque, the location of the plaque, etc. This area is also used to integrate with the electronic yahrzeit system from Yahrzeitronix (sales@yahrzeitronix.com) 
+- "Religious"  Used to track religious information about individuals, such as their Hebrew name, tribe, etc.
 
 ## Custom Contact Types
 

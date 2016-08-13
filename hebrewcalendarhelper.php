@@ -107,14 +107,15 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 	
 	$token_category_label  = " :: Yahrzeits for this Mourner ";
 
-		$tokens['dates']['dates.today___hebrew_trans'] =  'Dates: Today (Hebrew transliterated)';
-		$tokens['dates']['dates.today___hebrew'] = 'Dates: Today (Hebrew)' ;
-		$tokens['dates']['dates.birth_date_hebrew_trans'] = 'Birth Date (Hebrew - transliterated)' ;
-		$tokens['dates']['dates.birth_date_hebrew'] = 'Birth Date (Hebrew)' ;
-		     
+	$dates_category_label = " :: Hebrew Dates ";
+		$tokens['dates']['dates.today___hebrew_trans'] =  'Today (Hebrew transliterated)'.$dates_category_label;
+		$tokens['dates']['dates.today___hebrew'] = 'Dates: Today (Hebrew)'.$dates_category_label ;
+		$tokens['dates']['dates.birth_date_hebrew_trans'] = 'Birth Date (Hebrew - transliterated)'.$dates_category_label ;
+		$tokens['dates']['dates.birth_date_hebrew'] = 'Birth Date (Hebrew)'.$dates_category_label ;
+		
 		 
 		$tokens['yahrzeit'] = array(
-				'yahrzeit.all' => "All Yahrzeits".$token_category_label, 
+			//	'yahrzeit.all' => "All Yahrzeits".$token_category_label, 
 		);
 		
 		// 'communitynews.upcomingevents___day_7' =>   'Events in the next 7 days :: Events', 
@@ -137,6 +138,7 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 		
 		$partial_date_choices = array(		
 				'day_7' => 'in exactly 7 days',
+				'day_10' => 'in exactly 10 days',
 				'day_14' => 'in exactly 14 days',
 				'day_30' => 'in exactly 30 days',		
 		);
@@ -272,7 +274,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		    //print_r( $token_as_array );
 		
 			$partial_token =  $token_as_array[0];
-			if( strlen($token_as_array[1])){
+			if( isset( $token_as_array[1] ) && strlen($token_as_array[1]) > 0 ){
 				$token_date_portion =  $token_as_array[1];
 			}
 				
@@ -308,8 +310,8 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		//$token_as_array = explode("___",  $token_yah_dec_name );
 		
 		//print_r($token_as_array );
-		
-		$token_date_portion = $token_as_array[1];
+		//if( isset( $token_as_array[1]) && strlen(  $token_as_array[1] ) > 0 ){
+			// $token_date_portion = $token_as_array[1];
 		
 		require_once('utils/HebrewCalendar.php');
 		$tmpHebCal = new HebrewCalendar();
@@ -319,6 +321,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 				$token_yah_erev_shabbat_after ,
 				$token_yah_shabbat_morning_after,
 				$token_yah_english_date_morning, $token_date_portion  ) ;
+		
 
 	}
 	 

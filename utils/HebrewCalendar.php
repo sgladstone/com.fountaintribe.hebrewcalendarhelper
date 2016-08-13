@@ -106,6 +106,13 @@ class HebrewCalendar{
 	const HEB_EARLIEST_BARBAT_MITZVAH_NAME = "Hebrew_Earliest_BarBat_Date";
 	const HEB_EARLIEST_BARBAT_MITZVAH_TITLE = "Earliest Possible Bar/Bat Mitzvah Date (Starts at sunset on this date)";
 	
+	const RELIGIOUS_CUSTOM_FIELD_GROUP_NAME = "Religious";
+	const RELIGIOUS_CUSTOM_FIELD_GROUP_TITLE = "Religious";
+	
+	const PLAQUE_CUSTOM_FIELD_GROUP_TITLE = "Memorial Plaque Info";
+	const PLAQUE_CUSTOM_FIELD_GROUP_NAME = "Plaque Info";
+	
+	
 // Yahrzeit - correct spelling, per hebcal.com
 
 	// TODO: Fix original names, titles,  in older databases. 
@@ -1387,6 +1394,65 @@ class HebrewCalendar{
 		
 		}
 		
+		// if needed, create custom field group for tracking Religious information. 
+		$result = civicrm_api3('CustomGroup', 'get', array(
+				'sequential' => 1,
+				'name' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+		));
+		
+		// TODO: Check that it extends correct contact type.
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+				
+			$tmp_api_table_name = $this->formatTableNameForCreateAPI( HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME);
+				
+				
+			$create_result = civicrm_api3('CustomGroup', 'create', array(
+					'sequential' => 1,
+					'title' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_TITLE,
+					'extends' => "Individual",
+					'name' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+					'help_pre' => "",
+					'table_name' => $tmp_api_table_name,
+					'weight' => 3,
+			));
+				
+				
+				
+		}else{
+			// nothing to do
+		}
+		
+		// if needed, create plaque custom field set
+		//PLAQUE_CUSTOM_FIELD_GROUP_NAME
+		$result = civicrm_api3('CustomGroup', 'get', array(
+				'sequential' => 1,
+				'name' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
+		));
+		
+		// TODO: Check that it extends correct contact type.
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+		
+			$tmp_api_table_name = $this->formatTableNameForCreateAPI( HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME);
+		
+		
+			$create_result = civicrm_api3('CustomGroup', 'create', array(
+					'sequential' => 1,
+					'title' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_TITLE,
+					'extends' => "Individual",
+					'extends_entity_column_value' => HebrewCalendar::YAH_DECEASED_CONTACT_TYPE_NAME,
+					'name' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
+					'help_pre' => "",
+					'table_name' => $tmp_api_table_name,
+					'weight' => 3,
+			));
+		
+		
+		
+		}else{
+			// nothing to do
+		}
 		
 		
 	}
