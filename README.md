@@ -51,6 +51,23 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
 
 "civicrm_fountaintribe_yahrzeits_temp"  - This table gets frequently truncated and repopulated. 
 
+# What happens when this extension is disabled?
+
+What is removed:
+ - The MySQL table "civicrm_fountaintribe_yahrzeits_temp"
+ - The API used by the scheduled job "Call AllHebrewDates.Calculate API"
+ - The custom searches described in this README
+ - The tokens described in this README
+ - The APIs described in this README
+ 
+ What is left:
+  - The CiviCRM custom field sets, custom fields, and other CiviCRM configurations described in this README. 
+  
+# What happens when this extension is disabled, then re-enabled? Or uninstalled then re-installed?
+
+- a
+- b  
+
 ########################################
 ## WARNING
  - DO NOT remove or move any of the custom fields, or this extension will NOT WORK. Changing the labels for the custom fields, contact types, and relationship types has NOT been tested.  
