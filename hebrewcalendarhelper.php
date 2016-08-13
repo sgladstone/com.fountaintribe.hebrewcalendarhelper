@@ -96,9 +96,6 @@ function hebrewcalendarhelper_civicrm_alterContent(  &$content, $context, $tplNa
 	 	     from the 'Upcoming Yahrzeits' screen instead. ";
 
 			$content = $extra.$content;
-			 
-		
-
 
 	}
 	
@@ -139,9 +136,9 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 		);
 		
 		$partial_date_choices = array(		
-				'___day_7' => 'in exactly 7 days',
-				'___day_14' => 'in exactly 14 days',
-				'___day_30' => 'in exactly 30 days',		
+				'day_7' => 'in exactly 7 days',
+				'day_14' => 'in exactly 14 days',
+				'day_30' => 'in exactly 30 days',		
 		);
 
 		
@@ -201,7 +198,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 
 
 			$partial_token =  $token_as_array[0];
-
+			
 			if( $partial_token ==  'birth_date_hebrew_trans' || $partial_token ==  'birth_date_hebrew' ){
 				require_once 'utils/HebrewCalendar.php';
 
@@ -251,6 +248,69 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		$token_yah_shabbat_morning_after = 'yahrzeit.shabbat_morning_after' ;
 		$token_yah_english_date_morning = 'yahrzeit.morning_format_english';
 
+		
+		// CiviCRM is buggy here, if token is being used in CiviMail, we need to use the key
+		// as the token. Otherwise ( PDF Letter, one-off email, etc) we
+		// need to use the value.
+		while( $cur_token_raw = current( $tokens['yahrzeit'] )){
+			$tmp_key = key($tokens['yahrzeit']);
+		
+			$cur_token = '';
+			if(  is_numeric( $tmp_key)){
+				$cur_token = $cur_token_raw;
+			}else{
+				// Its being used by CiviMail.
+				$cur_token = $tmp_key;
+			}
+		
+			$token_to_fill = 'yahrzeit.'.$cur_token;
+			//print "<br><br>Token to fill: ".$token_to_fill."<br>";
+		
+			$token_as_array = explode("___",  $cur_token );
+		
+			//print "<br>\n";
+		    //print_r( $token_as_array );
+		
+			$partial_token =  $token_as_array[0];
+			if( strlen($token_as_array[1])){
+				$token_date_portion =  $token_as_array[1];
+			}
+				
+			if( $partial_token ==  'deceased_name' ){
+				$token_yah_dec_name = $token_to_fill;
+			}else if($partial_token == 'english_date'){
+				$token_yah_english_date =  $token_to_fill;
+			}else if($partial_token == 'hebrew_date'){
+				$token_yah_hebrew_date = $token_to_fill;
+			}else if( $partial_token == 'dec_death_english_date'){
+				$token_yah_dec_death_english_date = $token_to_fill;
+			}else if( $partial_token == 'dec_death_hebrew_date'){
+				$token_yah_dec_death_hebrew_date = $token_to_fill;
+			}else if( $partial_token == 'relationship_name'){
+				$token_yah_relationship_name = $token_to_fill;
+			}else if( $partial_token == 'erev_shabbat_before'){
+				$token_yah_erev_shabbat_before = $token_to_fill;
+			}else if( $partial_token == 'shabbat_morning_before'){
+				$token_yah_shabbat_morning_before = $token_to_fill;
+			}else if( $partial_token == 'erev_shabbat_after'){
+				$token_yah_erev_shabbat_after = $token_to_fill;
+			}else if( $partial_token == 'shabbat_morning_after'){
+				$token_yah_shabbat_morning_after = $token_to_fill;
+			}else if( $partial_token == 'morning_format_english'){
+				$token_yah_english_date_morning = $token_to_fill;
+			}
+			
+			next($tokens['yahrzeit']);
+		}
+		
+		
+		
+		//$token_as_array = explode("___",  $token_yah_dec_name );
+		
+		//print_r($token_as_array );
+		
+		$token_date_portion = $token_as_array[1];
+		
 		require_once('utils/HebrewCalendar.php');
 		$tmpHebCal = new HebrewCalendar();
 		$tmpHebCal->process_yahrzeit_tokens( $values, $contactIDs ,  $token_yahrzeits_all,  $token_yahrzeits_short, $token_yah_dec_name, $token_yah_english_date, $token_yah_hebrew_date, $token_yah_dec_death_english_date,  $token_yah_dec_death_hebrew_date ,   $token_yah_relationship_name,
@@ -258,7 +318,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 				$token_yah_shabbat_morning_before ,
 				$token_yah_erev_shabbat_after ,
 				$token_yah_shabbat_morning_after,
-				$token_yah_english_date_morning  ) ;
+				$token_yah_english_date_morning, $token_date_portion  ) ;
 
 	}
 	 
