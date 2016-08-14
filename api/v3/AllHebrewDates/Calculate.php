@@ -702,6 +702,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 				//return $rtn_data;
 		  
 		
+			// TODO: Use SQL, not API. API creates infinite loop becase this is called from a hook.
+			/*
 			$con_update_result = civicrm_api3('Contact', 'create', array(
 					'sequential' => 1,
 					'id' => $deceased_contact_id,
@@ -712,7 +714,10 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 			    
 			    $rtn_data['error_message'] = "API error on update of contact id  $deceased_contact_id : ".$con_update_result['error_message'];
 			    return $rtn_data;
+			    
+			    */
 			}
+			
 		}else{
 		  // Nothing to do, contact already has 'Deceased' as a subtype. 
 		

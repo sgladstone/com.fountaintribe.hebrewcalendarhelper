@@ -108,30 +108,78 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	$form->addDate('end_date', ts('...Through'), false, array( 'formatType' => 'custom' ) );
   
-  	//require_once('utils/CustomSearchTools.php');
-  	//$searchTools = new CustomSearchTools();
   	
-  
-  	$group_ids =   CRM_Core_PseudoConstant::group();
   
   	$relative_times_choices = array( '1_day' => 'In Exactly 1 Day',
   			'6_day' => 'In Exactly 6 Days', 
   			'7_day' => 'In Exactly 7 Days', 
   			'8_day' => 'In Exactly 8 Days',
   			'14_day' => 'In Exactly 14 Days',
+  			'30_day' => 'In Exactly 30 Days',
   			'0_month' => 'Current Month', '1_month' => 'Next Month', '2_month' => '2 Months From Now' , '3_month' => '3 Months From Now',
   			'4_month' => '4 Months From Now'
   			, '5_month' => '5 Months From Now', '6_month' => '6 Months From Now', 
   			'7_month' => '7 Months From Now', '8_month' => '8 Months From Now', '9_month' => '9 Months From Now', '10_month' => '10 Months From Now'
   			, '11_month' => '11 Months From Now', '12_month' => '12 Months From Now'  );
   
-  	// TODO: get all mem ids, and org ids
-  
-  	//$mem_ids = $searchTools->getMembershipsforSelectList();
-  
-  	//$org_ids = $searchTools->getMembershipOrgsforSelectList();
+  	
+  	
+  	$group_ids = array();
+  	 
+  	$result = civicrm_api3('Group', 'get', array(
+  			'sequential' => 1,
+  			'is_active' => 1,
+  			'is_hidden' => 0,
+  			'options' => array('limit' => 0, 'sort' => "title"),
+  	));
+  	 
+  	if($result['is_error'] == 0 && $result['count'] > 0 ){
+  		 
+  		$values = $result['values'];
+  		foreach($values as $cur){
+  			$grp_id = $cur['id'];
+  			$grp_title = $cur['title'];
+  				
+  			$group_ids[$grp_id] = $grp_title;
+  				
+  		}
+  		 
+  	}
+  	
+        
   	$mem_ids = array();
   	$org_ids = array();
+  	
+  	$result = civicrm_api3('MembershipType', 'get', array(
+  			'sequential' => 1,
+  			'is_active' => 1,
+  			'options' => array('limit' => 0, 'sort' => "name"),
+  	));
+  	
+  	if($result['is_error'] == 0 && $result['count'] > 0 ){
+  		
+  		$values = $result['values'];
+  		foreach($values as $cur){
+  			$memtype_id = $cur['id'];
+  			$memtype_name = $cur['name'];
+  			$memtype_orgid = $cur['member_of_contact_id'];
+  			
+  			$mem_ids[$memtype_id] = $memtype_name; 
+  			
+  			$result_org = civicrm_api3('Contact', 'getsingle', array(
+  					'sequential' => 1,
+  					'return' => array("display_name"),
+  					'id' => $memtype_orgid,
+  			));
+  			
+  			$org_name = $result_org['display_name'];
+  			
+  			$org_ids[$memtype_orgid] = $org_name; 
+  			
+  		} 		
+  		
+  	}
+ 	
   
   	//  $tmp_in_out_group = array( '' =>  '-- select --', 'IN' => 'In Group(s)', 'NOT IN' => 'Not In Group(s)');
   
@@ -178,21 +226,6 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   
   
-  	
-  
-  
-  
-  
-  	/*
-  	 $form->add('select', 'group_of_contact', ts('Mourner group(s)'), $group_ids, FALSE,
-  	 array('id' => 'group_of_contact', 'multiple' => 'multiple', 'title' => ts('-- select --'))
-  	 );
-  
-  	 */
-  
-  
-  
-  
   
   	// $form->add('select', 'membership_type_in_notin' , ts('Mourner Has or Not') ,  $tmp_in_out_mem, FALSE, array('id' => 'membership_type_in_notin' , 'title' => ts('-- select --')) ) ;
   
@@ -225,22 +258,57 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			$tmp_date_options,
   			false);
   	 
-  	$gender_options_tmp =  CRM_Contact_BAO_Contact::buildOptions('gender_id');
   
   	$gender_options = array("" => "-- select --");
-  	foreach( $gender_options_tmp as $key => $val){
-  		$gender_options[$key] = $val;
-  
+  	
+  	$result = civicrm_api3('OptionValue', 'get', array(
+  			'sequential' => 1,
+  			'option_group_id' => "gender",
+  			'is_active' => 1,
+  			'options' => array('sort' => "name"),
+  	));
+  	
+  	if($result['is_error'] == 0 && $result['count'] > 0 ){
+  		 
+  		$values = $result['values'];
+  		foreach($values as $cur){
+  			$gen_id = $cur['id'];
+  			$gen_label = $cur['label'];
+  				
+  			$gender_options[$gen_id] = $gen_label;
+  		}
+  	
   	}
+  	
+  
   
   	$gender_select = $form->add  ('select', 'gender_choice', ts('Mourner Gender'),
   			$gender_options,
   			false);
   	 
+
   
-  // TODO: Get commprefs from API
-  //	$comm_prefs =  $searchTools->getCommunicationPreferencesForSelectList();
-  	$comm_prefs = array();
+  	$comm_prefs = array(); 
+  	$comm_prefs[''] = "-- select --";
+  	
+  	$result = civicrm_api3('OptionValue', 'get', array(
+  			'sequential' => 1,
+  			'option_group_id' => "preferred_communication_method",
+  			'is_active' => 1,
+  			'options' => array('sort' => "name"),
+  	));
+  	
+  	if($result['is_error'] == 0 && $result['count'] > 0 ){
+  	
+  		$values = $result['values'];
+  		foreach($values as $cur){
+  			$comm_id = $cur['id'];
+  			$comm_label = $cur['label'];
+  			
+  			$comm_prefs[$comm_id] = $comm_label;
+  		}
+  		
+  	}
   	
   	$comm_prefs_select = $form->add  ('select', 'comm_prefs', ts('Communication Preference'),
   			$comm_prefs,
@@ -698,23 +766,20 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	}else{
   		$groups_of_individual = array();
   	}
-  //	require_once('utils/CustomSearchTools.php');
-  //	$searchTools = new CustomSearchTools();
   
+    if( isset( $this->_formValues['comm_prefs'] )){
+  		$comm_prefs = $this->_formValues['comm_prefs'];
+    }else{
+    	$comm_prefs = "";
+    }
   
-  
-  //	$comm_prefs = $this->_formValues['comm_prefs'];
-  
-  	//$searchTools->updateWhereClauseForCommPrefs($comm_prefs, $clauses ) ;
+    if( strlen($comm_prefs ) > 0 ){
+    	$clauses[] = "contact_a.preferred_communication_method = '".$comm_prefs."' "; 	
+    }
   
   
    $tmp_sql_list = implode( ", ", $groups_of_individual);
   
-  	//$tmp_sql_list = $searchTools->getSQLStringFromArray($groups_of_individual);
-  
-  
-  
-  	//print "<br> sql list: ".$tmp_sql_list;
   	if(strlen($tmp_sql_list) > 0 ){
   
   
@@ -738,8 +803,6 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   
   
-  
-  //	$tmp_membership_sql_list = $searchTools->convertArrayToSqlString( $membership_types_of_con ) ;
   	$tmp_membership_sql_list = implode( ", ", $membership_types_of_con );
   	
   	if(strlen($tmp_membership_sql_list) > 0 ){

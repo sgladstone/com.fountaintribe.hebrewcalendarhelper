@@ -247,6 +247,7 @@ class HebrewCalendar{
 	 *   the Jewish holiday. If there is no holiday, then  an empty
 	 *   string is returned.
 	 ******************************************************************/
+	// TODO: This needs to be tested
 	function get_rosh_hodesh_name($iyear, $imonth, $iday){
 
 		$tmp_name = "";
@@ -267,7 +268,7 @@ class HebrewCalendar{
 
 
 			}else if( $heb_day == "30"){
-				// TODO: Need to advance Jullian date and Hebrew date to the next day.
+				// Need to advance Jullian date and Hebrew date to the next day.
 				$tmp_name = "Rosh Hodesh ".$month_name ;
 
 			}else{
@@ -1668,7 +1669,10 @@ class HebrewCalendar{
 					$api_name_earliest_barbat => $bat_mitzvah_date_formated,
 			 */
 			
-			$result = civicrm_api3('Contact', 'create', $api_parms);
+			
+			// TODO: Do NOT use API here, use SQL. This is because using API creates a infinite loop because this is called from a hook
+			
+			//$result = civicrm_api3('Contact', 'create', $api_parms);
 			
 			if( $result['is_error'] == 0 && $result['count'] == 1){
 				$contacts_updated = $contacts_updated + 1;
@@ -1688,7 +1692,7 @@ class HebrewCalendar{
 	 * This function queries info from the CiviCRM database and returns
 	 * the calculated Hebrew dates as an array.
 	 ******************************************************************************/
-	function retrieve_hebrew_demographic_dates(&$cur_id_parm ){
+	function XXXretrieve_hebrew_demographic_dates(&$cur_id_parm ){
 
 		$record_found = false;
 

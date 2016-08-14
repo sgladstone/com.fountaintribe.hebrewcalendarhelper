@@ -3,38 +3,22 @@
 require_once 'hebrewcalendarhelper.civix.php';
 
 function hebrewcalendarhelper_civicrm_post( $op, $objectName, $objectId, &$objectRef ){
-	// if a deceased individual is being created or edited, rebuild yahrzeit data.
-
-	
-	
+	// if an individual is being created or edited, rebuild yahrzeit data, hebrew birthday info.
 	// 
-	if(  isset($objectRef->death_date) && strlen($objectRef->death_date) > 0 &&  $objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore' ) ){
+	if( $objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore' ) ){
 		 
-		// Recalculate Hebrew demographic dates, such as next yahrzeit date for this contact.
-		$params = array(
-				'version' => 3,
-				'sequential' => 1,
-				'contact_ids' => $objectId,
-		);
-		$result = civicrm_api('AllHebrewDates', 'calculate', $params);
+		// If there is a date of birth or date of death, then calculate Hebrew dates. 
+		if( (isset($objectRef->death_date) && strlen($objectRef->death_date) > 0)  || 
+			( isset( $objectRef->birth_date )  && strlen($objectRef->birth_date) > 0 )  ){
+				// Calculate Hebrew demographic dates, such as next yahrzeit date, next hebrew birthday date for this contact.
+				$params = array(
+						'version' => 3,
+						'sequential' => 1,
+						'contact_ids' => $objectId,
+				);
+				$result = civicrm_api('AllHebrewDates', 'calculate', $params);
 		
-        
-		
-	}else if(  $objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore' )){
-		// Recalculate Hebrew demographic dates, such as next hebrew birthday date for this contact.
-		
-		if( isset( $objectRef->birth_date )  && strlen($objectRef->birth_date) > 0 ){
-			//$tst = $djals[dada];
-			//CRM_Core_Error:log("Current obj ref:",  );
-			//CRM_Core_Error:debug("Current obj ref:",  $objectRef );
-			$params = array(
-					'version' => 3,
-					'sequential' => 1,
-					'contact_ids' => $objectId,
-			);
-		// results in infinite loop as API below tries to update this contact. 	
-		//$result = civicrm_api('AllHebrewDates', 'calculate', $params);
-		}
+		}	
 	}
 
 
