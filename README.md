@@ -38,7 +38,7 @@ This is necessary because the DOMPDF (the PDF engine that is part of CiviCRM cor
 # CiviCRM Configurations created by this extension
 
 ## Custom Data Sets
-- "Extended Date Information"
+- "Extended Date Information" Used to indicate if an individual was born/died before sunset.
 - "Yahrzeit Preferences"
 - "Yahrzeit Dates (Calculated Automatically)"
 - "Hebrew Birth Dates (Calculated Automatically)"
