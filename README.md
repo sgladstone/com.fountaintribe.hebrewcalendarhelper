@@ -38,16 +38,16 @@ This is necessary because the DOMPDF (the PDF engine that is part of CiviCRM cor
 # CiviCRM Configurations created by this extension
 
 ## Custom Data Sets
-- "Extended Date Information" Used to indicate if an individual was born/died before sunset.
-- "Yahrzeit Preferences"
-- "Yahrzeit Dates (Calculated Automatically)"
-- "Hebrew Birth Dates (Calculated Automatically)"
-- "Memorial Plaque Info" used for track information, such as if a deceased person has a memorial plaque, the location of the plaque, etc. This area is also used to integrate with the electronic yahrzeit system from Yahrzeitronix (sales@yahrzeitronix.com) 
-- "Religious"  Used to track religious information about individuals, such as their Hebrew name, tribe, etc.
+- "Extended Date Information" Used to indicate if an individual was born/died before sunset. This can be edited when editing any individual. 
+- "Yahrzeit Preferences" Used to indicate track mourner preferences for various yahrzeits observed. This can be edited when editing a yahrzeit relationship.
+- "Yahrzeit Dates (Calculated Automatically)" - Nothing in this area is editable.
+- "Hebrew Birth Dates (Calculated Automatically)" - Nothing in this area is editable.
+- "Memorial Plaque Info" used for track information, such as if a deceased person has a memorial plaque, the location of the plaque, etc. This can be edited when editing any deceased individual. This area is also used to integrate with the electronic yahrzeit system from Yahrzeitronix (sales@yahrzeitronix.com) 
+- "Religious"  Used to track religious information about individuals, such as their Hebrew name, Hebrew names of parents, etc. This can be edited when edited any individual.
 
 ## Custom Contact Types
 
-"Deceased" based on Individual
+"Deceased" based on Individual. This is set automatically. There is no need for the user to edit this.
 
 ## Custom Relationship Types
 

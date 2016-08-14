@@ -206,10 +206,12 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  $sql_date_format = "Y-m-d";
 	   
 
-	  $yahrzeit_date_raw  =   $yahrzeit_date_tmp ; // $row['yahrzeit_date_sort'] ;
-	  if( $yahrzeit_date_raw <> "0000-00-00") {
+	  $yahrzeit_date_raw  =   $yahrzeit_date_tmp ; 
+	  
+	 
+	  if( $yahrzeit_date_raw <> "0000-00-00"  &&  is_numeric (substr($yahrzeit_date_raw, 0 , 4)) ) {
 	  	 
-	  	 
+	  	//CRM_Core_Error::debug("Debug: yahrzeit date raw, will do shabbat calcs : ",  $yahrzeit_date_raw );
 	  	// take care of tokens for Friday, Saturday before the yahrzeit, and the Friday, Saturday after the yahrzeit.
 	  	$yah_timestamp = strtotime($yahrzeit_date_raw);
 	  	$yah_day_of_week = date( 'w', $yah_timestamp);
@@ -242,18 +244,27 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  		$raw_saturday_after  =  strtotime(date("Y-m-d", $yah_timestamp) ." next Saturday");
 
 
-	  	}
+	  	} 	
+	  	
+	  	$sql_friday_before = "'".date($sql_date_format, $raw_friday_before )."'";
+	  	$sql_friday_after = "'".date($sql_date_format, $raw_friday_after )."'";
 
-	  	$sql_friday_before = date($sql_date_format, $raw_friday_before );
-	  	$sql_friday_after = date($sql_date_format, $raw_friday_after );
+	  	$sql_saturday_before = "'".date($sql_date_format, $raw_saturday_before )."'";
+	  	$sql_saturday_after = "'".date($sql_date_format, $raw_saturday_after )."'";
 
-	  	$sql_saturday_before = date($sql_date_format, $raw_saturday_before );
-	  	$sql_saturday_after = date($sql_date_format, $raw_saturday_after );
+	  	$sql_yahrzeit_date_morning = "'".date($sql_date_format, $raw_yahrzeit_date_morning )."'";
 
-	  	$sql_yahrzeit_date_morning = date($sql_date_format, $raw_yahrzeit_date_morning );
-
-	  	 
-
+	  }else{
+	  	 // CRM_Core_Error::debug("Debug: yahrzeit date raw, will NOT do shabbat calcs : ",  $yahrzeit_date_raw );
+	  	
+		  	$sql_friday_before = "null";
+		  	$sql_friday_after = "null";
+		  	
+		  	$sql_saturday_before = "null";
+		  	$sql_saturday_after = "null";
+		  	
+		  	$sql_yahrzeit_date_morning = "null";
+	  	
 	  }
 	  // verify this is a valid SQL date
 	  if( strlen( $yahrzeit_date_tmp ) > 10 ){
@@ -283,7 +294,8 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			%3, %4,
 			%5, '$relationship_name_formated', %6,
 			'$mourner_observance_preference', '$plaque_location',
-			'$sql_friday_before', '$sql_saturday_before', '$sql_friday_after', '$sql_saturday_after', '$sql_yahrzeit_date_morning', '$yahrzeit_relationship_id'  )";
+			$sql_friday_before, $sql_saturday_before, $sql_friday_after, $sql_saturday_after,
+	  		$sql_yahrzeit_date_morning, '$yahrzeit_relationship_id'  )";
 	  	
 		 //	print "<br><br><b>Insert sql: </b>".$insert_sql;
 
@@ -328,12 +340,9 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 				$params_a[6] =  array( ' ', 'String' );
 			}
 				
-				
-			//print "<br>sql params<br>: ";
-			//print_r($params_a);
-				
+		
+			
 			$dao = 		CRM_Core_DAO::executeQuery( $insert_sql,   $params_a ) ;
-			// print "<br> done with insert";
 			$dao->free();
 				
 }
@@ -519,6 +528,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	AND contact_a.is_deleted <> 1  ".$mourner_count_where ;
 
 
+	
+	
 	$config = CRM_Core_Config::singleton( );
 
 	$tmp_system_date_format = 	$config->dateInputFormat;
@@ -612,6 +623,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	//  print "<br><br> honor mourner pref: ".$honor_mourner_pref;
     $mourner_contacts_count = 0; 
 	
+   // CRM_Core_Error::debug("Debug: Yahrzeit sql: ", $sql ); 
+    
 	$dao =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
 	while ( $dao->fetch( ) ) {
 
@@ -700,22 +713,19 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 				//$tmp_str = implode(", ", $subtypes_for_api );
 				//$rtn_data['error_message'] = "API Stuff: ".$subtypes_for_api;
 				//return $rtn_data;
-		  
-		
-			// TODO: Use SQL, not API. API creates infinite loop becase this is called from a hook.
-			/*
+		  	
 			$con_update_result = civicrm_api3('Contact', 'create', array(
 					'sequential' => 1,
 					'id' => $deceased_contact_id,
 					'contact_sub_type' => $subtypes_for_api,
 			));
 			
-			if($con_update_result['is_error'] <> 0 )
+			if($con_update_result['is_error'] <> 0 ){
 			    
 			    $rtn_data['error_message'] = "API error on update of contact id  $deceased_contact_id : ".$con_update_result['error_message'];
 			    return $rtn_data;
+			}
 			    
-			    */
 			}
 			
 		}else{
@@ -727,7 +737,6 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 
 		$hebrew_deceased_date  = $tmpHebCal->util_convert2hebrew_date($deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $hebrew_date_format);
 
-		//      print " <br>Hebrew deceased date: ".$hebrew_deceased_date;
 
 		$gregorian_date_format_plain = 'yyyy-mm-dd';
 
@@ -746,13 +755,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		  'result_date_format' => $gregorian_date_format_plain
 
 		);
-		//$result = civicrm_api('YahrzeitDate', 'get', $params);
-
-		//print_r( $result);
-
-			
-
-
+		
 		$yahrzeit_date_tmp_next  = $tmpHebCal->util_get_yahrzeit_date($next_flag,  $deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $erev_start_flag, $gregorian_date_format_plain);
 		//    print "<br>Next yahrzeit date: ".$yahrzeit_date_tmp_next;
 
@@ -805,7 +808,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 			$formated_english_deceased_date = "Unknown date";
 
 		}
-		// print "<br>Formatted English deceased date".$formated_english_deceased_date  ;
+		
 
 		// Calculate English yahrzeit for mourners who observe the English anniversary.
 		$tmp_yahrzeit_date_observe_english_next  = $tmpHebCal->getYahrzeitDateEnglishObservance($deceased_year, $deceased_month, $deceased_day, $next_flag);
@@ -826,127 +829,15 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 			$mourner_contact_id = 0;
 
 		}
-
-		$params = array(
-		  'version' => 3,
-		  'sequential' => 1,
-		  'name' => HebrewCalendar::YAH_DECEASED_CUSTOM_FIELD_GROUP_NAME,
-		);
-		$result = civicrm_api('CustomGroup', 'getsingle', $params);
-
-		if(isset($result['table_name'])){
-			$heb_cal_table_name = $result['table_name'];
-			$heb_cal_set_id = $result['id'];
-		}else{
-			$heb_cal_table_name = "";
-		}
-
-		if( strlen( $heb_cal_table_name) > 0){
-			 
-
-			$params = array(
-			  'version' => 3,
-			  'sequential' => 1,
-			  'custom_group_id' =>  $heb_cal_set_id,
-			  'name' => HebrewCalendar::YAH_NEXT_HEB_YAHRZEIT_NAME,
-			);
-			$result = civicrm_api('CustomField', 'getsingle', $params);
-			
-			if( isset ( $result['column_name'])){
-				$col_name_next_heb_yahrzeit = $result['column_name'];
-			}else{
-				$col_name_next_heb_yahrzeit = "";
-				
-			}
-
-
-			$params = array(
-			  'version' => 3,
-			  'sequential' => 1,
-			  'custom_group_id' =>  $heb_cal_set_id,
-			  'name' => HebrewCalendar::YAH_NEXT_ENGLISH_YAHRZEIT_NAME,
-			);
-			$result = civicrm_api('CustomField', 'getsingle', $params);
-			
-			if( isset ( $result['column_name'])){
-				$col_name_next_english_yahrzeit = $result['column_name'];
-			}else{
-				$col_name_next_english_yahrzeit = "";
-			}
-			 
-			$params = array(
-			  'version' => 3,
-			  'sequential' => 1,
-			  'custom_group_id' =>  $heb_cal_set_id,
-			  'name' => HebrewCalendar::YAH_HEB_DEATH_DATE_NAME,
-			);
-			$result = civicrm_api('CustomField', 'getsingle', $params);
-				
-			if( isset ( $result['column_name'])){
-				$col_name_hebrew_date_of_death = $result['column_name'];
-			}else{
-				$col_name_hebrew_date_of_death = ""; 
-			}
-			
-			
-			if( strlen($col_name_next_heb_yahrzeit) > 0 && strlen($col_name_next_english_yahrzeit) > 0  ){   
-					$dao_exists =& CRM_Core_DAO::executeQuery(
-							"select count(*) as count from $heb_cal_table_name where entity_id =  $deceased_contact_id ", 
-							CRM_Core_DAO::$_nullArray ) ;
-		
-					$rec_exists = false;
-					if($dao_exists->fetch()){
-						if( $dao_exists->count == "1" ){
-							$rec_exists = true;
-						}else{
-							$rec_exists = false;
-						}
-		
-					}
-					 
-					
-					
-					$yah_date_cleaned_for_sql  = "null";
-					// 'Cannot determine yahrzeit date'
-					if(  is_numeric (substr($yahrzeit_date_tmp_next, 0 , 4)) ){
-						$yah_date_cleaned_for_sql = "'".$yahrzeit_date_tmp_next."'" ;
-						
-					}else{
-						// all years must be numeric
-						$yah_date_cleaned_for_sql  = "null";
-						
-					}
-					
-					//   $hebrew_data = $tmpHebCal::retrieve_hebrew_demographic_dates( $deceased_contact_id);
-					if( $rec_exists){
-						$sql_deceased_contact_record	= "UPDATE $heb_cal_table_name SET
-						$col_name_next_heb_yahrzeit  = $yah_date_cleaned_for_sql,
-						$col_name_next_english_yahrzeit = date_add( '$tmp_yahrzeit_date_observe_english_next' , INTERVAL 1 day),
-						$col_name_hebrew_date_of_death = '".$hebrew_deceased_date."'
-						WHERE entity_id =  $deceased_contact_id ";
-		
-					}else{
-						$sql_deceased_contact_record = "INSERT INTO $heb_cal_table_name (entity_id , $col_name_next_heb_yahrzeit, $col_name_next_english_yahrzeit, $col_name_hebrew_date_of_death   )
-						VALUES( $deceased_contact_id , $yah_date_cleaned_for_sql , date_add( '$tmp_yahrzeit_date_observe_english_next' , INTERVAL 1 day),
-						'".$hebrew_deceased_date."'
-		 )  ";
-					}
-					 
-					$dao_update_dececased =& CRM_Core_DAO::executeQuery( $sql_deceased_contact_record,   CRM_Core_DAO::$_nullArray ) ;
-					$dao_update_dececased->free();
-			 
-			 
-		}
-	}
-		 
+ 
 		 if(isset($deceased_date_before_sunset_formated)){
 		 	// do nothing.
 		 }else{
 		 	$deceased_date_before_sunset_formated = "";
 		 }
 		 
-		 
-		//print "<br><br>Yahrzeit date formatted for SQL insert: ".$yahrzeit_date_tmp_next;
+		$rtn_count =  $tmpHebCal->updateCiviCRMCalcYahrzeitFields( $deceased_contact_id, $yahrzeit_date_tmp_next, $tmp_yahrzeit_date_observe_english_next, $hebrew_deceased_date  );
+		
 		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_hebrew, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
 				$deceased_name,  $formated_english_deceased_date,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,
@@ -990,9 +881,10 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	$rtn_data['mourner_contacts_count'] = $mourner_contacts_count; 
 	
 	return $rtn_data;
-	
-	
 
 }
+
+
+
 
 

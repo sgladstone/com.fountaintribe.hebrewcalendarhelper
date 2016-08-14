@@ -109,17 +109,39 @@ class HebrewCalendar{
 	const RELIGIOUS_CUSTOM_FIELD_GROUP_NAME = "Religious";
 	const RELIGIOUS_CUSTOM_FIELD_GROUP_TITLE = "Religious";
 	
+	const HEB_NAME_FIELD_TITLE = "Hebrew Name";
+	const HEB_NAME_FIELD_NAME = "Hebrew_Name";
+	
+	const HEB_NAME_PARENTS_FIELD_TITLE = "Hebrew Names of Parents";
+	const HEB_NAME_PARENTS_FIELD_NAME = "Hebrew_Names_of_Parents";
+	
+	const IS_JEWISH_FIELD_TITLE = "Is Jewish";
+	const IS_JEWISH_FIELD_NAME = "Is_Jewish";
+	
+	// Other fields to add to "Religious" field set.
+	// Tribe (select list) // options: 'Israelite' , 'Levi' , 'Cohen' 
+	// Bar_Bat_Mitzvah_Date , Bar/Bat Mitzvah Date  (date)
+	// Bar_Bat_Mitzvah_Parasha , Bar_Bat_Mitzvah_Parasha (text)
+	// Confirmation_Date , Confirmation Date (date)
+	
 	const PLAQUE_CUSTOM_FIELD_GROUP_TITLE = "Memorial Plaque Info";
-	const PLAQUE_CUSTOM_FIELD_GROUP_NAME = "Plaque Info";
+	const PLAQUE_CUSTOM_FIELD_GROUP_NAME = "Plaque_Info";
+	
+	const HAS_PLAQUE_FIELD_TITLE = "Has Plaque"; // boolean
+	const HAS_PLAQUE_FIELD_NAME = "Has_Plaque";
+	
+	const PLAQUE_LOCATION_TITLE = "Plaque Location";
+	const PLAQUE_LOCATION_NAME = "Plaque_Location";
 	
 	
 // Yahrzeit - correct spelling, per hebcal.com
 
-	// TODO: Fix original names, titles,  in older databases. 
+	// TODO: Fix original names, titles,  in older CiviCRM databases. 
 // Yarzheit - incorrect spelling, fix via SQL as needed.  also spaces used to be used in the 'name'
 
-	// original title: 'Yarzheit observed by'
-	// original name: 'Yarzheit observed by'
+	// original relationship title: 'Yarzheit observed by'
+	// original relationship name: 'Yarzheit observed by'
+	
 	const YAHRZEIT_RELATIONSHIP_TYPE_A_B_TITLE = "Yahrzeit observed by";
 	const YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME = "Yahrzeit_observed_by";
 	
@@ -151,9 +173,7 @@ class HebrewCalendar{
 		rel.relationship_type_id = reltype.id
 		and contact_id_a = $deceased_contact_id and contact_id_b = $mourner_contact_id
 		and contact_id_a = con.id
-		and rel.is_active = 1)
-	
-		";
+		and rel.is_active = 1)		";
 	
 		$dao =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
 		$first_time = true;
@@ -891,6 +911,16 @@ class HebrewCalendar{
 		$this->createCustomCRMConfigs();
 		$this->createYahrzeitTempTable();
 		
+		
+		// calculate all Hebrew dates. ( this is helpful on re-installs and re-enablement.
+		// This has no impact on fresh installs. 
+		$params = array(
+				'version' => 3,
+				'sequential' => 1,
+		);
+		$result = civicrm_api('AllHebrewDates', 'calculate', $params);
+	 
+		
 	}
 	
 	// This is normally called whenever this extension is disabled.
@@ -1424,15 +1454,90 @@ class HebrewCalendar{
 			// nothing to do
 		}
 		
+		// add fields to Religious field set
+		//
+		$result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::HEB_NAME_FIELD_NAME,
+		));
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$result = civicrm_api3('CustomField', 'create', array(
+					'sequential' => 1,
+					'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+					'label' =>  HebrewCalendar::HEB_NAME_FIELD_TITLE,
+					'name' => HebrewCalendar::HEB_NAME_FIELD_NAME,
+					'data_type' => "String",
+					'html_type' => "Text",
+					'is_required' => "0",
+					'is_searchable' => "1",
+					'help_pre' => "", 
+					'help_post' => "Example:  David or דוד",
+		
+			));
+		
+		}
+		
+		//
+		$result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::HEB_NAME_PARENTS_FIELD_NAME,
+		));
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$result = civicrm_api3('CustomField', 'create', array(
+					'sequential' => 1,
+					'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+					'label' =>  HebrewCalendar::HEB_NAME_PARENTS_FIELD_TITLE,
+					'name' => HebrewCalendar::HEB_NAME_PARENTS_FIELD_NAME,
+					'data_type' => "String",
+					'html_type' => "Text",
+					'is_required' => "0",
+					'is_searchable' => "1",
+					'help_pre' => "", 
+					'help_post' => "Example: Ben Moshe v'Sarah or בן משה ושרה",
+		
+			));
+		
+		}
+		
+		//
+		$result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::IS_JEWISH_FIELD_NAME,
+		));
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$result = civicrm_api3('CustomField', 'create', array(
+					'sequential' => 1,
+					'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+					'label' =>  HebrewCalendar::IS_JEWISH_FIELD_TITLE,
+					'name' => HebrewCalendar::IS_JEWISH_FIELD_NAME,
+					'data_type' => "Boolean",
+					'html_type' => "Radio",
+					'is_required' => "0",
+					'is_searchable' => "1",
+					'help_pre' => "",
+					'help_post' => "", 
+		
+			));
+		
+		}
+		
+		
+	
 		// if needed, create plaque custom field set
-		//PLAQUE_CUSTOM_FIELD_GROUP_NAME
 		$result = civicrm_api3('CustomGroup', 'get', array(
 				'sequential' => 1,
 				'name' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
 		));
 		
 		// TODO: Check that it extends correct contact type.
-		
+		CRM_Core_Error::debug("Debug: Just checked if '".HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME."' set exists. : ",  $result );
+		//CRM_Core_Error::log("Debug: Just checked if '".HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME."' set exists. : ",  $result );
 		if($result['is_error'] <> 0 || $result['count'] == 0  ){
 		
 			$tmp_api_table_name = $this->formatTableNameForCreateAPI( HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME);
@@ -1454,6 +1559,62 @@ class HebrewCalendar{
 		}else{
 			// nothing to do
 		}
+		
+		// add custom fields to Plaque Info set
+		
+		
+		// // HAS_PLAQUE_FIELD_NAME
+		$result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::HAS_PLAQUE_FIELD_NAME,
+		));
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$result = civicrm_api3('CustomField', 'create', array(
+					'sequential' => 1,
+					'custom_group_id' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
+					'label' =>  HebrewCalendar::HAS_PLAQUE_FIELD_TITLE,
+					'name' => HebrewCalendar::HAS_PLAQUE_FIELD_NAME,
+					'data_type' => "Boolean",
+					'html_type' => "Radio",
+					'is_required' => "0",
+					'is_searchable' => "1",
+					'help_pre' => "",
+					'help_post' => "",
+		
+			));
+		
+		}
+		
+		
+		
+		
+		//
+		$result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::PLAQUE_LOCATION_NAME,
+		));
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			$result = civicrm_api3('CustomField', 'create', array(
+					'sequential' => 1,
+					'custom_group_id' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
+					'label' =>  HebrewCalendar::PLAQUE_LOCATION_TITLE,
+					'name' => HebrewCalendar::PLAQUE_LOCATION_NAME,
+					'data_type' => "String",
+					'html_type' => "Text",
+					'is_required' => "0",
+					'is_searchable' => "1",
+					'help_pre' => "",
+					'help_post' => "",
+		
+			));
+		
+		}
+		
+		
 		
 		
 	}
@@ -1585,8 +1746,7 @@ class HebrewCalendar{
 			$birth_date_before_sunset = $dao->birth_date_before_sunset;
 			$gender = $dao->gender_label;
 	
-				
-				
+						
 			$hebrew_date_format =  'dd MM yy';
 			$hebrew_birth_date_formated = self::util_convert2hebrew_date($birth_year, $birth_month, $birth_day, $birth_date_before_sunset, $hebrew_date_format);
 			
@@ -1646,6 +1806,7 @@ class HebrewCalendar{
 			
 			
 			// Now update the contact with the newly calculated values.
+			/*
 			$api_parms = array(
 					'sequential' => 1,
 					'id' =>  $contact_id,
@@ -1664,20 +1825,26 @@ class HebrewCalendar{
 			
 				$api_parms[$api_name_next_hebrew_birthday] = $next_hebrew_birthday_formated;
 			}
+			
+			*/
 			/*
 			 * $api_name_heb_birth_date => $hebrew_birth_date_formated,
 					$api_name_earliest_barbat => $bat_mitzvah_date_formated,
 			 */
 			
 			
-			// TODO: Do NOT use API here, use SQL. This is because using API creates a infinite loop because this is called from a hook
+			// Do NOT use CiviCRM API here, use SQL. This is because using API creates a infinite loop because this is called from a hook
+			$rtn_code  = $this->updateCiviCRMCalcBirthdayFields(  $contact_id, $hebrew_birth_date_formated, $bat_mitzvah_date_formated, $next_hebrew_birthday_formated ) ;
 			
+			if( $rtn_code > 0 ){
+				$contacts_updated = $contacts_updated + 1;
+			}
 			//$result = civicrm_api3('Contact', 'create', $api_parms);
 			
-			if( $result['is_error'] == 0 && $result['count'] == 1){
-				$contacts_updated = $contacts_updated + 1;
+			//if( $result['is_error'] == 0 && $result['count'] == 1){
+			//	$contacts_updated = $contacts_updated + 1;
 	
-			}
+			//}
 				
 		}
 		$dao->free();
@@ -1685,6 +1852,261 @@ class HebrewCalendar{
 		$rtn_data['contacts_updated_birthdays'] = $contacts_updated;
 		return $rtn_data;
 		 
+	}
+	
+	function updateCiviCRMCalcYahrzeitFields( &$deceased_contact_id, &$yahrzeit_date_tmp_next, &$tmp_yahrzeit_date_observe_english_next, &$hebrew_deceased_date  ){
+		
+		$params = array(
+				'version' => 3,
+				'sequential' => 1,
+				'name' => HebrewCalendar::YAH_DECEASED_CUSTOM_FIELD_GROUP_NAME,
+		);
+		$result = civicrm_api('CustomGroup', 'getsingle', $params);
+		
+		if(isset($result['table_name'])){
+			$heb_cal_table_name = $result['table_name'];
+			$heb_cal_set_id = $result['id'];
+		}else{
+			$heb_cal_table_name = "";
+		}
+		
+		if( strlen( $heb_cal_table_name) > 0){
+		
+		
+			$params = array(
+					'version' => 3,
+					'sequential' => 1,
+					'custom_group_id' =>  $heb_cal_set_id,
+					'name' => HebrewCalendar::YAH_NEXT_HEB_YAHRZEIT_NAME,
+			);
+			$result = civicrm_api('CustomField', 'getsingle', $params);
+				
+			if( isset ( $result['column_name'])){
+				$col_name_next_heb_yahrzeit = $result['column_name'];
+			}else{
+				$col_name_next_heb_yahrzeit = "";
+		
+			}
+		
+		
+			$params = array(
+					'version' => 3,
+					'sequential' => 1,
+					'custom_group_id' =>  $heb_cal_set_id,
+					'name' => HebrewCalendar::YAH_NEXT_ENGLISH_YAHRZEIT_NAME,
+			);
+			$result = civicrm_api('CustomField', 'getsingle', $params);
+				
+			if( isset ( $result['column_name'])){
+				$col_name_next_english_yahrzeit = $result['column_name'];
+			}else{
+				$col_name_next_english_yahrzeit = "";
+			}
+		
+			$params = array(
+					'version' => 3,
+					'sequential' => 1,
+					'custom_group_id' =>  $heb_cal_set_id,
+					'name' => HebrewCalendar::YAH_HEB_DEATH_DATE_NAME,
+			);
+			$result = civicrm_api('CustomField', 'getsingle', $params);
+		
+			if( isset ( $result['column_name'])){
+				$col_name_hebrew_date_of_death = $result['column_name'];
+			}else{
+				$col_name_hebrew_date_of_death = "";
+			}
+				
+				
+			if( strlen($col_name_next_heb_yahrzeit) > 0 && strlen($col_name_next_english_yahrzeit) > 0  ){
+				$dao_exists =& CRM_Core_DAO::executeQuery(
+						"select count(*) as count from $heb_cal_table_name where entity_id =  $deceased_contact_id ",
+						CRM_Core_DAO::$_nullArray ) ;
+		
+				$rec_exists = false;
+				if($dao_exists->fetch()){
+					if( $dao_exists->count == "1" ){
+						$rec_exists = true;
+					}else{
+						$rec_exists = false;
+					}
+		
+				}
+		
+					
+					
+				$yah_date_cleaned_for_sql  = "null";
+				
+				if(  is_numeric (substr($yahrzeit_date_tmp_next, 0 , 4)) ){
+					$yah_date_cleaned_for_sql = "'".$yahrzeit_date_tmp_next."'" ;
+					
+					$yah_english_next_for_sql = " date_add( '$tmp_yahrzeit_date_observe_english_next' , INTERVAL 1 day) ";
+		
+				}else{
+					// all years must be numeric
+					// this means  'Cannot determine yahrzeit date'
+					$yah_date_cleaned_for_sql  = "null";
+					$yah_english_next_for_sql  = "null"; 
+		
+				}
+				
+				$hebrew_date_of_death_for_sql = str_replace("'", "''",$hebrew_deceased_date );   // escape ' for sql
+					
+				//   $hebrew_data = $tmpHebCal::retrieve_hebrew_demographic_dates( $deceased_contact_id);
+				if( $rec_exists){
+					$sql	= "UPDATE $heb_cal_table_name SET
+					$col_name_next_heb_yahrzeit  = $yah_date_cleaned_for_sql,
+					$col_name_next_english_yahrzeit =  $yah_english_next_for_sql ,
+					$col_name_hebrew_date_of_death = '".$hebrew_date_of_death_for_sql."'
+					WHERE entity_id =  $deceased_contact_id ";
+		
+				}else{
+					$sql = "INSERT INTO $heb_cal_table_name (entity_id , $col_name_next_heb_yahrzeit, $col_name_next_english_yahrzeit, $col_name_hebrew_date_of_death   )
+					VALUES( $deceased_contact_id , $yah_date_cleaned_for_sql , $yah_english_next_for_sql ,  '".$hebrew_date_of_death_for_sql."'	 )  ";
+				}
+		
+				// CRM_Core_Error::debug("Debug: Yahrzeit sql for custom fields : ", $sql );
+				$dao_update_dececased =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
+				$dao_update_dececased->free();
+		
+		
+			}
+		}
+		
+		
+	}
+	function updateCiviCRMCalcBirthdayFields(  &$contact_id, &$hebrew_birth_date_formated, &$bat_mitzvah_date_formated, &$next_hebrew_birthday_formated){
+		
+		$rtn_did_update = 0 ; 
+		
+		$params = array(
+				'version' => 3,
+				'sequential' => 1,
+				'name' => HebrewCalendar::HEB_BIRTH_CUSTOM_FIELD_GROUP_NAME,
+		);
+		$result = civicrm_api('CustomGroup', 'getsingle', $params);
+		
+		if(isset($result['table_name'])){
+			$heb_cal_table_name = $result['table_name'];
+			$heb_cal_set_id = $result['id'];
+		}else{
+			$heb_cal_table_name = "";
+		}
+		
+		if( strlen( $heb_cal_table_name) > 0){
+		
+		
+			$params = array(
+					'version' => 3,
+					'sequential' => 1,
+					'custom_group_id' =>  $heb_cal_set_id,
+					'name' => HebrewCalendar::HEB_NEXT_BIRTHDAY_NAME,
+			);
+			$result = civicrm_api('CustomField', 'getsingle', $params);
+				
+			if( isset ( $result['column_name'])){
+				$col_name_next_heb_birthday = $result['column_name'];
+			}else{
+				$col_name_next_heb_birthday = "";
+		
+			}
+		
+		
+			$params = array(
+					'version' => 3,
+					'sequential' => 1,
+					'custom_group_id' =>  $heb_cal_set_id,
+					'name' => HebrewCalendar::HEB_EARLIEST_BARBAT_MITZVAH_NAME,
+			);
+			$result = civicrm_api('CustomField', 'getsingle', $params);
+				
+			if( isset ( $result['column_name'])){
+				$col_name_earliest_barbat = $result['column_name'];
+			}else{
+				$col_name_earliest_barbat = "";
+			}
+		
+			
+			$params = array(
+					'version' => 3,
+					'sequential' => 1,
+					'custom_group_id' =>  $heb_cal_set_id,
+					'name' => HebrewCalendar::HEB_BIRTH_DATE_NAME,
+			);
+			$result = civicrm_api('CustomField', 'getsingle', $params);
+		
+			if( isset ( $result['column_name'])){
+				$col_name_hebrew_date_of_birth = $result['column_name'];
+			}else{
+				$col_name_hebrew_date_of_birth = "";
+			}
+				
+			// if all three columns exist, do sql. 	
+			if( strlen($col_name_next_heb_birthday) > 0 && strlen($col_name_earliest_barbat) > 0 && strlen( $col_name_hebrew_date_of_birth ) > 0  ){
+				$dao_exists =& CRM_Core_DAO::executeQuery(
+						"select count(*) as count from $heb_cal_table_name where entity_id =  $contact_id ",
+						CRM_Core_DAO::$_nullArray ) ;
+				$rec_exists = false;
+				if($dao_exists->fetch()){
+					if( $dao_exists->count == "1" ){
+						$rec_exists = true;
+					}else{
+						$rec_exists = false;
+					}
+				}
+		
+				// 3 dates to put in database: $hebrew_birth_date_formated, $bat_mitzvah_date_formated, $next_hebrew_birthday_formated		
+				$sql_earliest_barbat_date = $this->cleanDateForSQL( $bat_mitzvah_date_formated ); 
+				$sql_next_heb_birthday = $this->cleanDateForSQL( $next_hebrew_birthday_formated ); 
+				
+				$sql_heb_date_of_birth = str_replace("'", "''", $hebrew_birth_date_formated);
+					
+				if( $rec_exists){
+					$sql	= "UPDATE $heb_cal_table_name SET
+					$col_name_next_heb_birthday  = $sql_next_heb_birthday,
+					$col_name_earliest_barbat = $sql_earliest_barbat_date,
+					$col_name_hebrew_date_of_birth = '".$sql_heb_date_of_birth."'
+					WHERE entity_id =  $contact_id ";
+		
+				}else{
+					$sql = "INSERT INTO $heb_cal_table_name 
+					(entity_id , $col_name_next_heb_birthday , $col_name_earliest_barbat, $col_name_hebrew_date_of_birth   )
+					VALUES( $contact_id , $sql_next_heb_birthday ,$sql_earliest_barbat_date, '".$sql_heb_date_of_birth."' ) ";
+				}
+		
+				
+				//CRM_Core_Error::debug("Debug: Date of birth sql for custom fields : ", $sql );
+				$dao =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
+				$dao->free();
+		
+			     $rtn_did_update = 1; 
+			}
+		}
+		
+		
+		
+		
+		return $rtn_did_update; 
+		
+	}
+	
+	
+	private function cleanDateForSQL(&$date_parm){
+		
+	$date_cleaned  = "null";
+	// 'Cannot determine date'
+	if(  is_numeric (substr($date_parm, 0 , 4)) ){
+		$date_cleaned = "'".$date_parm."'" ;
+	
+	}else{
+		// all years must be numeric
+		$date_cleaned  = "null";
+	
+	}
+	
+	
+	return $date_cleaned; 
+	
 	}
 	
 	/*****************************************************************************
@@ -1975,11 +2397,7 @@ class HebrewCalendar{
 					return;
 				}
 				
-				/*
-				 * 
-				$english_start_date = '2011-10-01';
-				$english_end_date = '2011-10-15';
-				
+				/*		
 				session_start();
 
 				if(isset($_SESSION['yahrzeit_sql']))
@@ -2001,32 +2419,7 @@ class HebrewCalendar{
 				*/
 
 
-				// TODO: Get table name and column names from API.
-				//require_once 'CRM/Hebrew/HebrewDates.php';
-				//require_once('utils/util_custom_fields.php');
-				/*
-				$custom_field_group_label = "Extended Date Information";
-				$custom_field_birthdate_sunset_label = "Birth Date Before Sunset";
-				$custom_field_deathdate_sunset_label = "Death Date Before Sunset" ;
-
-           
-				$customFieldLabels = array($custom_field_birthdate_sunset_label   , $custom_field_deathdate_sunset_label );
-				$extended_date_table = "";
-				$outCustomColumnNames = array();
-
-
-				$error_msg = getCustomTableFieldNames($custom_field_group_label, $customFieldLabels, $extended_date_table, $outCustomColumnNames ) ;
-
-				$extended_birth_date  =  $outCustomColumnNames[$custom_field_birthdate_sunset_label];
-				$extended_death_date  =  $outCustomColumnNames[$custom_field_deathdate_sunset_label];
-
-				// list($error_msg, $extended_date_table,  $extended_birth_date , $extended_death_date) = getCustomTableFieldNames();
-
-				if($error_msg <> ''){
-
-					return ;
-				}
-				*/
+				
 
 				$i = 1;
 				$cid_list = "";
@@ -2063,8 +2456,7 @@ class HebrewCalendar{
        AND contact_b.mourner_contact_id in (   $cid_list )
        ORDER BY sort_name asc";
 				 
-				//   print "<br>Yizkor sql: ".$yizkor_sql_str;
-				 // INTERVAL 30 DAY
+				
 				 
 
 				$html_table_begin =  '<table border=0 style="border-spacing: 0; border-collapse: collapse; width: 100%">
@@ -2204,7 +2596,8 @@ class HebrewCalendar{
      concat( year(yahrzeit_date), '-', month(yahrzeit_date), '-', day(yahrzeit_date)) as yahrzeit_date_sort , yahrzeit_date_display, 
 						relationship_name_formatted,
       yahrzeit_type, mourner_observance_preference
-       FROM ".$yahrzeit_temp_table_name." contact_b INNER JOIN civicrm_contact contact_a ON contact_a.id = contact_b.mourner_contact_id
+       FROM ".$yahrzeit_temp_table_name." contact_b 
+       INNER JOIN civicrm_contact contact_a ON contact_a.id = contact_b.mourner_contact_id
        JOIN civicrm_contact deceased_contact_table ON deceased_contact_table.id = contact_b.deceased_contact_id
        WHERE contact_b.created_date >= DATE_SUB(CURDATE(), INTERVAL 10 MINUTE) AND (yahrzeit_type = mourner_observance_preference)
        AND yahrzeit_date >= CURDATE()
@@ -2212,7 +2605,7 @@ class HebrewCalendar{
         AND date(yahrzeit_date) = DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." )
        ORDER BY sort_name asc";
 					
-				//print "<br><br>SQL: ".$yahrzeit_sql;
+				
 				 
 		if( strlen($yahrzeit_sql) > 0 ){
 			$dao =& CRM_Core_DAO::executeQuery( $yahrzeit_sql ,   CRM_Core_DAO::$_nullArray ) ;
@@ -2446,7 +2839,7 @@ class HebrewCalendar{
 	 *********************************************************************/
 	function util_get_hebrew_month_name( &$julian_date, &$hebrew_date){
 
-		/* TODO: Use month spellings from HebCal.com for all months.
+		/* Use month spellings from HebCal.com for all months.
 		PHP spellings (hebcal.com spellings):
 		[1] => Tishri  (Tishrei)
 		[2] => Heshvan (Cheshvan)
@@ -2521,7 +2914,7 @@ class HebrewCalendar{
 		
   // https://en.wikipedia.org/wiki/Hebrew_calendar
   //  To determine whether year n of the calendar is a leap year, 
-  // find the remainder on dividing [(7 � n) + 1] by 19. 
+  // find the remainder on dividing [(7 × n) + 1] by 19. 
   // If the remainder  is 6 or less it is a leap year; if it is 7 or more it is not.
 		
 		$tmp = (7 * $hebrewYear) + 1;
@@ -2832,7 +3225,7 @@ class HebrewCalendar{
 						// so move observance forward by one day (eg no Chesvan 30 on first observance
 						// so observe yahrzeit/birthay on Kiselv 1. (which is also 1st day of Rosh Hodesh)
 						// Meaning on Cheshvan 30 when it exists
-						// and on Kislev 1 when Cheshvan 30 doesn�t exist.
+						// and on Kislev 1 when Cheshvan 30 doesn’t exist.
 						// for example: for a person that died/born on Chesvan 30, this means observe the yarzeit/birthday on Kislev 1.
 						// for example: for a person that died/born on Kiselv 30, this means observe the yarzeit/birthday on Tevet 1.
 						$tmp_hmonth = $original_hmonth + 1; 
@@ -2853,13 +3246,13 @@ class HebrewCalendar{
 					A) there IS NO Cheshvan 30 for the first yahrzeit, then the Yahrtzeit falls on 
 					Kislev 1 and all the following Yahrtzeits will be on the 
 					1st day of Rosh Hodesh. Meaning on Cheshvan 30 when it exists 
-					and on Kislev 1 when Cheshvan 30 doesn�t exist.
+					and on Kislev 1 when Cheshvan 30 doesn’t exist.
 					OR
 					B) There IS Cheshvan 30, then the Yahrtzeit falls on
 					 Cheshvan 30 and all the following Yahrtzeits will 
 					 fall on the last day of Cheshvan. Meaning on Cheshvan 
 					 30 (1st day Rosh Hodesh) when it exists and 
-					 on Cheshvan 29 when Cheshvan 30 doesn�t exist.
+					 on Cheshvan 29 when Cheshvan 30 doesn’t exist.
 						*/
 					
 				}
