@@ -24,7 +24,7 @@ Full documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
  - "Relationship of Deceased to Mourner in exactly X days"
  
 
-If you are planning to use these tokens to create a PDF letter, you need to install "wkhtmltopdf"
+If you are planning to use these tokens to create a PDF letter, you need to install "wkhtmltopdf" as that allows for Hebrew in PDF documents. 
  
 Directions on how to install "wkhtmltopdf" at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
 
