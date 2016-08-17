@@ -4,7 +4,7 @@ Has a variety of functionality related to the Hebrew calendar. This includes mai
   
 # Features added by this extension
 
-User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
+Full documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
 
 ## Custom Tokens
 
@@ -23,10 +23,10 @@ User documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
  - "Hebrew Date of Death in exactly X days"
  - "Relationship of Deceased to Mourner in exactly X days"
  
- If you are planning to use these tokens to create a PDF letter, you need to install "wkhtmltopdf" and the Hebrew character set for your operating system. Then configure CiviCRM to use "wkhtmltopdf". If this is not done,
- tokens that use Hebrew letters will show as ????? in the PDF document. 
+
+If you are planning to use these tokens to create a PDF letter, you need to install "wkhtmltopdf"
  
-This is necessary because the DOMPDF (the PDF engine that is part of CiviCRM core) can only handle the English alphabet. 
+Directions on how to install "wkhtmltopdf" at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
 
 ## Custom Searches
 
@@ -53,9 +53,12 @@ This is necessary because the DOMPDF (the PDF engine that is part of CiviCRM cor
 
 "Yahrzeit observed by"  --- "Yahrzeit observed in memory of"
 
+ **strongly recommended** to create additional relationships types manually. See details at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
+
 ## CiviCRM Scheduled Jobs
 
-"Call AllHebrewDates.Calculate API"   --- Recalculates all yahrzeits, Hebrew birthdays, and other observances tied to the Hebrew calendar.
+"Call AllHebrewDates.Calculate API"   --- Recalculates all yahrzeits, Hebrew birthdays, and other observances tied to the Hebrew calendar.  This should run at least daily. It can run more frequently as preferred. 
+
 
 ---
 
