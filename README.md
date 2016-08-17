@@ -53,7 +53,7 @@ Directions on how to install "wkhtmltopdf" at: https://github.com/sgladstone/com
 
 "Yahrzeit observed by"  --- "Yahrzeit observed in memory of"
 
- **strongly recommended** to create additional relationships types manually. See details at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
+ **Its strongly recommended** to create additional relationships types manually. See details at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
 
 ## CiviCRM Scheduled Jobs
 
