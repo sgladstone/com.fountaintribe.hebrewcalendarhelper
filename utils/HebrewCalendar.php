@@ -908,7 +908,14 @@ class HebrewCalendar{
 	// This is normally called whenever this extension is enabled. 
 	function createExtensionConfigs(){
 		$this->createRelationshipType();
-		$this->createCustomCRMConfigs();
+		$rtn = $this->createCustomCRMConfigs();
+		
+		
+		if(isset( $rtn['error_message']) && strlen($rtn['error_message']) > 0){
+			
+			throw new Exception('Error creating custom CRM configs: '.$rtn['error_message']); 
+		}
+		
 		$this->createYahrzeitTempTable();
 		
 		
@@ -1025,6 +1032,23 @@ class HebrewCalendar{
    // If custom data fields, custom contact types do not exist, create them. Otherwise do nothing.
 	private function createCustomCRMConfigs(){
 		
+		$tmp = array();
+		
+		$individual_type_id = "";
+		// Get id of contact_type 'Individual' , needed for API call.
+		$result = civicrm_api3('ContactType', 'get', array(
+				'sequential' => 1,
+				'name' => "Individual",
+		));
+		
+		if($result['is_error'] == 0 && $result['count'] == 1  ){
+			$individual_type_id = $result['id'];
+			
+			
+		}else{
+			$tmp[error_message] = "Error: Could not find core contact_type 'Individual' ";
+			return;
+		}
 		
 		
 		// Make sure custom contact type 'Deceased' exists. 
@@ -1038,7 +1062,7 @@ class HebrewCalendar{
 					'sequential' => 1,
 					'name' => HebrewCalendar::YAH_DECEASED_CONTACT_TYPE_NAME,
 					'label' => HebrewCalendar::YAH_DECEASED_CONTACT_TYPE_TITLE,
-					'parent_id' => "Individual",
+					'parent_id' => $individual_type_id,
 			));
 				
 			
