@@ -2575,13 +2575,16 @@ class HebrewCalendar{
 				if ( $prev_cid != ""){
 					// Wrap up table for previous contact.
 					$cur_cid_html = $cur_cid_html.$html_table_end;
-					$values[$prev_cid][$token_yahrzeits_long] = $cur_cid_html;
+					// need to check if its set, otherwise PHP generates a warning.
+					if(isset($values[$prev_cid][$token_yahrzeits_long])){
+						$values[$prev_cid][$token_yahrzeits_long] = $cur_cid_html;
+					}	
 				}
 
 
 				foreach ( $contactIDs as $cid ) {
 					if(array_key_exists($cid,  $values)){
-						if ( $values[$cid][$token_yahrzeits_long] == ""){
+						if ( isset($values[$prev_cid][$token_yahrzeits_long] )  &&  $values[$cid][$token_yahrzeits_long] == ""){
 							$values[$cid][$token_yahrzeits_long]  = "No yahrzeits found.";
 
 						}
