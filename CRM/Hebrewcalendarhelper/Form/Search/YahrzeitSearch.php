@@ -515,14 +515,17 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			$this->_systemDateFormat = $tmp_system_date_format;
   
   
-  			if($tmp_system_date_format == 'dd/mm/yy'){
+  	if($tmp_system_date_format == 'dd/mm/yy'){
   		  $nice_date_format = '%e %M %Y' ;
   
   	  }else if($tmp_system_date_format == 'mm/dd/yy'){
   	  	$nice_date_format = '%M %e, %Y' ;
   	  	 
+  	  }else if($tmp_system_date_format == 'd M yy'){
+  	  	$nice_date_format = '%e %M %Y' ;
   	  }else{
-  	  	print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
+  	  	$nice_date_format = '%e %M %Y' ;
+  	  	  //print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
   	  	 
   	  }
   
