@@ -2614,12 +2614,38 @@ class HebrewCalendar{
 //				new col. name: yahrzeit_date_morning,
 //				old col. name: yahrzeit_morning_format_english ,
 
+				$config = CRM_Core_Config::singleton( );
+				$tmp_system_date_format = 	$config->dateInputFormat;
+				
+				$this->_systemDateFormat = $tmp_system_date_format;
+				
+				
+				if($tmp_system_date_format == 'dd/mm/yy'){
+					$nice_date_format = '%e %M %Y' ;
+				
+				}else if($tmp_system_date_format == 'mm/dd/yy'){
+					$nice_date_format = '%M %e, %Y' ;
+					 
+				}else if($tmp_system_date_format == 'd M yy'){
+					$nice_date_format = '%e %M %Y' ;
+				}else{
+					$nice_date_format = '%e %M %Y' ;
+					//print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
+				  	 
+				}
+				
+				
+				
 			$yahrzeit_sql = "SELECT mourner_contact_id as contact_id, 
 						mourner_contact_id as id, mourner_name as sort_name, deceased_name as deceased_name,
     deceased_contact_table.display_name as deceased_display_name, deceased_contact_id, 
 						contact_b.deceased_date, 
 						yahrzeit_date, yahrzeit_hebrew_date_format_english, yahrzeit_hebrew_date_format_hebrew,
 						yahrzeit_date_morning, 
+					 date_format( yahrzeit_erev_shabbat_before, '".$nice_date_format."' ) as yah_erev_shabbat_before ,
+		 date_format( yahrzeit_shabbat_morning_before, '".$nice_date_format."' ) as yah_shabbat_morning_before,
+		 date_format( yahrzeit_erev_shabbat_after, '".$nice_date_format."' ) as yah_erev_shabbat_after ,
+		 date_format( yahrzeit_shabbat_morning_after, '".$nice_date_format."' ) as yah_shabbat_morning_after,
     contact_b.deceased_date as ddate,
     d_before_sunset, hebrew_deceased_date,
      concat( year(yahrzeit_date), '-', month(yahrzeit_date), '-', day(yahrzeit_date)) as yahrzeit_date_sort , yahrzeit_date_display, 
@@ -2638,7 +2664,7 @@ class HebrewCalendar{
 				 
 		if( strlen($yahrzeit_sql) > 0 ){
 			$dao =& CRM_Core_DAO::executeQuery( $yahrzeit_sql ,   CRM_Core_DAO::$_nullArray ) ;
-
+/*
 			// Figure out how to format date for this locale
 			$config = CRM_Core_Config::singleton( );
 
@@ -2657,6 +2683,7 @@ class HebrewCalendar{
 				print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
 				 
 			}
+			*/
 
 
 					$tmp_deceasedids_for_con= array();
@@ -2677,6 +2704,22 @@ class HebrewCalendar{
 						$yahrzeit_hebrew_date_format_hebrew = $dao->yahrzeit_hebrew_date_format_hebrew;
 						$yahrzeit_date_raw = $dao->yahrzeit_date_sort;
 						$yahrzeit_morning_format_english =  $dao->yahrzeit_date_morning;
+						
+						
+						$formatted_friday_before = $dao->yah_erev_shabbat_before;
+						$formatted_saturday_before = $dao->yah_shabbat_morning_before;
+						$formatted_friday_after = $dao->yah_erev_shabbat_after;
+						$formatted_saturday_after = $dao->yah_shabbat_morning_after;
+						
+						
+						/*
+						 * $formatted_friday_before = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." previous Friday"));
+									$formatted_friday_after = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." next Friday"));
+
+									$formatted_saturday_before = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." previous Saturday"));
+									$formatted_saturday_after = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." next Saturday"));
+									
+						 */
 					// $yahrzeit_morning_format_english
 
 
@@ -2780,6 +2823,7 @@ class HebrewCalendar{
 									$values[$cid][$token_yah_english_date_morning] = $yahrzeit_morning_format_english ;
 								}
 
+								/*
 								// take care of tokens for Friday, Saturday before the yahrzeit, and the Friday, Saturday after the yahrzeit.
 								$yah_timestamp = strtotime($yahrzeit_date_raw);
 								$yah_day_of_week = date( 'w', $yah_timestamp);
@@ -2814,6 +2858,7 @@ class HebrewCalendar{
 
 
 								}
+								*/
 
 								if(isset( $values[$cid][$token_yah_erev_shabbat_before] ) && strlen( $values[$cid][$token_yah_erev_shabbat_before] ) > 0 ){   
 									$seper = $default_seperator;  }else{  $seper = "";    }  ;

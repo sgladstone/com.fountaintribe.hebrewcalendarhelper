@@ -539,8 +539,11 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	}else if($tmp_system_date_format == 'mm/dd/yy'){
 		$gregorian_date_format = "MM dd, yyyy";
 		 
+	}else if( $tmp_system_date_format == 'd M yy' ){
+		$gregorian_date_format = "dd MM yyyy";
 	}else{
-		print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
+		//$gregorian_date_format = "MM dd, yyyy";
+		//print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
 		 
 	}
 	 
