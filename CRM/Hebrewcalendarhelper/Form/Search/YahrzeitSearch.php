@@ -445,6 +445,38 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			}
   
   
+  			$result = civicrm_api3('CustomField', 'get', array(
+  					'sequential' => 1,
+  					'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+  					'name' => HebrewCalendar::HEB_NAME_FIELD_NAME,
+  			));
+  			
+  			if($result['is_error'] == 0 && $result['count'] == 1){
+  				$extended_hebrewname = $result['values'][0]['column_name'];
+  				
+  			}
+  			
+  			// get plaque fields.
+  			$result = civicrm_api3('CustomField', 'get', array(
+  					'sequential' => 1,
+  					'custom_group_id' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
+  					'name' => HebrewCalendar::HAS_PLAQUE_FIELD_NAME,
+  			));
+  			if($result['is_error'] == 0 && $result['count'] == 1){
+  				$extended_has_plaque = $result['values'][0]['column_name'];
+  			
+  			}
+  			
+  			$result = civicrm_api3('CustomField', 'get', array(
+  					'sequential' => 1,
+  					'custom_group_id' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
+  					'name' => HebrewCalendar::PLAQUE_LOCATION_NAME,
+  			));
+  			if($result['is_error'] == 0 && $result['count'] == 1){
+  				$extended_plaque_location = $result['values'][0]['column_name'];
+  			
+  			}
+  			
   			/*
   			// Get SQL table info for table with Hebrew name.
   			$custom_religious_field_group_label = "Religious";
@@ -536,6 +568,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
     	$heb_name_sql = " '' as hebrew_name, ";
     	
     }
+    
+    
     
     if(isset( $extended_plaque_location ) && strlen($extended_plaque_location) > 0 && isset($extended_has_plaque ) && strlen( $extended_has_plaque ) > 0  ){
     	$plaque_sql = $extended_plaque_location." as plaque_location, if(".$extended_has_plaque." OR length(".$extended_plaque_location.") > 0, 'Yes', 'No') as has_plaque, ";
@@ -647,6 +681,29 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	$tmp_cal = $this->_localHebrewCalendar;
   //	$tmp_sql_table_name = $tmp_cal::get_sql_table_name() ;
   	$tmp_sql_table_name = HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
+  	
+  	
+  	$result = civicrm_api3('CustomGroup', 'get', array(
+  			'sequential' => 1,
+  			'name' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+  	));
+  	
+  	if($result['is_error'] == 0 && $result['count'] == 1){
+  		
+  		$extended_religious_table = $result['values'][0]['table_name'];
+  		
+  	}
+  	
+  	$result = civicrm_api3('CustomGroup', 'get', array(
+  			'sequential' => 1,
+  			'name' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
+  	));
+  	
+  	if($result['is_error'] == 0 && $result['count'] == 1){
+  	
+  		$extended_plaque_table = $result['values'][0]['table_name'];
+  	
+  	}
   /*
   	// Get SQL table info for table with Hebrew name.
   	$custom_religious_field_group_label = "Religious";
