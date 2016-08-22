@@ -1560,7 +1560,7 @@ class HebrewCalendar{
 		));
 		
 		// TODO: Check that it extends correct contact type.
-		CRM_Core_Error::debug("Debug: Just checked if '".HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME."' set exists. : ",  $result );
+		//CRM_Core_Error::debug("Debug: Just checked if '".HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME."' set exists. : ",  $result );
 		//CRM_Core_Error::log("Debug: Just checked if '".HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME."' set exists. : ",  $result );
 		if($result['is_error'] <> 0 || $result['count'] == 0  ){
 		
@@ -1781,7 +1781,7 @@ class HebrewCalendar{
 			
 			// $rtn_data["hebrew_date_of_birth_hebrew"] = $hebrew_birth_date_formated_as_hebrew;
 				
-				
+				/*
 			$config = CRM_Core_Config::singleton( );
 				
 			$tmp_system_date_format = 	$config->dateInputFormat;
@@ -1797,6 +1797,8 @@ class HebrewCalendar{
 				return $rtn_data ;
 	
 			}
+			*/
+			
 	
 			$erev_start_flag = '1';
 			$gregorian_date_format = "MM dd, yyyy";
@@ -2327,7 +2329,7 @@ class HebrewCalendar{
 				$gregorian_date_format = "MM dd, yyyy";
 				 
 			}else{
-				print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
+				// print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
 			}
 
 
@@ -2647,6 +2649,10 @@ class HebrewCalendar{
 			}else if($tmp_system_date_format == 'mm/dd/yy'){
 				$gregorian_date_format = "F j, Y";
 				 
+			}else if($tmp_system_date_format == 'd M yy' ){
+				$gregorian_date_format = "j F Y";
+				
+				//print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
 			}else{
 				print "<br>Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
 				 
