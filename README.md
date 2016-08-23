@@ -8,25 +8,9 @@ Full documentation is at: https://github.com/sgladstone/com.fountaintribe.hebrew
 
 ## Custom Tokens
 
-### In the token section "Today"
+### Additional token sections "Today"  and "Yahrzeits for this Mourner"
 
-- "Today (Hebrew transliterated)"
-- "Today (Hebrew)"
- 
-### In the token section "Yahrzeits for this Mourner"
-
- - "Name of Deceased in exactly X days"
- - "English Yarzeit Date (evening) in exactly X days"
- - "English Yahrzeit Date (morning) in exactly X days"
- - "Hebrew Yahrzeit Date in exactly X days"
- - "English Date of Death in exactly X days"
- - "Hebrew Date of Death in exactly X days"
- - "Relationship of Deceased to Mourner in exactly X days"
- 
-
-If you are planning to use these tokens to create a PDF letter, you need to install "wkhtmltopdf" as that allows for Hebrew in PDF documents. 
- 
-Directions on how to install "wkhtmltopdf" at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
+ Token details documented at: https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/wiki
 
 ## Custom Searches
 
