@@ -118,9 +118,23 @@ class HebrewCalendar{
 	const IS_JEWISH_FIELD_TITLE = "Is Jewish";
 	const IS_JEWISH_FIELD_NAME = "Is_Jewish";
 	
-	// Other fields to add to "Religious" field set.
+
 	// Tribe (select list) // options: 'Israelite' , 'Levi' , 'Cohen' 
-	// Bar_Bat_Mitzvah_Date , Bar/Bat Mitzvah Date  (date)
+	
+	// Tribe field type: String, Select
+	// Tribe choices:  Cohen, Israelite, Levi
+	const RELIGIOUS_TRIBE_FIELD_NAME = "Tribe";
+	const RELIGIOUS_TRIBE_FIELD_TITLE = "Tribe";
+	
+	const RELIGIOUS_TRIBE_OPTIONS_NAME = "tribe_options";
+	
+	
+	
+	
+	// Israelite Kohen and Levi aliyot
+	
+	// Other fields to add to "Religious" field set:
+	// Bar_Bat_Mitzvah_Date , Bar/Bat Mitzvah Date  (date)  --> ie when is it scheduled to occur in the shul
 	// Bar_Bat_Mitzvah_Parasha , Bar_Bat_Mitzvah_Parasha (text)
 	// Confirmation_Date , Confirmation Date (date)
 	
@@ -139,7 +153,7 @@ class HebrewCalendar{
 	// TODO: Fix original names, titles,  in older CiviCRM databases. 
 // Yarzheit - incorrect spelling, fix via SQL as needed.  also spaces used to be used in the 'name'
 
-	// original relationship title: 'Yarzheit observed by'
+	// original relationship title: 'Yarzheit observed by'  
 	// original relationship name: 'Yarzheit observed by'
 	
 	const YAHRZEIT_RELATIONSHIP_TYPE_A_B_TITLE = "Yahrzeit observed by";
@@ -1551,6 +1565,62 @@ class HebrewCalendar{
 		
 		}
 		
+		/*
+		 * // Tribe (select list) // options: 'Israelite' , 'Levi' , 'Cohen' 
+	
+	// Tribe field type: String, Select
+	// Tribe choices:  Cohen, Israelite, Levi
+	const RELIGIOUS_TRIBE_FIELD_NAME = "Tribe";
+	const RELIGIOUS_TRIBE_FIELD_TITLE = "Tribe";
+	
+	const RELIGIOUS_TRIBE_OPTIONS_NAME = "tribe_options";
+		 */
+		$result = civicrm_api3('CustomField', 'get', array(
+				'sequential' => 1,
+				'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+				'name' => HebrewCalendar::RELIGIOUS_TRIBE_FIELD_NAME,
+		));
+		
+		if($result['is_error'] <> 0 || $result['count'] == 0  ){
+			// 'Tribe' does not exist yet, create the options, then create the field 'Tribe' 
+			
+			$tribe_options_array = array();
+			
+			$tribe_options_array['Israelite'] =  "Israelite";
+			$tribe_options_array['Levi'] =  "Levi";
+			$tribe_options_array['Cohen'] =  "Cohen";
+			
+			require_once( "utils/ConfigHelper.php");
+			$tmpConfigHelper = new ConfigHelper();
+			$tribe_grp_option_id = $tmpConfigHelper->create_option_group( HebrewCalendar::RELIGIOUS_TRIBE_OPTIONS_NAME , 
+					HebrewCalendar::RELIGIOUS_TRIBE_OPTIONS_NAME, 
+					$tribe_options_array );
+			
+			if(strlen($tribe_grp_option_id) > 0  ){
+				$result = civicrm_api3('CustomField', 'create', array(
+						'sequential' => 1,
+						'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
+						'label' =>  HebrewCalendar::RELIGIOUS_TRIBE_FIELD_TITLE,
+						'name' => HebrewCalendar::RELIGIOUS_TRIBE_FIELD_NAME,
+						'data_type' => "String",
+						'html_type' => "Select",
+						'option_group_id' => $tribe_grp_option_id ,
+						'is_required' => "0",
+						'is_searchable' => "1",
+						'help_pre' => "",
+						'help_post' => "",
+						'weight' => 4,
+				
+				));
+				
+			}else{
+				$tmp[error_message] = "Error: Could NOT find id for the option_group named  '".
+				HebrewCalendar::RELIGIOUS_TRIBE_OPTIONS_NAME."' as a result, could not create the custom field for Tribe.";
+				return;
+				
+			}
+			
+		}
 		
 	
 		// if needed, create plaque custom field set
