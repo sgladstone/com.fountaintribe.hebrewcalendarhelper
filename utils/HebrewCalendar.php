@@ -2479,11 +2479,24 @@ class HebrewCalendar{
 				$date_interval_from_token = $date_token_as_array[0];
 				$date_number_from_token = $date_token_as_array[1];
 				
-				if( $date_interval_from_token == "day" ){
-					$interval_type_sql_str = "DAY"; 			
-				}else{
-					CRM_Core_Error::debug("Error in Yahrzeit token: interval type is not valid: ",  $date_interval_from_token );
-					return;
+				/*
+				 * 	'month_cur' => 'during current month',
+				'month_next' => 'during next month',
+				'month_2' => '2 months from now',
+				'month_3' => '3 months from now',
+				'month_4' => '4 months from now',
+				'week_cur' => 'during current week',
+				'week_next' => 'during next week',
+				'week_2'  => '2 weeks from now',
+				'week_3'  => '3 weeks from now',
+				'week_4'  => '4 weeks from now',
+				 */
+				
+				
+				if( $date_number_from_token == "cur"){
+					$date_number_from_token = "0";
+				}else if( $date_number_from_token == "next"){
+					$date_number_from_token = "1";
 				}
 				
 				if( is_numeric($date_number_from_token )){
@@ -2492,6 +2505,30 @@ class HebrewCalendar{
 					CRM_Core_Error::debug("Error in Yahrzeit token: number of days is not a number: ",  $date_number_from_token );
 					return;
 				}
+				
+				
+				//CRM_Core_Error::debug(" date_interval: ".$date_interval_from_token , "" );
+				if( $date_interval_from_token == "day" ){
+					$interval_type_sql_str = "DAY";
+					
+					$date_where_clause = " AND yahrzeit_date >= CURDATE()
+					AND date(yahrzeit_date) = DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." ) ";
+						
+				}else if( $date_interval_from_token  == 'week'){
+					$interval_type_sql_str = "WEEK";
+					
+					// week_start_day  is Sunday. 
+					$date_where_clause = " AND week(yahrzeit_date, 0 ) = week( DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." ), 0 ) ";
+				}else if( $date_interval_from_token == 'month'){
+					$interval_type_sql_str = "MONTH";
+						
+					$date_where_clause = " AND month(yahrzeit_date) = month( DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." )) ";
+				}else{
+					CRM_Core_Error::debug("Error in Yahrzeit token: interval type is not valid: ",  $date_interval_from_token );
+					return;
+				}
+				
+				//CRM_Core_Error::debug("date clause: ".$date_where_clause );
 				
 				/*		
 				session_start();
@@ -2668,7 +2705,7 @@ class HebrewCalendar{
 				// All done with Yizkor (all yahrzeits) token
 				
 				
-				/****  Deal with the rest of the yahrzeit tokens, that consider date. ( for example: only yahrzeits in 7 days) ***************/
+				/****  Deal with the rest of the yahrzeit tokens, that consider date. ( for example: only yahrzeits in 7 days, or next month) ***************/
 				// $token_date_portion
 
 				//$yahrzeit_sql = $yahrzeit_data;
@@ -2724,14 +2761,11 @@ class HebrewCalendar{
        FROM ".$yahrzeit_temp_table_name." contact_b 
        INNER JOIN civicrm_contact contact_a ON contact_a.id = contact_b.mourner_contact_id
        JOIN civicrm_contact deceased_contact_table ON deceased_contact_table.id = contact_b.deceased_contact_id
-       WHERE contact_b.created_date >= DATE_SUB(CURDATE(), INTERVAL 10 MINUTE) AND (yahrzeit_type = mourner_observance_preference)
-       AND yahrzeit_date >= CURDATE()
-       AND contact_b.mourner_contact_id in (   $cid_list )
-        AND date(yahrzeit_date) = DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." )
-       ORDER BY sort_name asc";
+       WHERE contact_b.created_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR) AND (yahrzeit_type = mourner_observance_preference)
+        AND contact_b.mourner_contact_id in (   $cid_list ) ".$date_where_clause."  ORDER BY sort_name asc";
 					
 				
-				 
+		//	CRM_Core_Error::debug("SQL: ".$yahrzeit_sql, "");
 		if( strlen($yahrzeit_sql) > 0 ){
 			$dao =& CRM_Core_DAO::executeQuery( $yahrzeit_sql ,   CRM_Core_DAO::$_nullArray ) ;
 /*

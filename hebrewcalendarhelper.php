@@ -134,7 +134,17 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 				'day_7' => 'in exactly 7 days',
 				'day_10' => 'in exactly 10 days',
 				'day_14' => 'in exactly 14 days',
-				'day_30' => 'in exactly 30 days',		
+				'day_30' => 'in exactly 30 days',	
+				'month_cur' => 'during current month',
+				'month_next' => 'during next month',
+				'month_2' => '2 months from now',
+				'month_3' => '3 months from now',
+				'month_4' => '4 months from now',
+				'week_cur' => 'during current week',
+				'week_next' => 'during next week',
+				'week_2'  => '2 weeks from now',
+				'week_3'  => '3 weeks from now',
+				'week_4'  => '4 weeks from now',
 		);
 
 		
