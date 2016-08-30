@@ -2518,11 +2518,13 @@ class HebrewCalendar{
 					$interval_type_sql_str = "WEEK";
 					
 					// week_start_day  is Sunday. 
-					$date_where_clause = " AND week(yahrzeit_date, 0 ) = week( DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." ), 0 ) ";
+					$date_where_clause = " AND week(yahrzeit_date, 0 ) = week( DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." ), 0 ) 
+							               AND year(yahrzeit_date ) = year( DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." )) ";
 				}else if( $date_interval_from_token == 'month'){
 					$interval_type_sql_str = "MONTH";
 						
-					$date_where_clause = " AND month(yahrzeit_date) = month( DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." )) ";
+					$date_where_clause = " AND month(yahrzeit_date) = month( DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." ))
+											AND year(yahrzeit_date) AND year(DATE(  CURDATE() + INTERVAL ".$date_number_from_token." ".$interval_type_sql_str." ))";
 				}else{
 					CRM_Core_Error::debug("Error in Yahrzeit token: interval type is not valid: ",  $date_interval_from_token );
 					return;
