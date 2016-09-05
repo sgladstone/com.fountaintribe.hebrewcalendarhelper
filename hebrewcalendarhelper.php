@@ -91,10 +91,11 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 	
 	
 
-	$dates_category_label = " :: Today ";
+	//$dates_category_label = " :: Today";
+	$dates_category_label = " :: Dates";
 	
-	$tokens['dates']['dates.today___hebrew_trans'] =  'Today (Hebrew transliterated)'.$dates_category_label;
-	$tokens['dates']['dates.today___hebrew'] = 'Today (Hebrew)'.$dates_category_label ;
+	$tokens['hebrewcalendar']['hebrewcalendar.today___hebrew_trans'] =  'Today (Hebrew transliterated)'.$dates_category_label;
+	$tokens['hebrewcalendar']['hebrewcalendar.today___hebrew'] = 'Today (Hebrew)'.$dates_category_label ;
 		
 		// Next 2 are now available as read-only custom fields, which means CiviCRM core makes them available as tokens. 
 	//	$tokens['dates']['dates.birth_date_hebrew_trans'] = 'Birth Date (Hebrew - transliterated)'.$dates_category_label ;
@@ -164,7 +165,7 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
  
 function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job = null, $tokens = array(), $context = null) {
 	
-	if(!empty($tokens['dates'])){
+	if(!empty($tokens['hebrewcalendar'])){
 		require_once 'utils/HebrewCalendar.php';
 		$hebrew_format = 'dd MM yy';
 
@@ -175,68 +176,9 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		$today_hebrew_hebrew = $tmpHebCal->util_convert_today2hebrew_date($tmp_hebrew_format );
 
 		foreach ( $contactIDs as $cid ) {
-			 
-			$values[$cid]['dates.today___hebrew_trans'] = $today_hebrew;
-			$values[$cid]['dates.today___hebrew'] = $today_hebrew_hebrew;
-
-
+			$values[$cid]['hebrewcalendar.today___hebrew_trans'] = $today_hebrew;
+			$values[$cid]['hebrewcalendar.today___hebrew'] = $today_hebrew_hebrew;
 		}
-
-		/*
-		// CiviCRM is buggy here, if token is being used in CiviMail, we need to use the key
-		// as the token. Otherwise ( PDF Letter, one-off email, etc) we
-		// need to use the value.
-		while( $cur_token_raw = current( $tokens['dates'] )){
-			$tmp_key = key($tokens['dates']);
-
-			$cur_token = '';
-			if(  is_numeric( $tmp_key)){
-				$cur_token = $cur_token_raw;
-			}else{
-				// Its being used by CiviMail.
-				$cur_token = $tmp_key;
-			}
-
-			$token_to_fill = 'dates.'.$cur_token;
-			
-
-			$token_as_array = explode("___",  $cur_token );
-
-
-
-			$partial_token =  $token_as_array[0];
-			
-			if( $partial_token ==  'birth_date_hebrew_trans' || $partial_token ==  'birth_date_hebrew' ){
-				require_once 'utils/HebrewCalendar.php';
-
-				$tmpHebCal = new HebrewCalendar();
-
-
-
-				foreach ( $contactIDs as $cid ) {
-					$hebrew_data = $tmpHebCal::retrieve_hebrew_demographic_dates( $cid);
-					//print_r($hebrew_data );
-					$heb_date_of_birth =  $hebrew_data['hebrew_date_of_birth'];
-					$heb_date_of_birth_hebrew =  $hebrew_data['hebrew_date_of_birth_hebrew'];
-					$bar_bat_mitzvah_label = $hebrew_data['bar_bat_mitzvah_label'] ;
-					$earliest_bar_bat_mitzvah_date = $hebrew_data['earliest_bar_bat_mitzvah_date'];
-					$full_token = 'dates.'.$partial_token ;
-					if(  $partial_token ==  "birth_date_hebrew_trans" ){
-						$values[$cid][$full_token] =  $heb_date_of_birth;
-					}else if( $partial_token == 'birth_date_hebrew' ){
-						$values[$cid][$full_token] = $heb_date_of_birth_hebrew;
-					}
-
-
-				}
-
-			}
-
-
-			// $tokens['dates']['dates.birth_date___hebrew']
-			next($tokens['dates']);
-		}
-		*/
 
 	}
 
