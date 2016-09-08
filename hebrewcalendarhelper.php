@@ -204,6 +204,8 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		$token_yah_shabbat_morning_before = 'yahrzeit.shabbat_morning_before';
 		$token_yah_erev_shabbat_after = 'yahrzeit.erev_shabbat_after' ;
 		$token_yah_shabbat_morning_after = 'yahrzeit.shabbat_morning_after' ;
+		
+		
 		$token_yah_english_date_morning = 'yahrzeit.morning_format_english';
 
 		
