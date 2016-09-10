@@ -122,8 +122,10 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 			'dec_death_hebrew_date' => 'Hebrew Date of Death',
 			'relationship_name'  => 'Relationship of Deceased to Mourner',
 			'erev_shabbat_before' => 'Erev (evening) of the Shabbat before yahrzeit',
+			'parashat_shabbat_before' => 'Parashat of the Shabbat before yahrzeit',
 			'shabbat_morning_before' => 'Morning of the Shabbat before yahrzeit',
 			'erev_shabbat_after' => 'Erev (evening) of the Shabbat after yahrzeit',
+			'parashat_shabbat_after' => 'Parashat of the Shabbat after yahrzeit',
 			'shabbat_morning_after' => 'Morning of the Shabbat after yahrzeit',
 				//'yahrzeit.erev_shabbat_before' => 'Yahrzeit: Erev (evening) of the Shabbat Before',
 				//'yahrzeit.shabbat_morning_before' => 'Yahrzeit: Morning of the Shabbat Before',
@@ -205,6 +207,9 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		$token_yah_erev_shabbat_after = 'yahrzeit.erev_shabbat_after' ;
 		$token_yah_shabbat_morning_after = 'yahrzeit.shabbat_morning_after' ;
 		
+		$token_yah_shabbat_parashat_before = 'yahrzeit.parashat_shabbat_before';
+		$token_yah_shabbat_parashat_after = 'yahrzeit.parashat_shabbat_after';
+		
 		
 		$token_yah_english_date_morning = 'yahrzeit.morning_format_english';
 
@@ -258,6 +263,10 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 				$token_yah_shabbat_morning_after = $token_to_fill;
 			}else if( $partial_token == 'morning_format_english'){
 				$token_yah_english_date_morning = $token_to_fill;
+			}else if($partial_token == 'parashat_shabbat_before'){
+				$token_yah_shabbat_parashat_before = $token_to_fill;
+			}else if($partial_token == 'parashat_shabbat_after'){
+				$token_yah_shabbat_parashat_after = $token_to_fill;	
 			}
 			
 			next($tokens['yahrzeit']);
@@ -285,6 +294,8 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 				$token_yah_erev_shabbat_after ,
 				$token_yah_shabbat_morning_after,
 				$token_yah_english_date_morning, 
+				$token_yah_shabbat_parashat_before,
+				$token_yah_shabbat_parashat_after,
 				$token_date_portion  ) ;
 		
 

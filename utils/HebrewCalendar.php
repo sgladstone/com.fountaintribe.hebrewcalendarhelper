@@ -220,25 +220,131 @@ class HebrewCalendar{
 		
 	}
 	
-	private static function getAllRemoteHebCalData(){
-		
-		
-		
-		
 	
-		$default_country_tmp = ""; 
-		// TODO: Check default country, do not assume diaspora. HebCal API:	'off' = diaspora, 'on' = in israel
+	
+	private static function isLocatedInIsrael(){
+		// Get the domain's country for this CiviCRM environment's current domain.
+		// This assumes this setting is the same for all domains in a multi-site CiviCRM.
+		// TODO: get more information about how to handle multi-site environments.
+			
+		$default_country_name_tmp = "";
+		$result = civicrm_api3('Domain', 'get', array(
+				'sequential' => 1,
+				'current_domain' => array('IS NOT NULL' => 1),
+		));
+			
+			
+		if( $result['is_error'] == 0 && $result['count'] == 1){
+			$tmp_domain_address = $result['values'][0]['domain_address'];
+				
+			if( is_array($tmp_domain_address)){
+				$tmp_country_id = $tmp_domain_address['country_id'];
+					
+				//CRM_Core_Error::debug("Country ID: ", $tmp_country_id);
+				if( strlen($tmp_country_id) > 0 ){
+					$result_country = civicrm_api3('Country', 'get', array(
+							'sequential' => 1,
+							'id' => $tmp_country_id,
+					));
 		
-		if( $default_country_tmp == "Israel"){
-			$tmp_in_israel = "on";
+					if( $result_country['is_error'] == 0 && $result_country['count'] == 1){
+							
+						$default_country_name_tmp = $result_country['values'][0]['name'] ;
+					}
+				}
+			}
+				
+				
+				
+				
 		}else{
-			$tmp_in_israel = "off";
+				
+		}
+		
+		if( strtolower( $default_country_name_tmp) == "israel"){
+			$tmp_in_israel = "true";
+			// CRM_Core_Error::debug("Will use API setting for Israel", $default_country_name_tmp);
+		}else{
+			$tmp_in_israel = "false";
+			// CRM_Core_Error::debug("Will use API setting for diaspora. ", $default_country_name_tmp);
+		}
+			
+		return $tmp_in_israel; 
+		
+	}
+	
+	
+	
+	private static function getRemoteHebCalDataByYear(&$year_parm ){
+		
+		// Documentation for HebCal.com REST API: https://www.hebcal.com/home/195/jewish-calendar-rest-api
+		$in_israel_crm_domain_setting = HebrewCalendar::isLocatedInIsrael();
+		
+		if(strlen($year_parm) == 4 && strlen($in_israel_crm_domain_setting) > 0 ){
+			
+			/*
+			 * Mutually exclusive language parameter for HebCal API:
+
+			    lg=s – Sephardic transliterations (default if unspecified)
+			    lg=sh – Sephardic translit. + Hebrew
+			    lg=a – Ashkenazis transliterations
+			    lg=ah – Ashkenazis translit. + Hebrew
+			    lg=h – Hebrew only
+
+			 */
+			
+			$language_api_parm = "s"; // Uses the modern Hebrew transliteration, ie 'parashat'.   'a' and 'ah' uses the older, Yiddish-style ie 'parashas' which is rarely used. 
+			
+			// Since geo is set to 'none', no candle-lighting times will get returned. 
+			$geo_api_query_string = "&geo=none";
+			
+			
+			if( strtolower($in_israel_crm_domain_setting) == "true"){
+				$tmp_in_israel = "on";
+				// HebCal.com API:	'on' = in Israel
+				 CRM_Core_Error::debug("Will use HebCal.com API setting for Israel", $tmp_in_israel);
+			}else{
+				$tmp_in_israel = "off";
+				// HebCal.com API:	'off' = diaspora
+				 CRM_Core_Error::debug("Will use  HebCal.com API setting for diaspora. ", $tmp_in_israel);
+			}
+		
+			$service_url = "http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&min=on&lg=".$language_api_parm."&i=".$tmp_in_israel."&mod=on&nx=on&year=".$year_parm."&month=x&ss=on&mf=on".$geo_api_query_string."&c=on&m=50&s=on";
+			
+			$curl = curl_init($service_url);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+			$curl_response = curl_exec($curl);
+			if ($curl_response === false) {
+				$info = curl_getinfo($curl);
+				curl_close($curl);
+				CRM_Core_Error::debug("Error getting remote hebcal.com data: ", 'error occured during curl exec. Additional info: ' . var_export($info));
+			}
+			curl_close($curl);
+			$decoded = json_decode($curl_response);
+			if (isset($decoded->response->status) && $decoded->response->status == 'ERROR') {
+				CRM_Core_Error::debug("Error getting remote hebcal.com data: " . $decoded->response->errormessage);
+			}
+			//CRM_Core_Error::debug(" $tmp_year Good news, got hebcal.com data: " , 'response ok!');
+			//CRM_Core_Error::debug("$tmp_year Data: ", $decoded);
+			HebrewCalendar::$allRemoteHebCalData[$year_parm] = $decoded->items;
+		
+		
+		//var_export($decoded->response);
+		}else{
+			CRM_Core_Error::debug("Error: missing required parms for either 'year_parm' or 'in_israel_crm_domain_setting' " , "Did not attempt to get anything from hebcal.com API");
 		}
 		
 		
+		
+	}
+	
+	
+	private static function getAllRemoteHebCalData(){
+		
 		$tmp_rtn = null; 
 		if(count( HebrewCalendar::$allRemoteHebCalData) == 0){
-			// Use hebcal.com API to get needed data for last year, current year, and next year. 
+			
+			// Use remote hebcal.com API to get needed data for last year, current year, and next year. 
 			$last_year = date("Y") - 1;
 			$current_year = date("Y");
 			$next_year = date("Y") + 1;
@@ -246,31 +352,9 @@ class HebrewCalendar{
 			$years_array = array($last_year, $current_year, $next_year );
 			
 			foreach($years_array as $tmp_year){
-				$service_url = "http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&min=on&i=".$tmp_in_israel."&mod=on&nx=on&year=".$tmp_year."&month=x&ss=on&mf=on&c=on&m=50&s=on";
 				
-				$curl = curl_init($service_url);
-				curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-				$curl_response = curl_exec($curl);
-				if ($curl_response === false) {
-					$info = curl_getinfo($curl);
-					curl_close($curl);
-					CRM_Core_Error::debug("Error getting remote hebcal.com data: ", 'error occured during curl exec. Additional info: ' . var_export($info));
-				}
-				curl_close($curl);
-				$decoded = json_decode($curl_response);
-				if (isset($decoded->response->status) && $decoded->response->status == 'ERROR') {
-					CRM_Core_Error::debug("Error getting remote hebcal.com data: " . $decoded->response->errormessage);
-				}
-				//CRM_Core_Error::debug(" $tmp_year Good news, got hebcal.com data: " , 'response ok!');
-				//CRM_Core_Error::debug("$tmp_year Data: ", $decoded);
-				HebrewCalendar::$allRemoteHebCalData[$tmp_year] = $decoded->items; 
-				
-				
-				//var_export($decoded->response);	
-				
-			}
-			
-			
+				HebrewCalendar::getRemoteHebCalDataByYear( $tmp_year ); 
+			}		
 			
 		}
 		
@@ -2715,7 +2799,10 @@ class HebrewCalendar{
 			&$token_yah_relationship_name,
 			&$token_yah_erev_shabbat_before, &$token_yah_shabbat_morning_before, 
 			&$token_yah_erev_shabbat_after, &$token_yah_shabbat_morning_after,
-			&$token_yah_english_date_morning ,  &$token_date_portion ){
+			&$token_yah_english_date_morning ,
+			&$token_yah_shabbat_parashat_before,
+			&$token_yah_shabbat_parashat_after,
+			&$token_date_portion ){
 
 				
 				// old parm: $token_yahrzeits_short
@@ -3009,6 +3096,8 @@ class HebrewCalendar{
     d_before_sunset, hebrew_deceased_date,
      concat( year(yahrzeit_date), '-', month(yahrzeit_date), '-', day(yahrzeit_date)) as yahrzeit_date_sort , yahrzeit_date_display, 
 						relationship_name_formatted,
+		 		shabbat_before_parashat, 
+		 		shabbat_after_parashat, 
       yahrzeit_type, mourner_observance_preference
        FROM ".$yahrzeit_temp_table_name." contact_b 
        INNER JOIN civicrm_contact contact_a ON contact_a.id = contact_b.mourner_contact_id
@@ -3066,6 +3155,10 @@ class HebrewCalendar{
 						$formatted_saturday_before = $dao->yah_shabbat_morning_before;
 						$formatted_friday_after = $dao->yah_erev_shabbat_after;
 						$formatted_saturday_after = $dao->yah_shabbat_morning_after;
+						
+						$shabbat_before_parashat = $dao->shabbat_before_parashat;
+						$shabbat_after_parashat = $dao->shabbat_after_parashat;
+						
 						
 						
 						/*
@@ -3179,42 +3272,20 @@ class HebrewCalendar{
 									$values[$cid][$token_yah_english_date_morning] = $yahrzeit_morning_format_english ;
 								}
 
-								/*
-								// take care of tokens for Friday, Saturday before the yahrzeit, and the Friday, Saturday after the yahrzeit.
-								$yah_timestamp = strtotime($yahrzeit_date_raw);
-								$yah_day_of_week = date( 'w', $yah_timestamp);
-								 
-
-								if($yah_day_of_week == 5){
-									// The yahrzeit starts at erev Shabbat (ie Friday night), return the yahrzeit date itself.
-									// A synagogue in this situation will read the name during services that same shabbat.
-									$formatted_friday_before = date( $gregorian_date_format,  $yah_timestamp );
-									$formatted_friday_after = date($gregorian_date_format,  $yah_timestamp );
-
-									// Since the yahrzeit itself is a Friday, shabbat morning is the next day.
-									$formatted_saturday_before = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." +1 day"));
-									$formatted_saturday_after = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." +1 day"));
-									 
-								}else if($yah_day_of_week == 6){
-									// The yahrzeit starts on a Saturday night.
-									// So the Shabbat morning before the yahrzeit is the same English date as the start of the yahrzeit date.
-									$formatted_saturday_before = date($gregorian_date_format,  $yah_timestamp );
-									$formatted_saturday_after = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." next Saturday"));
-
-									// Do the usual process for getting erev Shabbat before and after.
-									$formatted_friday_before = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." previous Friday"));
-									$formatted_friday_after = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." next Friday"));
-
+								// token for: shabbat_before_parashat
+								if( isset( $values[$cid][$token_yah_shabbat_parashat_before] )){
+									$values[$cid][$token_yah_shabbat_parashat_before] = $values[$cid][$token_yah_shabbat_parashat_before].$default_seperator.$shabbat_before_parashat;
 								}else{
-									$formatted_friday_before = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." previous Friday"));
-									$formatted_friday_after = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." next Friday"));
-
-									$formatted_saturday_before = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." previous Saturday"));
-									$formatted_saturday_after = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." next Saturday"));
-
-
+									$values[$cid][$token_yah_shabbat_parashat_before] = $shabbat_before_parashat;
 								}
-								*/
+								
+								// token for: shabbat_after_parashat
+								if( isset( $values[$cid][$token_yah_shabbat_parashat_after] )){
+									$values[$cid][$token_yah_shabbat_parashat_after] = $values[$cid][$token_yah_shabbat_parashat_after].$default_seperator.$shabbat_after_parashat;
+								}else{
+									$values[$cid][$token_yah_shabbat_parashat_after] = $shabbat_after_parashat;
+								}
+								
 
 								if(isset( $values[$cid][$token_yah_erev_shabbat_before] ) && strlen( $values[$cid][$token_yah_erev_shabbat_before] ) > 0 ){   
 									$seper = $default_seperator;  }else{  $seper = "";    }  ;
