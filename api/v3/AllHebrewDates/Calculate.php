@@ -149,6 +149,8 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 		}else{
 			
 				$rtn_data = fillYahrzeitTempTable( $tmpHebCal, $extended_date_table , $yahrzeit_table_name, $tmp_contact_ids   );
+				
+				$parashat_rtn = $tmpHebCal->fillYahrzeitParashat($tmp_contact_ids );
 			
 				$rtn_data['record_count_birthdays'] = $record_count_birthdays; 
 				
@@ -283,6 +285,9 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  	$english_deceased_date_sql = "null";
 	  }
 	  
+	  
+	  // '$hebrew_deceased_date' 
+	  		
 	  $insert_sql = "INSERT INTO $TempTableName ( mourner_contact_id,
 	  mourner_name, 
 	  deceased_contact_id,
@@ -299,10 +304,10 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			VALUES($mourner_contact_id, %1 , $deceased_contact_id,
 			%2, 
 			 $english_deceased_date_sql , '$deceased_date_before_sunset_formated',
-			'$hebrew_deceased_date' , $yahrzeit_date_tmp,
-			%3, %4,
-			%5, '$relationship_name_formated', %6,
-			'$mourner_observance_preference', '$plaque_location',
+			 %3 , $yahrzeit_date_tmp,
+			%4, %5,
+			%6, '$relationship_name_formated', %7,
+			'$mourner_observance_preference', %8,
 			$sql_friday_before, $sql_saturday_before, $sql_friday_after, $sql_saturday_after,
 	  		$sql_yahrzeit_date_morning, '$yahrzeit_relationship_id'  )";
 	  	
@@ -313,43 +318,56 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			if(strlen($mourner_name) > 0 ){
 				$params_a[1] =  array( $mourner_name, 'String' );
 			}else{
-				$params_a[1] =  array( ' ', 'String' );
+				$params_a[1] =  array( '', 'String' );
 					
 			}
 
 			if(strlen($deceased_name) > 0){
 				$params_a[2] =  array( $deceased_name, 'String' );
 			}else{
-				$params_a[2] =  array( ' ', 'String' );
+				$params_a[2] =  array( '', 'String' );
 			}
 
+			if(strlen($hebrew_deceased_date) > 0 ){
+				$params_a[3] =  array($hebrew_deceased_date, 'String');
+			}else{
+				$params_a[3] =  array( '', 'String' );
+			}
 			
+			//
 
 			if(strlen($yahrzeit_hebrew_date_format_hebrew) > 0 ){
-				$params_a[3] =  array($yahrzeit_hebrew_date_format_hebrew, 'String');
+				$params_a[4] =  array($yahrzeit_hebrew_date_format_hebrew, 'String');
 			}else{
-				$params_a[3] =  array( ' ', 'String' );
+				$params_a[4] =  array( '', 'String' );
 			}
 
 			if(strlen($yahrzeit_hebrew_date_format_english) > 0 ){
-				$params_a[4] =  array($yahrzeit_hebrew_date_format_english, 'String');
-			}else{
-				$params_a[4] =  array( ' ', 'String' );
-			}
-
-			if(strlen($yahrzeit_date_formated_tmp) > 0 ){
-				$params_a[5] =  array($yahrzeit_date_formated_tmp, 'String');
+				$params_a[5] =  array($yahrzeit_hebrew_date_format_english, 'String');
 			}else{
 				$params_a[5] =  array( ' ', 'String' );
 			}
 
-			if(strlen($yahrzeit_type) > 0 ){
-				$params_a[6] =  array($yahrzeit_type, 'String');
+			if(strlen($yahrzeit_date_formated_tmp) > 0 ){
+				$params_a[6] =  array($yahrzeit_date_formated_tmp, 'String');
 			}else{
 				$params_a[6] =  array( ' ', 'String' );
 			}
+
+			if(strlen($yahrzeit_type) > 0 ){
+				$params_a[7] =  array($yahrzeit_type, 'String');
+			}else{
+				$params_a[7] =  array( ' ', 'String' );
+			}
+			
+			// '$plaque_location'
 				
-		
+			if(strlen($plaque_location) > 0 ){
+				$params_a[8] =  array($plaque_location, 'String');
+			}else{
+				$params_a[8] =  array( '', 'String' );
+			}
+			//CRM_Core_Error::debug("Insert SQL : ". $insert_sql, $params_a );
 			
 			$dao = 		CRM_Core_DAO::executeQuery( $insert_sql,   $params_a ) ;
 			$dao->free();
@@ -533,6 +551,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	AND reltype.name_a_b IN ( '".HebrewCalendar::YAHRZEIT_RELATIONSHIP_TYPE_A_B_NAME."'  )
 	left join $extended_yahrzeit_table as yd ON rel.id = yd.entity_id
 	WHERE contact_a.contact_type = 'Individual'
+	AND contact_a.deceased_date is not null
 	AND contact_a.is_deceased = 1 $contactids_sql
 	AND contact_a.is_deleted <> 1  ".$mourner_count_where ;
 
@@ -572,7 +591,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
     
 	$global_pref_field_name = "custom_".$fid;
 	 
-	// print "<br><br>pref field : ".$global_pref_field_name;
+	
 
 	$params = array(
 			'version' => 3,
@@ -595,7 +614,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	}else{
 		$default_yahrzeit_cal_pref = "hebrew";
 	}
-	//  print "<br><br>sql to fill temp table: ".$sql;
+	
 	 
 	// Check of mourner preference should be ignored.
 	$params = array(
@@ -613,7 +632,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	}
 	
 	 
-	// print "<br><br>pref field : ".$global_pref_field_name;
+
 
 	$params = array(
 			'version' => 3,
@@ -669,7 +688,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		require_once 'utils/HebrewCalendar.php';
 		$tmpHebCal = new HebrewCalendar();
 
-		//	print "<br><br>dname: ".$deceased_display_name." dyear: ".$deceased_year." dmonth: ".$deceased_month." dday: ".$deceased_day." ddate: ".$deceased_date;
+		// CRM_Core_Error::debug(" dname: ".$deceased_name." dyear: ".$deceased_year." dmonth: ".$deceased_month." dday: ".$deceased_day." ddate: ".$deceased_date) ;
 		$hebrew_date_format = 'dd MM yy';
 		$erev_start_flag = '1';
 		
@@ -851,6 +870,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		 
 		$rtn_count =  $tmpHebCal->updateCiviCRMCalcYahrzeitFields( $deceased_contact_id, $yahrzeit_date_tmp_next, $tmp_yahrzeit_date_observe_english_next, $hebrew_deceased_date  );
 		
+		
+		//CRM_Core_Error::debug("About to put data into yahrzeit temp table for contact id: ".$deceased_contact_id." - ".$deceased_name, $deceased_date_english_raw." - ".$hebrew_deceased_date);
 		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_hebrew, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
 				$deceased_name,  $deceased_date_english_raw,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,

@@ -31,6 +31,9 @@ class HebrewCalendar{
 		
 	private  $jewish_holidays_minor = array('aaa' => 'a');
 
+	
+	static private $allRemoteHebCalData = array();  // data from the http://hebcal.com API. 
+	
 	// Should always be set to false in a production environment.
 	const ALWAYS_CLEAR_TEMP_TABLE = false;
 	
@@ -162,6 +165,119 @@ class HebrewCalendar{
 	const YAHRZEIT_RELATIONSHIP_TYPE_B_A_TITLE =  "Yahrzeit observed in memory of";
 	const YAHRZEIT_RELATIONSHIP_TYPE_B_A_NAME = "Yahrzeit_observed_in_memory_of";
 	
+	
+	
+	private static function getParashatByDateHebrew(  &$date_parm){
+		
+		$tmp_hebcal_data_all_years = HebrewCalendar::getAllRemoteHebCalData();
+		
+		$year_parm = substr($date_parm, 0, 4 );
+		
+		$tmp_hebcal_data = $tmp_hebcal_data_all_years[$year_parm];
+		//CRM_Core_Error::debug($year_parm." Heb data: ", $tmp_hebcal_data );
+		foreach( $tmp_hebcal_data as $cur ){
+			if( $cur->category == "parashat" &&  $cur->date == $date_parm ){
+		
+				$parashat_title_hebrew = $cur->hebrew;
+				$parashat_date = $cur->date;
+		
+				return $parashat_title_hebrew ;
+		
+			}else{
+				// keep looking.
+			}
+				
+				
+		}
+		
+		
+	}
+	
+	
+	private static function getParashatByDate( &$date_parm){
+		
+		$tmp_hebcal_data_all_years = HebrewCalendar::getAllRemoteHebCalData(); 
+		
+		$year_parm = substr($date_parm, 0, 4 );
+		
+		$tmp_hebcal_data = $tmp_hebcal_data_all_years[$year_parm];
+		//CRM_Core_Error::debug($year_parm." Heb data: ", $tmp_hebcal_data );
+		foreach( $tmp_hebcal_data as $cur ){
+			if( $cur->category == "parashat" &&  $cur->date == $date_parm ){
+				
+				$parashat_title = $cur->title;
+				$parashat_date = $cur->date;
+				
+				return $parashat_title ; 
+				
+			}else{
+				// keep looking. 
+			}
+			
+			
+		}
+		
+		
+	}
+	
+	private static function getAllRemoteHebCalData(){
+		
+		
+		
+		
+	
+		$default_country_tmp = ""; 
+		// TODO: Check default country, do not assume diaspora. HebCal API:	'off' = diaspora, 'on' = in israel
+		
+		if( $default_country_tmp == "Israel"){
+			$tmp_in_israel = "on";
+		}else{
+			$tmp_in_israel = "off";
+		}
+		
+		
+		$tmp_rtn = null; 
+		if(count( HebrewCalendar::$allRemoteHebCalData) == 0){
+			// Use hebcal.com API to get needed data for last year, current year, and next year. 
+			$last_year = date("Y") - 1;
+			$current_year = date("Y");
+			$next_year = date("Y") + 1;
+			
+			$years_array = array($last_year, $current_year, $next_year );
+			
+			foreach($years_array as $tmp_year){
+				$service_url = "http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&min=on&i=".$tmp_in_israel."&mod=on&nx=on&year=".$tmp_year."&month=x&ss=on&mf=on&c=on&m=50&s=on";
+				
+				$curl = curl_init($service_url);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+				$curl_response = curl_exec($curl);
+				if ($curl_response === false) {
+					$info = curl_getinfo($curl);
+					curl_close($curl);
+					CRM_Core_Error::debug("Error getting remote hebcal.com data: ", 'error occured during curl exec. Additional info: ' . var_export($info));
+				}
+				curl_close($curl);
+				$decoded = json_decode($curl_response);
+				if (isset($decoded->response->status) && $decoded->response->status == 'ERROR') {
+					CRM_Core_Error::debug("Error getting remote hebcal.com data: " . $decoded->response->errormessage);
+				}
+				//CRM_Core_Error::debug(" $tmp_year Good news, got hebcal.com data: " , 'response ok!');
+				//CRM_Core_Error::debug("$tmp_year Data: ", $decoded);
+				HebrewCalendar::$allRemoteHebCalData[$tmp_year] = $decoded->items; 
+				
+				
+				//var_export($decoded->response);	
+				
+			}
+			
+			
+			
+		}
+		
+		$tmp_rtn = HebrewCalendar::$allRemoteHebCalData;
+		return $tmp_rtn;
+		
+	}
 	
 	function determine_relationship_name($mourner_contact_id, $deceased_contact_id  ){
 	
@@ -731,6 +847,128 @@ class HebrewCalendar{
 	}
 	
 	
+	function fillYahrzeitParashat(&$contact_ids ){
+		
+		
+		
+		if(strlen($contact_ids) > 0){
+			$sql_conids_filter = " AND deceased_contact_id  IN ( $contact_ids ) ";
+		}else{
+			$sql_conids_filter = "";
+		}
+		
+		$sql = "SELECT group_concat( id) as ids , date(yahrzeit_shabbat_morning_before) as shabbat_date , 'before' as shabbat_type
+				 FROM ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME.
+				" WHERE yahrzeit_shabbat_morning_before IS NOT NULL ".$sql_conids_filter.
+				"  GROUP BY yahrzeit_shabbat_morning_before
+				order by yahrzeit_shabbat_morning_before  ";
+		
+		$dao =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
+		
+		while ( $dao->fetch( ) ) {
+			
+			$shabbat_date = $dao->shabbat_date;
+			$shabbat_type = $dao->shabbat_type;
+			$row_ids_raw  = $dao->ids;
+		
+			
+			$tmpParashat = HebrewCalendar::getParashatByDate($shabbat_date);
+			if( strlen( $tmpParashat ) > 0 ){
+				
+			//	$tmpParashat_cleaned = str_replace("'", "''", $tmpParashat);
+				$update_sql = "UPDATE ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME." set shabbat_before_parashat = %1 
+						       WHERE id IN ( ".$row_ids_raw." ) ";			
+				
+				$params_a = array();
+				$params_a[1] =  array( $tmpParashat, 'String' );
+				
+				
+				$update_dao =& CRM_Core_DAO::executeQuery( $update_sql,   $params_a ) ;
+				$update_dao->free();
+				
+			}
+			
+			// Now get the Hebrew name of the parashat.
+			$tmpParashatHebrew = HebrewCalendar::getParashatByDateHebrew($shabbat_date);
+			if( strlen( $tmpParashatHebrew ) > 0 ){
+			
+				//	$tmpParashat_cleaned = str_replace("'", "''", $tmpParashat);
+				$update_sql = "UPDATE ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME." set shabbat_before_parashat_hebrew = %1
+						       WHERE id IN ( ".$row_ids_raw." ) ";
+			
+				$params_a = array();
+				$params_a[1] =  array( $tmpParashatHebrew, 'String' );
+			
+			
+				$update_dao =& CRM_Core_DAO::executeQuery( $update_sql,   $params_a ) ;
+				$update_dao->free();
+			
+			}
+			
+			
+			//CRM_Core_Error::debug("Shabbat Date: ".$shabbat_date, $tmpParashat );
+			
+		}
+		
+		$dao->free();
+		
+		
+		$sql = "SELECT group_concat( id) as ids , date(yahrzeit_shabbat_morning_after) as shabbat_date , 'after' as shabbat_type
+				FROM ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME.
+				" WHERE yahrzeit_shabbat_morning_after IS NOT NULL ".$sql_conids_filter.
+				" GROUP BY yahrzeit_shabbat_morning_after
+				 order by yahrzeit_shabbat_morning_after";
+		
+		
+		$dao =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
+		
+		while ( $dao->fetch( ) ) {
+				
+			$shabbat_date = $dao->shabbat_date;
+			$shabbat_type = $dao->shabbat_type;
+			$row_ids_raw  = $dao->ids;
+		
+				
+			$tmpParashat = HebrewCalendar::getParashatByDate($shabbat_date);
+			if( strlen( $tmpParashat ) > 0 ){
+		
+				$tmpParashat_cleaned = str_replace("'", "''", $tmpParashat);
+				$update_sql = "UPDATE ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME." set shabbat_after_parashat = '$tmpParashat_cleaned'
+				WHERE id IN ( ".$row_ids_raw." ) ";
+				$update_dao =& CRM_Core_DAO::executeQuery( $update_sql,   CRM_Core_DAO::$_nullArray ) ;
+				$update_dao->free();
+		
+			}
+			
+			// Now get the Hebrew name of the parashat.
+			$tmpParashatHebrew = HebrewCalendar::getParashatByDateHebrew($shabbat_date);
+			if( strlen( $tmpParashatHebrew ) > 0 ){
+					
+				//	$tmpParashat_cleaned = str_replace("'", "''", $tmpParashat);
+				$update_sql = "UPDATE ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME." set shabbat_after_parashat_hebrew = %1
+						       WHERE id IN ( ".$row_ids_raw." ) ";
+					
+				$params_a = array();
+				$params_a[1] =  array( $tmpParashatHebrew, 'String' );
+					
+					
+				$update_dao =& CRM_Core_DAO::executeQuery( $update_sql,   $params_a ) ;
+				$update_dao->free();
+					
+			}
+				
+				
+			//CRM_Core_Error::debug("Shabbat Date: ".$shabbat_date, $tmpParashat );
+				
+		}
+		
+		$dao->free();
+		
+		
+		
+		
+	}
+	
 	function scrubBirthCalculatedFields( $contact_ids  ){
 		$rtn_data = array();
 		
@@ -969,7 +1207,14 @@ class HebrewCalendar{
 		
 		$yahrzeit_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
 		
+		/*
+		 * CREATE TABLE `sepg1_crm1`.`sarahtest1` ( `id` INT(10) NOT NULL AUTO_INCREMENT , 
+		 * `aaa` VARCHAR(25) NOT NULL , `bbb` VARCHAR(50) NOT NULL , 
+		 * `ccc` VARCHAR(100) NOT NULL , 
+		 *  PRIMARY KEY (`id`)) ENGINE = InnoDB;
+		 */
 		$sql_create = "CREATE TABLE $yahrzeit_table_name (
+		id int(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
 		mourner_contact_id int NOT NULL,
 		mourner_name varchar(500) NOT NULL,
 		deceased_contact_id int NOT NULL,
@@ -985,13 +1230,18 @@ class HebrewCalendar{
 		yahrzeit_type varchar(256),
 		mourner_observance_preference varchar(256),
 		plaque_location varchar(500),
+		shabbat_before_parashat varchar(250),
+		shabbat_before_parashat_hebrew varchar(250),
+		shabbat_after_parashat varchar(250),
+		shabbat_after_parashat_hebrew varchar(250),
 		yahrzeit_erev_shabbat_before datetime,
 		yahrzeit_shabbat_morning_before datetime,
 		yahrzeit_erev_shabbat_after datetime,
 		yahrzeit_shabbat_morning_after datetime,
 		yahrzeit_date_morning datetime,
 		yahrzeit_relationship_id varchar(25),
-		created_date TIMESTAMP  ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
+		created_date TIMESTAMP ,
+		PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
 		
 		$dao =& CRM_Core_DAO::executeQuery( $sql_create,   CRM_Core_DAO::$_nullArray ) ;
 		$dao->free();

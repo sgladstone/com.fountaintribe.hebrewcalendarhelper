@@ -52,10 +52,14 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			ts('City') => 'city',
   			ts('State/Province') => 'abbreviation',
   			ts('Postal Code') => 'postal_code',
+  			ts('Parashat for Shabbat Before') => 'shabbat_before_parashat',
+  			ts('Parashat for Shabbat Before (Hebrew)') => 'shabbat_before_parashat_hebrew',
   			ts('Friday Night Before Yahrzeit') => 'yah_erev_shabbat_before',
   			ts('Saturday Morning Before Yahrzeit ' ) => 'yah_shabbat_morning_before',
   			ts('Friday Night After Yahrzeit') => 'yah_erev_shabbat_after',
   			ts('Saturday Morning After Yahrzeit ' ) => 'yah_shabbat_morning_after',
+  			ts('Parashat for Shabbat After') => 'shabbat_after_parashat',
+  			ts('Parashat for Shabbat After (Hebrew)') => 'shabbat_after_parashat_hebrew',
   			ts('Mourner Display Name' ) => 'mourner_display_name',
   			ts('Mourner First Name' ) => 'mourner_first_name',
   			ts('Mourner Last Name' ) => 'mourner_last_name',
@@ -341,31 +345,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   function all( $offset = 0, $rowcount = 0, $sort = null,
   		$includeContactIDs = false, $onlyIDs = false ) {
   
-  			// SELECT clause must include contact_id as an alias for civicrm_contact.id
-  			//require_once('utils/util_custom_fields.php');
-  
-  			/*
-  			$custom_field_group_label = "Extended Date Information";
-  			$custom_field_birthdate_sunset_label = "Birth Date Before Sunset";
-  			$custom_field_deathdate_sunset_label = "Death Date Before Sunset" ;
-  
-  
-  			$customFieldLabels = array($custom_field_birthdate_sunset_label   , $custom_field_deathdate_sunset_label );
-  			$extended_date_table = "";
-  			$outCustomColumnNames = array();
-  
-  
-  			$error_msg = getCustomTableFieldNames($custom_field_group_label, $customFieldLabels, $extended_date_table, $outCustomColumnNames ) ;
-  
-  			$extended_birth_date  =  $outCustomColumnNames[$custom_field_birthdate_sunset_label];
-  			$extended_death_date  =  $outCustomColumnNames[$custom_field_deathdate_sunset_label];
-  
-  			if($error_msg <> ''){
-  
-  				print "<br><h2>Configuration Problem: ".$error_msg."</h2>" ;
-  				return '';
-  			}
-  			*/
+  			
   			$extended_date_table = "";
   			$extended_birth_date  = "";
   			$extended_death_date  = "";
@@ -477,45 +457,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			
   			}
   			
-  			/*
-  			// Get SQL table info for table with Hebrew name.
-  			$custom_religious_field_group_label = "Religious";
-  			$custom_hebrewname_field_label = "Hebrew Name";
-  			$customFieldLabels = array($custom_hebrewname_field_label );
-  			$extended_religious_table = "";
-  			$outCustomColumnNames = array();
-  			$error_msg = getCustomTableFieldNames($custom_religious_field_group_label , $customFieldLabels, $extended_religious_table, $outCustomColumnNames ) ;
-  
-  			$extended_hebrewname  =  $outCustomColumnNames[$custom_hebrewname_field_label];
-  			if($error_msg <> ''){
-  
-  				print "<br><h2>Configuration Problem: ".$error_msg."</h2>" ;
-  				return '';
-  			}
-  			*/
   			
-  
-  			
-  			/*
-  			// Get SQL table info for plaque table.
-  			$custom_plaque_field_group_label = "Memorial Plaque Info";
-  			$custom_plaque_location_field_label = "Plaque Location";
-  			$custom_has_plaque_field_label = "Has Plaque";
-  			$customFieldLabels = array($custom_plaque_location_field_label, $custom_has_plaque_field_label );
-  			$extended_plaque_table = "";
-  			$outCustomColumnNames = array();
-  			$error_msg = getCustomTableFieldNames($custom_plaque_field_group_label , $customFieldLabels, $extended_plaque_table, $outCustomColumnNames ) ;
-  
-  			$extended_plaque_location  =  $outCustomColumnNames[$custom_plaque_location_field_label];
-  			$extended_has_plaque =  $outCustomColumnNames[$custom_has_plaque_field_label];
-  
-  			if($error_msg <> ''){
-  
-  				print "<br><h2>Configuration Problem: ".$error_msg."</h2>" ;
-  				return '';
-  			}
-  			
-  			*/
   			/******************************************************************************/
   			// Get data for contacts
   
@@ -603,7 +545,9 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
 		  group_concat(distinct hh.display_name) as household_display_name,
 		  group_concat(distinct hh.id) as household_id,
 		  rd.description as relationship_description,
-		  rnote.note as relationship_note
+		  rnote.note as relationship_note,
+		 		shabbat_before_parashat, shabbat_before_parashat_hebrew,
+		 		shabbat_after_parashat, shabbat_after_parashat_hebrew
 		  ";
   
   
