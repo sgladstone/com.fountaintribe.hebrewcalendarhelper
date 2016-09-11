@@ -224,7 +224,7 @@ class HebrewCalendar{
 	
 	private static function isLocatedInIsrael(){
 		// Get the domain's country for this CiviCRM environment's current domain.
-		// This assumes this setting is the same for all domains in a multi-site CiviCRM.
+		// This assumes this country is the same for all domains in a multi-site CiviCRM.
 		// TODO: get more information about how to handle multi-site environments.
 			
 		$default_country_name_tmp = "";
@@ -295,21 +295,23 @@ class HebrewCalendar{
 			
 			$language_api_parm = "s"; // Uses the modern Hebrew transliteration, ie 'parashat'.   'a' and 'ah' uses the older, Yiddish-style ie 'parashas' which is rarely used. 
 			
-			// Since geo is set to 'none', no candle-lighting times will get returned. 
+			// Since API parm 'geo' is set to 'none', no candle-lighting times will get returned from the API. 
 			$geo_api_query_string = "&geo=none";
 			
 			
 			if( strtolower($in_israel_crm_domain_setting) == "true"){
 				$tmp_in_israel = "on";
 				// HebCal.com API:	'on' = in Israel
-				 CRM_Core_Error::debug("Will use HebCal.com API setting for Israel", $tmp_in_israel);
+				// CRM_Core_Error::debug("Will use HebCal.com API setting for Israel", $tmp_in_israel);
 			}else{
 				$tmp_in_israel = "off";
 				// HebCal.com API:	'off' = diaspora
-				 CRM_Core_Error::debug("Will use  HebCal.com API setting for diaspora. ", $tmp_in_israel);
+				// CRM_Core_Error::debug("Will use  HebCal.com API setting for diaspora. ", $tmp_in_israel);
 			}
 		
-			$service_url = "http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&min=on&lg=".$language_api_parm."&i=".$tmp_in_israel."&mod=on&nx=on&year=".$year_parm."&month=x&ss=on&mf=on".$geo_api_query_string."&c=on&m=50&s=on";
+			$service_url = "http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&min=on&lg=".
+			   $language_api_parm."&i=".$tmp_in_israel."&mod=on&nx=on&year=".$year_parm.
+			   "&month=x&ss=on&mf=on".$geo_api_query_string."&c=on&m=50&s=on";
 			
 			$curl = curl_init($service_url);
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);

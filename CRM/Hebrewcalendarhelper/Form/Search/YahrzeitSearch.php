@@ -97,11 +97,6 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 */
   	$this->setTitle('Yahrzeit Search');
   
-  	 
-  	//require_once('utils/Entitlement.php');
-  	//$tmpEntitlement = new Entitlement();
-  
-  
   	$date_options = array(
   			'language'  => 'en',
   			'formatType'    => 'dMY',
