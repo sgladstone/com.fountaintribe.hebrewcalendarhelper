@@ -123,61 +123,12 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	
   	
-  	$group_ids = array();
-  	 
-  	$result = civicrm_api3('Group', 'get', array(
-  			'sequential' => 1,
-  			'is_active' => 1,
-  			'is_hidden' => 0,
-  			'options' => array('limit' => 0, 'sort' => "title"),
-  	));
-  	 
-  	if($result['is_error'] == 0 && $result['count'] > 0 ){
-  		 
-  		$values = $result['values'];
-  		foreach($values as $cur){
-  			$grp_id = $cur['id'];
-  			$grp_title = $cur['title'];
-  				
-  			$group_ids[$grp_id] = $grp_title;
-  				
-  		}
-  		 
-  	}
-  	
+  	$group_ids =    CRM_Core_PseudoConstant::nestedGroup();
         
   	$mem_ids = array();
   	$org_ids = array();
   	
-  	$result = civicrm_api3('MembershipType', 'get', array(
-  			'sequential' => 1,
-  			'is_active' => 1,
-  			'options' => array('limit' => 0, 'sort' => "name"),
-  	));
-  	
-  	if($result['is_error'] == 0 && $result['count'] > 0 ){
-  		
-  		$values = $result['values'];
-  		foreach($values as $cur){
-  			$memtype_id = $cur['id'];
-  			$memtype_name = $cur['name'];
-  			$memtype_orgid = $cur['member_of_contact_id'];
-  			
-  			$mem_ids[$memtype_id] = $memtype_name; 
-  			
-  			$result_org = civicrm_api3('Contact', 'getsingle', array(
-  					'sequential' => 1,
-  					'return' => array("display_name"),
-  					'id' => $memtype_orgid,
-  			));
-  			
-  			$org_name = $result_org['display_name'];
-  			
-  			$org_ids[$memtype_orgid] = $org_name; 
-  			
-  		} 		
-  		
-  	}
+  	$this->fillMembershipTypeArrays($mem_ids, $org_ids);
  	
   
   	//  $tmp_in_out_group = array( '' =>  '-- select --', 'IN' => 'In Group(s)', 'NOT IN' => 'Not In Group(s)');
@@ -322,6 +273,56 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			'relative_time' , 'start_date', 'end_date' , 'date_to_filter' ,  'deceased_has_plaque' ,
   			'yahrzeit_type_selection', 'living_mourners', 'gender_choice',  'comm_prefs' ) );
   
+  
+  }
+  
+  function fillMembershipTypeArrays(&$mem_ids,  &$org_ids){
+  
+  	$cur_domain_id = "";
+  		
+  	$result = civicrm_api3('Domain', 'get', array(
+  			'sequential' => 1,
+  			'current_domain' => array('IS NOT NULL' => 1),
+  	));
+  
+  
+  	if( $result['is_error'] == 0 && $result['count'] == 1){
+  		if(isset( $result['id'] )){
+  			$cur_domain_id = $result['id'];
+  		}
+  	}
+  		
+  	// get membership ids and org contact ids.
+  	if( strlen(  $cur_domain_id ) > 0 ){
+  		$api_result = civicrm_api3('MembershipType', 'get', array(
+  				'sequential' => 1,
+  				'is_active' => 1,
+  				'domain_id' =>  $cur_domain_id ,
+  				'options' => array('sort' => "name"),
+  		));
+  
+  
+  
+  		if( $api_result['is_error'] == 0 ){
+  			$tmp_api_values = $api_result['values'];
+  			foreach($tmp_api_values as $cur){
+  
+  				$tmp_id = $cur['id'];
+  				$mem_ids[$tmp_id] = $cur['name'];
+  
+  				$org_id = $cur['member_of_contact_id'];
+  				// get display name of org
+  				$result = civicrm_api3('Contact', 'getsingle', array(
+  						'sequential' => 1,
+  						'id' => $org_id ,
+  				));
+  				$org_ids[$org_id] = $result['display_name'];
+  
+  
+  			}
+  
+  		}
+  	}
   
   }
   
