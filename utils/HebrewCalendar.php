@@ -3987,7 +3987,7 @@ class HebrewCalendar{
 		list($hebrewMonth_tmp, $hebrewDay_tmp, $hebrewYear_tmp) = split('/',$hebrewDate_tmp);
 		
 		$tmp_heb_test = cal_from_jd($julian_datetmp, CAL_JEWISH  );
- 	CRM_Core_Error::debug($hebyear."-".$hebmonth."-".$hebday.": inside verify function : ", $hebrewDate_tmp." Test heb: ".$tmp_heb_test['date']);
+ 	//CRM_Core_Error::debug($hebyear."-".$hebmonth."-".$hebday.": inside verify function : ", $hebrewDate_tmp." Test heb: ".$tmp_heb_test['date']);
 		
 		
 		// Hebrew date before: $hebmonth-$hebday-$hebyear / after round trip (mm-dd-yyyy): $hebrewMonth_tmp-$hebrewDay_tmp-$hebrewYear_tmp
