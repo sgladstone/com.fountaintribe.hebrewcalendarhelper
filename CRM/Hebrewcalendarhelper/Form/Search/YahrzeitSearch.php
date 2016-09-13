@@ -222,10 +222,10 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   		 
   		$values = $result['values'];
   		foreach($values as $cur){
-  			$gen_id = $cur['id'];
+  			$gen_value_id = $cur['value'];
   			$gen_label = $cur['label'];
   				
-  			$gender_options[$gen_id] = $gen_label;
+  			$gender_options[$gen_value_id] = $gen_label;
   		}
   	
   	}
