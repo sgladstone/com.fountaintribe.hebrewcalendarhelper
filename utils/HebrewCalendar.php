@@ -2924,7 +2924,7 @@ class HebrewCalendar{
 					return;
 				}
 
-
+// yahrzeit_date_display
 				$yahrzeit_temp_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
 
 				$yizkor_sql_str = "SELECT DISTINCT mourner_contact_id as contact_id, mourner_contact_id as id, mourner_name as sort_name, 
@@ -2932,7 +2932,7 @@ class HebrewCalendar{
     deceased_contact_table.display_name as deceased_display_name, deceased_contact_id,  contact_b.deceased_date,
     contact_b.deceased_date as ddate,
     d_before_sunset, hebrew_deceased_date,
-     concat( year(yahrzeit_date), '-', month(yahrzeit_date), '-', day(yahrzeit_date)) as yahrzeit_date_sort , yahrzeit_date_display, relationship_name_formatted,
+     concat( year(yahrzeit_date), '-', month(yahrzeit_date), '-', day(yahrzeit_date)) as yahrzeit_date_sort , relationship_name_formatted,
       yahrzeit_type, mourner_observance_preference
        FROM ".$yahrzeit_temp_table_name." contact_b INNER JOIN civicrm_contact contact_a ON contact_a.id = contact_b.mourner_contact_id
        JOIN civicrm_contact deceased_contact_table ON deceased_contact_table.id = contact_b.deceased_contact_id
@@ -2956,6 +2956,8 @@ class HebrewCalendar{
 				$no_rec = true;
 				$prev_cid = "";
 				$cur_cid_html = "";
+				
+				
 				$dao =& CRM_Core_DAO::executeQuery( $yizkor_sql_str,   CRM_Core_DAO::$_nullArray ) ;
 
 				while ( $dao->fetch( ) ) {
@@ -2987,7 +2989,8 @@ class HebrewCalendar{
 					$english_deceased_date = $dao->ddate;
 					$deceased_date_before_sunset = $dao->d_before_sunset;
 					$relationship_to_mourner = $dao->relationship_name_formatted;
-					$yahrzeit_date_display = $dao->yahrzeit_date_display;
+				//	$yahrzeit_date_display = $dao->yahrzeit_date_display;
+					$yahrzeit_date_display = $dao->yahrzeit_date_sort;
 					$yahrzeit_type = $dao->yahrzeit_type;
 
 					//$hebrew_date_format = 'dd MM yy';
@@ -3094,7 +3097,7 @@ class HebrewCalendar{
 				}
 				
 				
-				
+			//	yahrzeit_date_display
 			$yahrzeit_sql = "SELECT mourner_contact_id as contact_id, 
 						mourner_contact_id as id, mourner_name as sort_name, deceased_name as deceased_name,
     deceased_contact_table.display_name as deceased_display_name, deceased_contact_id, 
@@ -3107,7 +3110,7 @@ class HebrewCalendar{
 		 date_format( yahrzeit_shabbat_morning_after, '".$nice_date_format."' ) as yah_shabbat_morning_after,
     contact_b.deceased_date as ddate,
     d_before_sunset, hebrew_deceased_date,
-     concat( year(yahrzeit_date), '-', month(yahrzeit_date), '-', day(yahrzeit_date)) as yahrzeit_date_sort , yahrzeit_date_display, 
+     concat( year(yahrzeit_date), '-', month(yahrzeit_date), '-', day(yahrzeit_date)) as yahrzeit_date_sort , 
 						relationship_name_formatted,
 		 		shabbat_before_parashat, 
 		 		shabbat_after_parashat, 
@@ -3156,7 +3159,7 @@ class HebrewCalendar{
 						$english_deceased_date = $dao->deceased_date;
 						$hebrew_deceased_date = $dao->hebrew_deceased_date;
 						$yahrzeit_date = $dao->yahrzeit_date;
-						$yahrzeit_date_display = $dao->yahrzeit_date_display;
+					//	$yahrzeit_date_display = $dao->yahrzeit_date_display;
 						$relationship_name_formatted = $dao->relationship_name_formatted;
 						$yahrzeit_hebrew_date_format_english = $dao->yahrzeit_hebrew_date_format_english;
 						$yahrzeit_hebrew_date_format_hebrew = $dao->yahrzeit_hebrew_date_format_hebrew;
