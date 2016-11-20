@@ -1322,7 +1322,9 @@ class HebrewCalendar{
 		yahrzeit_date datetime,
 		yahrzeit_hebrew_date_format_hebrew varchar(256),
 		yahrzeit_hebrew_date_format_english varchar(256),
-		yahrzeit_hebrew_year int(10),
+		yahrzeit_hebrew_year int(10), 
+	    yahrzeit_hebrew_month int(10),
+	    yahrzeit_hebrew_day int(10),
 		relationship_name_formatted varchar(256),
 		yahrzeit_type varchar(256),
 		mourner_observance_preference varchar(256),
@@ -2815,7 +2817,8 @@ class HebrewCalendar{
 			&$token_yah_english_date_morning ,
 			&$token_yah_shabbat_parashat_before,
 			&$token_yah_shabbat_parashat_after,
-			&$token_date_portion ){
+			&$token_date_portion,
+			&$token_yah_hebrew_date_hebrew){
 
 				
 				// old parm: $token_yahrzeits_short
@@ -2927,12 +2930,17 @@ class HebrewCalendar{
 // yahrzeit_date_display
 				$yahrzeit_temp_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
 
-				$yizkor_sql_str = "SELECT DISTINCT mourner_contact_id as contact_id, mourner_contact_id as id, mourner_name as sort_name, 
+				$yizkor_sql_str = "SELECT DISTINCT mourner_contact_id as contact_id,
+						mourner_contact_id as id, mourner_name as sort_name, 
 						deceased_name as deceased_name,
-    deceased_contact_table.display_name as deceased_display_name, deceased_contact_id,  contact_b.deceased_date,
+    deceased_contact_table.display_name as deceased_display_name, 
+	deceased_contact_id, 
+	contact_b.deceased_date,
     contact_b.deceased_date as ddate,
-    d_before_sunset, hebrew_deceased_date,
-     concat( year(yahrzeit_date), '-', month(yahrzeit_date), '-', day(yahrzeit_date)) as yahrzeit_date_sort , relationship_name_formatted,
+    d_before_sunset,
+	hebrew_deceased_date,
+     concat( year(yahrzeit_date), '-', month(yahrzeit_date), '-', day(yahrzeit_date)) as yahrzeit_date_sort , 
+		relationship_name_formatted,
       yahrzeit_type, mourner_observance_preference
        FROM ".$yahrzeit_temp_table_name." contact_b INNER JOIN civicrm_contact contact_a ON contact_a.id = contact_b.mourner_contact_id
        JOIN civicrm_contact deceased_contact_table ON deceased_contact_table.id = contact_b.deceased_contact_id
@@ -3096,8 +3104,7 @@ class HebrewCalendar{
 				  	 
 				}
 				
-				
-			//	yahrzeit_date_display 
+			// yahrzeit_hebrew_date_format_hebrew - uses Hebrew characters.	 
 			$yahrzeit_sql = "SELECT mourner_contact_id as contact_id, 
 						mourner_contact_id as id, mourner_name as sort_name, deceased_name as deceased_name,
     deceased_contact_table.display_name as deceased_display_name, deceased_contact_id, 
@@ -3237,6 +3244,7 @@ class HebrewCalendar{
 								
 									
 
+								// Yahrzeit Hebrew date, written in English letters ( ie transliterated)
 								if( isset($values[$cid][$token_yah_hebrew_date])  && strlen( $values[$cid][$token_yah_hebrew_date])  > 0 ){   
 									$seper = $default_seperator; 
 								}else{  
@@ -3249,6 +3257,16 @@ class HebrewCalendar{
 									$values[$cid][$token_yah_hebrew_date] = $yahrzeit_hebrew_date_format_english;
 								}
 
+								// Yahrzeit Hebrew date, written in Hebrew letters.
+								if( isset( $values[$cid][$token_yah_hebrew_date_hebrew] ) && strlen($values[$cid][$token_yah_hebrew_date_hebrew]) > 0  ){
+									$values[$cid][$token_yah_hebrew_date_hebrew] = $values[$cid][$token_yah_hebrew_date_hebrew].$default_seperator.$yahrzeit_hebrew_date_format_hebrew;
+								}else{
+									$values[$cid][$token_yah_hebrew_date_hebrew] = $yahrzeit_hebrew_date_format_hebrew;
+								}
+								
+								
+								
+								
 								if( isset($values[$cid][$token_yah_dec_death_english_date]) && strlen( $values[$cid][$token_yah_dec_death_english_date])  > 0 ){   
 									$seper = $default_seperator;  
 								}else{ 

@@ -187,11 +187,31 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
     $prev_heb_year = $cur_hebrew_year - 1 ;
   	
     
-  	$hebrew_years = array('' => '-- select --',  $prev_heb_year =>  $prev_heb_year, $cur_hebrew_year => $cur_hebrew_year,  $next_heb_year =>  $next_heb_year   );
+  	$hebrew_years = array('' => '-- select --',  $prev_heb_year =>  $prev_heb_year, $cur_hebrew_year => $cur_hebrew_year." (current year)",  $next_heb_year =>  $next_heb_year   );
   	$tmp_hebrew_year_select = $form->add  ('select', 'hebrew_year_choice', ts('Hebrew Year'),
   			$hebrew_years,
   			false);
   
+  	
+  	$tmp = "";
+  	$hebrew_months_to_show = array('' => '-- select --');
+  	$heb_month_numbers = array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+  	foreach($heb_month_numbers as $cur ){
+  		
+  		$tmp_hebrew_date = $cur."/1/5776";
+  		$tmp_month_name = $tmpHebCal->util_get_hebrew_month_name( $tmp, $tmp_hebrew_date);
+  		if( $cur == 6){
+  			$tmp_month_name = "Adar or Adar I";
+  		}
+  		$hebrew_months_to_show[$cur] = $tmp_month_name;
+  	}
+  	
+  	
+  	$tmp_hebrew_month_select = $form->add  ('select', 'hebrew_month_choice', ts('Hebrew Month'),
+  			$hebrew_months_to_show,
+  			false);
+  	
+  	
   	$tmp_yes_no =  array('all' => '-- select --',   'yes' => 'Deceased has Plaque', 'no' => 'Deceased does not have Plaque');
   	$tmp_has_plaque_select = $form->add  ('select', 'deceased_has_plaque', ts('Plaque Filter Choice'),
   			$tmp_yes_no,
@@ -281,7 +301,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 * for the search form.
   	 */
   	$form->assign( 'elements', array(  'group_of_contact',  'membership_org_of_contact',  'membership_type_of_contact',
-  			'relative_time' , 'start_date', 'end_date' , 'hebrew_year_choice' , 'date_to_filter' ,  'deceased_has_plaque' ,
+  			'relative_time' , 'start_date', 'end_date' , 'hebrew_year_choice' , 'hebrew_month_choice' , 'date_to_filter' ,  'deceased_has_plaque' ,
   			'yahrzeit_type_selection', 'living_mourners', 'gender_choice',  'comm_prefs' ) );
   
   
@@ -907,6 +927,15 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	if( strlen($hebrew_year_choice) > 0){
   		$clauses[] =  " yahrzeit_hebrew_year = $hebrew_year_choice"; 
   	}
+  	
+  	
+  	// 'hebrew_month_choice'
+  	$hebrew_month_choice = $this->_formValues['hebrew_month_choice'];
+  	 
+  	if( strlen($hebrew_month_choice) > 0){
+  		$clauses[] =  " yahrzeit_hebrew_month = $hebrew_month_choice";
+  	}
+  	
   	
   	//  $clauses[] = "contact_b.created_date >= DATE_SUB(CURDATE(), INTERVAL 10  MINUTE)";
   	 

@@ -207,7 +207,17 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 		 $yahrzeit_hebrew_date_format_english  = $tmpHebCal->util_convert2hebrew_date($yar[0], $yar[1], $yar[2], $deceased_date_before_sunset, $hebrew_date_format);
 		 //print "<br>yar. heb. date: ".$yahrzeit_hebrew_date;
 
-
+         // Get Hebrew date in machine-sortable format, ie all numbers. 
+		  $hebrew_date_format = 'mm/dd/yy';
+		  $yahrzeit_hebrew_date_format_sortable  = $tmpHebCal->util_convert2hebrew_date($yar[0], $yar[1], $yar[2], $deceased_date_before_sunset, $hebrew_date_format);
+		  
+		  $yah_tmp_sortable_arr = explode("/", $yahrzeit_hebrew_date_format_sortable);
+		  $yah_hebrew_month_num = $yah_tmp_sortable_arr[0];
+		  
+		  $yah_hebrew_day_num = $yah_tmp_sortable_arr[1];
+		  
+		  $yah_hebrew_year_num = $yah_tmp_sortable_arr[2];
+		  
 		  
 	  $sql_date_format = "Y-m-d";
 	   
@@ -289,7 +299,7 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  	$english_deceased_date_sql = "null";
 	  }
 	  
-	  
+	  /*
 	  // '$hebrew_deceased_date' 
 	  if(strlen($yahrzeit_hebrew_date_format_english) > 0 ){
 	  	  $yahrzeit_hebrew_year = substr( $yahrzeit_hebrew_date_format_english, -4   ) ;
@@ -297,34 +307,43 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  	$yahrzeit_hebrew_year = 0;
 	  }
 	  
-
+      */
 	  
 	// print "<br>SQL INSERT: deceased name: $deceased_name   yah_date: ".$yahrzeit_date_tmp ;
 	
-	  $insert_sql = "INSERT INTO $TempTableName ( mourner_contact_id,
+	  $insert_sql = "INSERT INTO $TempTableName ( 
+	  mourner_contact_id,
 	  mourner_name, 
 	  deceased_contact_id,
 	  deceased_name, 
-	  deceased_date, d_before_sunset,
-	  hebrew_deceased_date, yahrzeit_date ,
+	  deceased_date, 
+	  d_before_sunset,
+	  hebrew_deceased_date, 
+	  yahrzeit_date ,
 	  yahrzeit_hebrew_date_format_hebrew, 
 	  yahrzeit_hebrew_date_format_english,
 	  yahrzeit_hebrew_year, 
+	  yahrzeit_hebrew_month,
+	  yahrzeit_hebrew_day,
 	  relationship_name_formatted, 
 	  yahrzeit_type,
-	  mourner_observance_preference, plaque_location,
-	  yahrzeit_erev_shabbat_before, yahrzeit_shabbat_morning_before,
-	  yahrzeit_erev_shabbat_after , yahrzeit_shabbat_morning_after,
-	  yahrzeit_date_morning, yahrzeit_relationship_id
+	  mourner_observance_preference, 
+	  plaque_location,
+	  yahrzeit_erev_shabbat_before,
+	  yahrzeit_shabbat_morning_before,
+	  yahrzeit_erev_shabbat_after , 
+	  yahrzeit_shabbat_morning_after,
+	  yahrzeit_date_morning, 
+	  yahrzeit_relationship_id
 	  )
 			VALUES($mourner_contact_id, %1 , $deceased_contact_id,
 			%2, 
 			 $english_deceased_date_sql , '$deceased_date_before_sunset_formated',
 			 %3 , $yahrzeit_date_tmp,
 			%4, 
-			%5, %6, 
-		 '$relationship_name_formated', %7,
-			'$mourner_observance_preference', %8,
+			%5, %6, %7, %8,
+		 '$relationship_name_formated', %9,
+			'$mourner_observance_preference', %10,
 			$sql_friday_before, $sql_saturday_before, $sql_friday_after, $sql_saturday_after,
 	  		$sql_yahrzeit_date_morning, '$yahrzeit_relationship_id'  )";
 	  	
@@ -367,24 +386,38 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 
 			
 
-			if(strlen($yahrzeit_hebrew_year) > 0 ){
-				$params_a[6] =  array($yahrzeit_hebrew_year, 'String');
+			if(strlen($yah_hebrew_year_num) > 0 ){
+				$params_a[6] =  array($yah_hebrew_year_num, 'String');
 			}else{
-				$params_a[6] =  array( ' ', 'String' );
+				$params_a[6] =  array( '', 'String' );
 			}
 			
-			if(strlen($yahrzeit_type) > 0 ){
-				$params_a[7] =  array($yahrzeit_type, 'String');
+			if(strlen($yah_hebrew_month_num) > 0 ){
+				$params_a[7] =  array($yah_hebrew_month_num, 'String');
 			}else{
-				$params_a[7] =  array( ' ', 'String' );
+				$params_a[7] =  array( '', 'String' );
+			}
+			
+			if(strlen($yah_hebrew_day_num) > 0 ){
+				$params_a[8] =  array($yah_hebrew_day_num, 'String');
+			}else{
+				$params_a[8] =  array( '', 'String' );
+			}
+			
+			
+			
+			if(strlen($yahrzeit_type) > 0 ){
+				$params_a[9] =  array($yahrzeit_type, 'String');
+			}else{
+				$params_a[9] =  array( ' ', 'String' );
 			}
 			
 			// '$plaque_location'
 				
 			if(strlen($plaque_location) > 0 ){
-				$params_a[8] =  array($plaque_location, 'String');
+				$params_a[10] =  array($plaque_location, 'String');
 			}else{
-				$params_a[8] =  array( '', 'String' );
+				$params_a[10] =  array( '', 'String' );
 			}
 			//CRM_Core_Error::debug("Insert SQL : ". $insert_sql, $params_a );
 			

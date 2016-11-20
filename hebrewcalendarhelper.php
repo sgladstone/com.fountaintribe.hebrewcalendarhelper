@@ -118,6 +118,7 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 			'english_date' => 'English Yarzeit Date (evening)',
 			'morning_format_english' => 'English Yahrzeit Date (morning)',
 			'hebrew_date' => 'Hebrew Yahrzeit Date',	
+			'hebrew_date_hebrew' =>  'Hebrew Yahrzeit Date (Hebrew letters)',	
 			'dec_death_english_date' => 'English Date of Death',
 			'dec_death_hebrew_date' => 'Hebrew Date of Death',
 			'relationship_name'  => 'Relationship of Deceased to Mourner',
@@ -193,13 +194,16 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		// All the token data is in the  database table, and were do not want to query it for each token.
 		// We will query it once for all yahrzeit tokens. 
 		
+		
+		// Hebrew dates are generally written in English letters (ie transliterated), unless otherwise noted.
 		$token_yahrzeits_all = 'yahrzeit.all'; // all yahrzeits for this mourner (entire year)
-		// $token_yahrzeits_short = 'yahrzeit.all' ;
 		$token_yah_dec_name  = 'yahrzeit.deceased_name' ;
-		$token_yah_english_date = 'yahrzeit.english_date';
-		$token_yah_hebrew_date = 'yahrzeit.hebrew_date' ;
-		$token_yah_dec_death_english_date = 'yahrzeit.dec_death_english_date';
-		$token_yah_dec_death_hebrew_date = 'yahrzeit.dec_death_hebrew_date';
+		$token_yah_english_date = 'yahrzeit.english_date'; // English date of yahrzeit (evening when a candle should be lit) 
+		$token_yah_hebrew_date = 'yahrzeit.hebrew_date' ; // yahrzeit Hebrew date, example: 23 Elul 5776
+		
+		$token_yah_hebrew_date_hebrew = 'yahrzeit.hebrew_date_hebrew' ;  // yahrzeit Hebrew date, written in Hebrew letters.
+		$token_yah_dec_death_english_date = 'yahrzeit.dec_death_english_date'; // English date of death, example: August 15, 1980
+		$token_yah_dec_death_hebrew_date = 'yahrzeit.dec_death_hebrew_date';  // Hebrew date of death, example: 23 Elul 5765
 		$token_yah_relationship_name = 'yahrzeit.relationship_name';
 		
 		$token_yah_erev_shabbat_before = 'yahrzeit.erev_shabbat_before';
@@ -211,7 +215,9 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		$token_yah_shabbat_parashat_after = 'yahrzeit.parashat_shabbat_after';
 		
 		
-		$token_yah_english_date_morning = 'yahrzeit.morning_format_english';
+		$token_yah_english_date_morning = 'yahrzeit.morning_format_english'; // English date of yahrzeit (morning after candle is lit)
+		
+	
 
 		
 		// CiviCRM is buggy here, if token is being used in CiviMail, we need to use the key
@@ -233,8 +239,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		
 			$token_as_array = explode("___",  $cur_token );
 		
-			//print "<br>\n";
-		    //print_r( $token_as_array );
+			
 		
 			$partial_token =  $token_as_array[0];
 			if( isset( $token_as_array[1] ) && strlen($token_as_array[1]) > 0 ){
@@ -247,6 +252,8 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 				$token_yah_english_date =  $token_to_fill;
 			}else if($partial_token == 'hebrew_date'){
 				$token_yah_hebrew_date = $token_to_fill;
+			}else if($partial_token == 'hebrew_date_hebrew'){
+				$token_yah_hebrew_date_hebrew = $token_to_fill;
 			}else if( $partial_token == 'dec_death_english_date'){
 				$token_yah_dec_death_english_date = $token_to_fill;
 			}else if( $partial_token == 'dec_death_hebrew_date'){
@@ -274,12 +281,6 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		
 		
 		
-		//$token_as_array = explode("___",  $token_yah_dec_name );
-		
-		//print_r($token_as_array );
-		//if( isset( $token_as_array[1]) && strlen(  $token_as_array[1] ) > 0 ){
-			// $token_date_portion = $token_as_array[1];
-		
 		require_once('utils/HebrewCalendar.php');
 		$tmpHebCal = new HebrewCalendar();
 		$tmpHebCal->process_yahrzeit_tokens( $values, $contactIDs , 
@@ -296,7 +297,8 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 				$token_yah_english_date_morning, 
 				$token_yah_shabbat_parashat_before,
 				$token_yah_shabbat_parashat_after,
-				$token_date_portion  ) ;
+				$token_date_portion,
+				$token_yah_hebrew_date_hebrew) ;
 		
 
 	}
