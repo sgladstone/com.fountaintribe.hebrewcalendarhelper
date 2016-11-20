@@ -224,6 +224,62 @@ class HebrewCalendar{
 		
 	}
 	
+	private static function getHolidayByDateHebrew( &$date_parm){
+	
+		$tmp_hebcal_data_all_years = HebrewCalendar::getAllRemoteHebCalData();
+	
+		$year_parm = substr($date_parm, 0, 4 );
+	
+		if( isset( $tmp_hebcal_data_all_years[$year_parm] ) ){
+			$tmp_hebcal_data = $tmp_hebcal_data_all_years[$year_parm];
+			//CRM_Core_Error::debug($year_parm." Heb data: ", $tmp_hebcal_data );
+			foreach( $tmp_hebcal_data as $cur ){
+				if( $cur->category == "holiday" &&  $cur->date == $date_parm ){
+	
+					$holiday_title_hebrew = $cur->hebrew;
+					$holiday_date = $cur->date;
+	
+					return $holiday_title_hebrew;
+	
+				}else{
+					// keep looking.
+				}
+	
+	
+			}
+		}
+	
+	
+	}
+	
+	
+	private static function getHolidayByDate( &$date_parm){
+	
+		$tmp_hebcal_data_all_years = HebrewCalendar::getAllRemoteHebCalData();
+	
+		$year_parm = substr($date_parm, 0, 4 );
+	
+		if( isset( $tmp_hebcal_data_all_years[$year_parm] ) ){
+			$tmp_hebcal_data = $tmp_hebcal_data_all_years[$year_parm];
+			//CRM_Core_Error::debug($year_parm." Heb data: ", $tmp_hebcal_data );
+			foreach( $tmp_hebcal_data as $cur ){
+				if( $cur->category == "holiday" &&  $cur->date == $date_parm ){
+						
+					$holiday_title = $cur->title;
+					$holiday_date = $cur->date;
+						
+					return $holiday_title;
+						
+				}else{
+					// keep looking.
+				}
+	
+	
+			}
+		}
+	
+	
+	}
 	
 	
 	private static function isLocatedInIsrael(){
@@ -946,7 +1002,7 @@ class HebrewCalendar{
 		return $output_time_formated;
 	}
 	
-	
+	// This fills in parashat and holiday info
 	function fillYahrzeitParashat(&$contact_ids ){
 		
 		
@@ -972,11 +1028,38 @@ class HebrewCalendar{
 			$row_ids_raw  = $dao->ids;
 		
 			
+			
+			
+			
+			// get Holiday for Shabbat before the yahrzeit.
+			$tmpHoliday = HebrewCalendar::getHolidayByDate($shabbat_date);
+			$tmpHolidayHebrew = HebrewCalendar::getHolidayByDateHebrew($shabbat_date);
+			
+			if(  strlen($tmpHoliday ) > 0 ){		
+				//	$tmpParashat_cleaned = str_replace("'", "''", $tmpParashat);
+				$update_sql = "UPDATE ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME."
+						set shabbat_before_holiday = %1,
+						 shabbat_before_holiday_hebrew = %2
+						       WHERE id IN ( ".$row_ids_raw." ) ";
+			
+				$params_a = array();
+				$params_a[1] =  array( $tmpHoliday, 'String' );
+				
+				$params_a[2] =  array( $tmpHolidayHebrew, 'String' );
+			
+				$update_dao =& CRM_Core_DAO::executeQuery( $update_sql,   $params_a ) ;
+				$update_dao->free();
+			
+			}
+			
+			// getHolidayByDateHebrew
+			
 			$tmpParashat = HebrewCalendar::getParashatByDate($shabbat_date);
-			if( strlen( $tmpParashat ) > 0 ){
+			if( strlen( $tmpParashat ) > 0  ){
 				
 			//	$tmpParashat_cleaned = str_replace("'", "''", $tmpParashat);
-				$update_sql = "UPDATE ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME." set shabbat_before_parashat = %1 
+				$update_sql = "UPDATE ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME." 
+						set shabbat_before_parashat = %1 
 						       WHERE id IN ( ".$row_ids_raw." ) ";			
 				
 				$params_a = array();
@@ -1029,6 +1112,30 @@ class HebrewCalendar{
 			$row_ids_raw  = $dao->ids;
 		
 				
+			
+			
+			// get Holiday for Shabbat after the yahrzeit.
+			$tmpHoliday = HebrewCalendar::getHolidayByDate(  $shabbat_date);
+			$tmpHolidayHebrew = HebrewCalendar::getHolidayByDateHebrew($shabbat_date);
+			if(  strlen($tmpHoliday ) > 0 ){
+				//	$tmpParashat_cleaned = str_replace("'", "''", $tmpParashat);
+				$update_sql = "UPDATE ".HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME."
+						set shabbat_after_holiday = %1 , 
+						shabbat_after_holiday_hebrew = %2
+						       WHERE id IN ( ".$row_ids_raw." ) ";
+					
+				$params_a = array();
+				$params_a[1] =  array( $tmpHoliday, 'String' );
+				
+				
+				$params_a[2] =  array( $tmpHolidayHebrew, 'String' );
+					
+				$update_dao =& CRM_Core_DAO::executeQuery( $update_sql,   $params_a ) ;
+				$update_dao->free();
+					
+			}
+			
+			
 			$tmpParashat = HebrewCalendar::getParashatByDate($shabbat_date);
 			if( strlen( $tmpParashat ) > 0 ){
 		
@@ -1331,8 +1438,12 @@ class HebrewCalendar{
 		plaque_location varchar(500),
 		shabbat_before_parashat varchar(250),
 		shabbat_before_parashat_hebrew varchar(250),
+		shabbat_before_holiday varchar(250), 
+		shabbat_before_holiday_hebrew varchar(250), 
 		shabbat_after_parashat varchar(250),
 		shabbat_after_parashat_hebrew varchar(250),
+		shabbat_after_holiday varchar(250), 
+		shabbat_after_holiday_hebrew varchar(250), 
 		 shabbat_before_hebrew_date_format_english varchar(256),
 		 shabbat_before_hebrew_year_num int(10),
 	  shabbat_before_hebrew_month_num int(10),
@@ -3130,6 +3241,8 @@ class HebrewCalendar{
 						relationship_name_formatted,
 		 		shabbat_before_parashat, 
 		 		shabbat_after_parashat, 
+		 		shabbat_after_holiday , shabbat_after_holiday_hebrew, 
+		 		shabbat_before_holiday , shabbat_before_holiday_hebrew, 
       yahrzeit_type, mourner_observance_preference
        FROM ".$yahrzeit_temp_table_name." contact_b 
        INNER JOIN civicrm_contact contact_a ON contact_a.id = contact_b.mourner_contact_id
@@ -3191,7 +3304,8 @@ class HebrewCalendar{
 						$shabbat_before_parashat = $dao->shabbat_before_parashat;
 						$shabbat_after_parashat = $dao->shabbat_after_parashat;
 						
-						
+						$shabbat_before_holiday = $dao->shabbat_before_holiday;
+						$shabbat_after_holiday = $dao->shabbat_after_holiday;				
 						
 						/*
 						 * $formatted_friday_before = date($gregorian_date_format,  strtotime(date("Y-m-d", $yah_timestamp) ." previous Friday"));
@@ -3319,19 +3433,27 @@ class HebrewCalendar{
 									$values[$cid][$token_yah_english_date_morning] = $yahrzeit_morning_format_english ;
 								}
 
-								// token for: shabbat_before_parashat
+								// token for: shabbat_before_parashat, if empty use holiday
+								if( strlen( $shabbat_before_parashat ) == 0){
+									$shabbat_before_parashat = $shabbat_before_holiday;
+								}
 								if( isset( $values[$cid][$token_yah_shabbat_parashat_before] )){
 									$values[$cid][$token_yah_shabbat_parashat_before] = $values[$cid][$token_yah_shabbat_parashat_before].$default_seperator.$shabbat_before_parashat;
 								}else{
 									$values[$cid][$token_yah_shabbat_parashat_before] = $shabbat_before_parashat;
 								}
 								
-								// token for: shabbat_after_parashat
+								// token for: shabbat_after_parashat, if empty use holiday.
+								if( strlen( $shabbat_after_parashat ) == 0){
+									$shabbat_after_parashat = $shabbat_after_holiday;
+								}	
 								if( isset( $values[$cid][$token_yah_shabbat_parashat_after] )){
 									$values[$cid][$token_yah_shabbat_parashat_after] = $values[$cid][$token_yah_shabbat_parashat_after].$default_seperator.$shabbat_after_parashat;
 								}else{
 									$values[$cid][$token_yah_shabbat_parashat_after] = $shabbat_after_parashat;
 								}
+								
+								
 								
 
 								if(isset( $values[$cid][$token_yah_erev_shabbat_before] ) && strlen( $values[$cid][$token_yah_erev_shabbat_before] ) > 0 ){   

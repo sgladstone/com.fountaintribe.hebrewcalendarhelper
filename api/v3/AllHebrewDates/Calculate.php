@@ -300,20 +300,18 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  }
 	  
 	  
-
 	  
-	  $shabbat_before_sunset_flag = "1";
-	  
-	 
-	  // Get Hebrew date for the Shabbat BEFORE the yahrzeit in a machine-sortable format, ie all numbers. 
-	  $shabbat_before_english_arr = explode( "-", date($sql_date_format, $raw_saturday_before ) ) ;
-	  
-	  $hebrew_date_format = 'dd MM yy';
-	   $shabbat_before_hebrew_date_format_english  = $tmpHebCal->util_convert2hebrew_date($shabbat_before_english_arr[0], $shabbat_before_english_arr[1], $shabbat_before_english_arr[2],  $shabbat_before_sunset_flag, $hebrew_date_format);
+	  // prepare for dealing with Shabbat before the yahrzeit.
+	 $saturday_before_yah_sql_format = date($sql_date_format, $raw_saturday_before );
+	 $shabbat_before_sunset_flag = "1";
 	  
 	
+	
+	  // Get Hebrew date for the Shabbat BEFORE the yahrzeit in a machine-sortable format, ie all numbers. 
+	  $shabbat_before_english_arr = explode( "-", $saturday_before_yah_sql_format ) ;
 	  
-	  
+	  $hebrew_date_format = 'dd MM yy';
+	   $shabbat_before_hebrew_date_format_english  = $tmpHebCal->util_convert2hebrew_date($shabbat_before_english_arr[0], $shabbat_before_english_arr[1], $shabbat_before_english_arr[2],  $shabbat_before_sunset_flag, $hebrew_date_format); 
 	  
 	  $hebrew_date_format = 'mm/dd/yy';
 	  $yahrzeit_shabbat_hebrew_date_format_sortable  = $tmpHebCal->util_convert2hebrew_date($shabbat_before_english_arr[0], $shabbat_before_english_arr[1], $shabbat_before_english_arr[2],  $shabbat_before_sunset_flag, $hebrew_date_format);
@@ -326,9 +324,11 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  $yah_shabbat_before_hebrew_year_num = $yah_tmp_sortable_arr[2];
 	  
 	  
-	  //
+	  // prepare for dealing with Shabbat after the yahrzeit.
+	  $saturday_after_yah_sql_format = date($sql_date_format, $raw_saturday_after );
+	 
 	  // get Hebrew date for the Shabbat AFTER the yahrzeit in a machine-sortable format, ie all numbers.
-	  $shabbat_after_english_arr = explode( "-", date($sql_date_format, $raw_saturday_after) ) ;
+	  $shabbat_after_english_arr = explode( "-",  $saturday_after_yah_sql_format ) ;
 	  
 	  $hebrew_date_format = 'dd MM yy';
 	  $shabbat_after_hebrew_date_format_english =  $tmpHebCal->util_convert2hebrew_date($shabbat_after_english_arr[0], $shabbat_after_english_arr[1], $shabbat_after_english_arr[2],  $shabbat_before_sunset_flag, $hebrew_date_format);

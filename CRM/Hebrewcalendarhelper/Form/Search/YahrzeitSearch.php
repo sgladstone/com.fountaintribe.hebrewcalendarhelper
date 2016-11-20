@@ -52,6 +52,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			ts('City') => 'city',
   			ts('State/Province') => 'abbreviation',
   			ts('Postal Code') => 'postal_code',
+  			ts('Holiday for Shabbat Before') => 'shabbat_before_holiday',
+  			ts('Holiday for Shabbat Before (Hebrew)') => 'shabbat_before_holiday_hebrew',
   			ts('Parashat for Shabbat Before') => 'shabbat_before_parashat',
   			ts('Parashat for Shabbat Before (Hebrew)') => 'shabbat_before_parashat_hebrew',
   			ts('Shabbat Before Yahrzeit') => 'shabbat_before_hebrew_date_format_english',
@@ -60,6 +62,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			ts('Friday Night After Yahrzeit') => 'yah_erev_shabbat_after',
   			ts('Saturday Morning After Yahrzeit ' ) => 'yah_shabbat_morning_after',
   			ts('Shabbat After Yahrzeit') => 'shabbat_after_hebrew_date_format_english',
+  			ts('Holiday for Shabbat After') => 'shabbat_after_holiday',
+  			ts('Holiday for Shabbat After (Hebrew)') => 'shabbat_after_holiday_hebrew',
   			ts('Parashat for Shabbat After') => 'shabbat_after_parashat',
   			ts('Parashat for Shabbat After (Hebrew)') => 'shabbat_after_parashat_hebrew',
   			ts('Mourner Display Name' ) => 'mourner_display_name',
@@ -577,7 +581,9 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
 		  rnote.note as relationship_note,
 		 		shabbat_before_parashat, shabbat_before_parashat_hebrew,
 		 		shabbat_after_parashat, shabbat_after_parashat_hebrew,
-		 		shabbat_before_hebrew_date_format_english, shabbat_after_hebrew_date_format_english
+		 		shabbat_before_hebrew_date_format_english, shabbat_after_hebrew_date_format_english,
+		 		shabbat_before_holiday, shabbat_before_holiday_hebrew,
+		 		shabbat_after_holiday, shabbat_after_holiday_hebrew
 		  ";
   
   
