@@ -3097,10 +3097,11 @@ class HebrewCalendar{
 				}
 				
 				
-			//	yahrzeit_date_display
+			//	yahrzeit_date_display 
 			$yahrzeit_sql = "SELECT mourner_contact_id as contact_id, 
 						mourner_contact_id as id, mourner_name as sort_name, deceased_name as deceased_name,
     deceased_contact_table.display_name as deceased_display_name, deceased_contact_id, 
+					date_format( yahrzeit_date  ,   '".$nice_date_format."' ) as yahrzeit_date_display, 
 						date_format( deceased_contact_table.deceased_date , '".$nice_date_format."' ) as deceased_date, 
 						yahrzeit_date, yahrzeit_hebrew_date_format_english, yahrzeit_hebrew_date_format_hebrew,
 						date_format( yahrzeit_date_morning , '".$nice_date_format."' ) as yahrzeit_date_morning , 
@@ -3159,7 +3160,7 @@ class HebrewCalendar{
 						$english_deceased_date = $dao->deceased_date;
 						$hebrew_deceased_date = $dao->hebrew_deceased_date;
 						$yahrzeit_date = $dao->yahrzeit_date;
-					//	$yahrzeit_date_display = $dao->yahrzeit_date_display;
+						$yahrzeit_date_display = $dao->yahrzeit_date_display;
 						$relationship_name_formatted = $dao->relationship_name_formatted;
 						$yahrzeit_hebrew_date_format_english = $dao->yahrzeit_hebrew_date_format_english;
 						$yahrzeit_hebrew_date_format_hebrew = $dao->yahrzeit_hebrew_date_format_hebrew;
@@ -3225,12 +3226,16 @@ class HebrewCalendar{
 								}else{ 
 										$seper = "";  
 									}  ;
+								
+									
 									
 								if( isset( $values[$cid][$token_yah_english_date] )){	
 									$values[$cid][$token_yah_english_date] = $values[$cid][$token_yah_english_date].$seper.$yahrzeit_date_display;
 								}else{
 									$values[$cid][$token_yah_english_date] = $seper.$yahrzeit_date_display;
 								}
+								
+									
 
 								if( isset($values[$cid][$token_yah_hebrew_date])  && strlen( $values[$cid][$token_yah_hebrew_date])  > 0 ){   
 									$seper = $default_seperator; 
