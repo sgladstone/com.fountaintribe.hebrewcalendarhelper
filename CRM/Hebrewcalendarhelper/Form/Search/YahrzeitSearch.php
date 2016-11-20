@@ -54,10 +54,12 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			ts('Postal Code') => 'postal_code',
   			ts('Parashat for Shabbat Before') => 'shabbat_before_parashat',
   			ts('Parashat for Shabbat Before (Hebrew)') => 'shabbat_before_parashat_hebrew',
+  			ts('Shabbat Before Yahrzeit') => 'shabbat_before_hebrew_date_format_english',
   			ts('Friday Night Before Yahrzeit') => 'yah_erev_shabbat_before',
   			ts('Saturday Morning Before Yahrzeit ' ) => 'yah_shabbat_morning_before',
   			ts('Friday Night After Yahrzeit') => 'yah_erev_shabbat_after',
   			ts('Saturday Morning After Yahrzeit ' ) => 'yah_shabbat_morning_after',
+  			ts('Shabbat After Yahrzeit') => 'shabbat_after_hebrew_date_format_english',
   			ts('Parashat for Shabbat After') => 'shabbat_after_parashat',
   			ts('Parashat for Shabbat After (Hebrew)') => 'shabbat_after_parashat_hebrew',
   			ts('Mourner Display Name' ) => 'mourner_display_name',
@@ -574,7 +576,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
 		  rd.description as relationship_description,
 		  rnote.note as relationship_note,
 		 		shabbat_before_parashat, shabbat_before_parashat_hebrew,
-		 		shabbat_after_parashat, shabbat_after_parashat_hebrew
+		 		shabbat_after_parashat, shabbat_after_parashat_hebrew,
+		 		shabbat_before_hebrew_date_format_english, shabbat_after_hebrew_date_format_english
 		  ";
   
   
@@ -919,13 +922,51 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   		$clauses[] = "contact_a.gender_id = $gender_choice";
   
   	}
-  	 
+  	/*
+  	 *  	$tmp_date_options = array('' => '-- select --',
+  			'yahrzeit_date' => 'Yahrzeit Date - Evening (default)',
+  			'yahrzeit_date_morning' => 'Yahrzeit Date - Morning',
+  		
+  	);
+  	 */ 
+  	
+  	
+  	if(isset( $this->_formValues['date_to_filter'] )){
+  		$date_to_filter = $this->_formValues['date_to_filter'];
+  	}else{
+  		$date_to_filter = "";
+  	}
+  	
+  	// Determine correct SQL field names for filtering on  dates. 
+  	$date_sql_field_name = "";
+  	if(  strlen($date_to_filter) > 0 ){
+  		$date_sql_field_name = $date_to_filter;  // English-based date field.
+  		
+  		if( $date_to_filter == "yahrzeit_erev_shabbat_before"  || $date_to_filter == "yahrzeit_shabbat_morning_before" ){
+  			$hebrew_year_sql_field_name = "shabbat_before_hebrew_year_num";
+  			$hebrew_month_sql_field_name = "shabbat_before_hebrew_month_num";
+  		}else if($date_to_filter == "yahrzeit_erev_shabbat_after"  || $date_to_filter == "yahrzeit_shabbat_morning_after" ){
+  			$hebrew_year_sql_field_name = "shabbat_after_hebrew_year_num";
+  			$hebrew_month_sql_field_name = "shabbat_after_hebrew_month_num";
+  		}else{
+  			
+  			$hebrew_year_sql_field_name = "yahrzeit_hebrew_year";
+  			$hebrew_month_sql_field_name = "yahrzeit_hebrew_month";
+  		}
+  	
+  	}else{
+  		$date_sql_field_name = "yahrzeit_date" ; // English-based date field.
+  		$hebrew_year_sql_field_name = "yahrzeit_hebrew_year";
+  		$hebrew_month_sql_field_name = "yahrzeit_hebrew_month";
+  	}
+  	
+  	
   	
   	// 'hebrew_year_choice'
   	$hebrew_year_choice = $this->_formValues['hebrew_year_choice'];
   	
   	if( strlen($hebrew_year_choice) > 0){
-  		$clauses[] =  " yahrzeit_hebrew_year = $hebrew_year_choice"; 
+  		$clauses[] =  $hebrew_year_sql_field_name."  =  ".$hebrew_year_choice; 
   	}
   	
   	
@@ -933,7 +974,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	$hebrew_month_choice = $this->_formValues['hebrew_month_choice'];
   	 
   	if( strlen($hebrew_month_choice) > 0){
-  		$clauses[] =  " yahrzeit_hebrew_month = $hebrew_month_choice";
+  		$clauses[] =  $hebrew_month_sql_field_name." =  ".$hebrew_month_choice;
   	}
   	
   	
@@ -951,12 +992,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
    		$startDate = "";
    }
   
-   if(isset( $this->_formValues['date_to_filter'] )){
-  		$date_to_filter = $this->_formValues['date_to_filter'];
-   }else{
-   		$date_to_filter = ""; 
-   }
-   
+  
+   /*
   	$date_sql_field_name = "";
   	if( strlen($date_to_filter) > 0 ){
   		$date_sql_field_name = $date_to_filter;
@@ -964,7 +1001,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	}else{
   		$date_sql_field_name = "yahrzeit_date" ;
   	}
-  
+  */
   
   	if ( strlen($startDate) > 0  ) {
   		$clauses[] = $date_sql_field_name." >= $startDate";

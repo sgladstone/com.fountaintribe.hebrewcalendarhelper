@@ -299,6 +299,52 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  	$english_deceased_date_sql = "null";
 	  }
 	  
+	  
+
+	  
+	  $shabbat_before_sunset_flag = "1";
+	  
+	 
+	  // Get Hebrew date for the Shabbat BEFORE the yahrzeit in a machine-sortable format, ie all numbers. 
+	  $shabbat_before_english_arr = explode( "-", date($sql_date_format, $raw_saturday_before ) ) ;
+	  
+	  $hebrew_date_format = 'dd MM yy';
+	   $shabbat_before_hebrew_date_format_english  = $tmpHebCal->util_convert2hebrew_date($shabbat_before_english_arr[0], $shabbat_before_english_arr[1], $shabbat_before_english_arr[2],  $shabbat_before_sunset_flag, $hebrew_date_format);
+	  
+	
+	  
+	  
+	  
+	  $hebrew_date_format = 'mm/dd/yy';
+	  $yahrzeit_shabbat_hebrew_date_format_sortable  = $tmpHebCal->util_convert2hebrew_date($shabbat_before_english_arr[0], $shabbat_before_english_arr[1], $shabbat_before_english_arr[2],  $shabbat_before_sunset_flag, $hebrew_date_format);
+	  
+	  $yah_tmp_sortable_arr = explode("/", $yahrzeit_shabbat_hebrew_date_format_sortable);
+	  $yah_shabbat_before_hebrew_month_num = $yah_tmp_sortable_arr[0];
+	  
+	  $yah_shabbat_before_hebrew_day_num = $yah_tmp_sortable_arr[1];
+	  
+	  $yah_shabbat_before_hebrew_year_num = $yah_tmp_sortable_arr[2];
+	  
+	  
+	  //
+	  // get Hebrew date for the Shabbat AFTER the yahrzeit in a machine-sortable format, ie all numbers.
+	  $shabbat_after_english_arr = explode( "-", date($sql_date_format, $raw_saturday_after) ) ;
+	  
+	  $hebrew_date_format = 'dd MM yy';
+	  $shabbat_after_hebrew_date_format_english =  $tmpHebCal->util_convert2hebrew_date($shabbat_after_english_arr[0], $shabbat_after_english_arr[1], $shabbat_after_english_arr[2],  $shabbat_before_sunset_flag, $hebrew_date_format);
+	 
+	  
+	  $hebrew_date_format = 'mm/dd/yy';
+	  $yahrzeit_shabbat_hebrew_date_format_sortable  = $tmpHebCal->util_convert2hebrew_date($shabbat_after_english_arr[0], $shabbat_after_english_arr[1], $shabbat_after_english_arr[2],  $shabbat_before_sunset_flag, $hebrew_date_format);
+	   
+	  $yah_tmp_sortable_arr = explode("/", $yahrzeit_shabbat_hebrew_date_format_sortable);
+	  $yah_shabbat_after_hebrew_month_num = $yah_tmp_sortable_arr[0];
+	   
+	  $yah_shabbat_after_hebrew_day_num = $yah_tmp_sortable_arr[1];
+	   
+	  $yah_shabbat_after_hebrew_year_num = $yah_tmp_sortable_arr[2];
+	  
+	  
 	  /*
 	  // '$hebrew_deceased_date' 
 	  if(strlen($yahrzeit_hebrew_date_format_english) > 0 ){
@@ -329,10 +375,18 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  yahrzeit_type,
 	  mourner_observance_preference, 
 	  plaque_location,
+	  shabbat_before_hebrew_date_format_english,
+	  shabbat_before_hebrew_year_num,
+	  shabbat_before_hebrew_month_num,
+	  shabbat_before_hebrew_day_num,
 	  yahrzeit_erev_shabbat_before,
 	  yahrzeit_shabbat_morning_before,
 	  yahrzeit_erev_shabbat_after , 
 	  yahrzeit_shabbat_morning_after,
+	   shabbat_after_hebrew_year_num,
+	  shabbat_after_hebrew_month_num,
+	  shabbat_after_hebrew_day_num,
+	  shabbat_after_hebrew_date_format_english,
 	  yahrzeit_date_morning, 
 	  yahrzeit_relationship_id
 	  )
@@ -344,11 +398,16 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			%5, %6, %7, %8,
 		 '$relationship_name_formated', %9,
 			'$mourner_observance_preference', %10,
+			%11, 
+			 $yah_shabbat_before_hebrew_year_num,  $yah_shabbat_before_hebrew_month_num,  $yah_shabbat_before_hebrew_day_num,
 			$sql_friday_before, $sql_saturday_before, $sql_friday_after, $sql_saturday_after,
+			$yah_shabbat_after_hebrew_year_num,  $yah_shabbat_after_hebrew_month_num,  $yah_shabbat_after_hebrew_day_num,
+			%12 , 
 	  		$sql_yahrzeit_date_morning, '$yahrzeit_relationship_id'  )";
 	  	
-		 //	print "<br><br><b>Insert sql: </b>".$insert_sql;
-
+		// 	print "<br><br><b>Insert sql: </b>".$insert_sql;
+  //shabbat_before_hebrew_date_format_english
+  // shabbat_before_hebrew_date_format_english
 			$params_a = array();
 				
 			if(strlen($mourner_name) > 0 ){
@@ -420,6 +479,21 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 				$params_a[10] =  array( '', 'String' );
 			}
 			//CRM_Core_Error::debug("Insert SQL : ". $insert_sql, $params_a );
+			if(strlen($shabbat_before_hebrew_date_format_english) > 0 ){
+				$params_a[11] =  array($shabbat_before_hebrew_date_format_english, 'String');
+			}else{
+				$params_a[11] =  array( '', 'String' );
+			}
+			
+			
+			// $shabbat_after_hebrew_date_format_english
+			if(strlen($shabbat_after_hebrew_date_format_english) > 0 ){
+				$params_a[12] =  array($shabbat_after_hebrew_date_format_english, 'String');
+			}else{
+				$params_a[12] =  array( '', 'String' );
+			}
+			
+			
 			
 			$dao = 		CRM_Core_DAO::executeQuery( $insert_sql,   $params_a ) ;
 			$dao->free();
