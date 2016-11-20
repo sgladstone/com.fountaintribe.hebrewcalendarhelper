@@ -179,8 +179,12 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 
 
 function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
-		$deceased_name,   $english_deceased_date_raw,  $deceased_date_before_sunset_formated,
-		$hebrew_deceased_date, $yahrzeit_date_tmp, $yahrzeit_date_formated_tmp, $relationship_name_formated,
+		$deceased_name,  
+		$english_deceased_date_raw,  
+		$deceased_date_before_sunset_formated,
+		$hebrew_deceased_date,
+		$yahrzeit_date_tmp,
+		$relationship_name_formated,
 		$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) {
 
 		 require_once 'utils/HebrewCalendar.php';
@@ -287,15 +291,27 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  
 	  
 	  // '$hebrew_deceased_date' 
-	  		
+	  if(strlen($yahrzeit_hebrew_date_format_english) > 0 ){
+	  	  $yahrzeit_hebrew_year = substr( $yahrzeit_hebrew_date_format_english, -4   ) ;
+	  }else{
+	  	$yahrzeit_hebrew_year = 0;
+	  }
+	  
+
+	  
+	// print "<br>SQL INSERT: deceased name: $deceased_name   yah_date: ".$yahrzeit_date_tmp ;
+	
 	  $insert_sql = "INSERT INTO $TempTableName ( mourner_contact_id,
 	  mourner_name, 
 	  deceased_contact_id,
 	  deceased_name, 
 	  deceased_date, d_before_sunset,
 	  hebrew_deceased_date, yahrzeit_date ,
-	  yahrzeit_hebrew_date_format_hebrew, yahrzeit_hebrew_date_format_english,
-	  yahrzeit_date_display, relationship_name_formatted, yahrzeit_type,
+	  yahrzeit_hebrew_date_format_hebrew, 
+	  yahrzeit_hebrew_date_format_english,
+	  yahrzeit_hebrew_year, 
+	  relationship_name_formatted, 
+	  yahrzeit_type,
 	  mourner_observance_preference, plaque_location,
 	  yahrzeit_erev_shabbat_before, yahrzeit_shabbat_morning_before,
 	  yahrzeit_erev_shabbat_after , yahrzeit_shabbat_morning_after,
@@ -305,8 +321,9 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			%2, 
 			 $english_deceased_date_sql , '$deceased_date_before_sunset_formated',
 			 %3 , $yahrzeit_date_tmp,
-			%4, %5,
-			%6, '$relationship_name_formated', %7,
+			%4, 
+			%5, %6, 
+		 '$relationship_name_formated', %7,
 			'$mourner_observance_preference', %8,
 			$sql_friday_before, $sql_saturday_before, $sql_friday_after, $sql_saturday_after,
 	  		$sql_yahrzeit_date_morning, '$yahrzeit_relationship_id'  )";
@@ -348,12 +365,14 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 				$params_a[5] =  array( ' ', 'String' );
 			}
 
-			if(strlen($yahrzeit_date_formated_tmp) > 0 ){
-				$params_a[6] =  array($yahrzeit_date_formated_tmp, 'String');
+			
+
+			if(strlen($yahrzeit_hebrew_year) > 0 ){
+				$params_a[6] =  array($yahrzeit_hebrew_year, 'String');
 			}else{
 				$params_a[6] =  array( ' ', 'String' );
 			}
-
+			
 			if(strlen($yahrzeit_type) > 0 ){
 				$params_a[7] =  array($yahrzeit_type, 'String');
 			}else{
@@ -764,6 +783,64 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		
 		}
 		
+		
+		
+		//
+		
+		if($mourner_observance_preference <> '1' && $mourner_observance_preference <> '0'){
+			// the Mourner preference is unknown,  use the system default preference.
+			//  print "<br>Deceased: ".$deceased_name." mourner pref is unknown";
+			if( $default_yahrzeit_cal_pref == 'hebrew'){
+				$mourner_observance_preference = 0; // Hebrew calendar
+					
+			}else{
+				$mourner_observance_preference = 1; // English calendar
+		
+			}
+		
+		}else if( $mourner_observance_preference == '0' ){
+			$mourner_observance_preference = 0; // Hebrew calendar
+			//print "<br>Deceased: ".$deceased_name." mourner pref is Hebrew";
+		}else if(  $mourner_observance_preference == '1'){
+			$mourner_observance_preference = 1; // English calendar
+			//print "<br>Deceased: ".$deceased_name." mourner pref is English";
+		
+		}
+		
+		if( $deceased_date_before_sunset == '1'){
+			$deceased_date_before_sunset_formated = 'Yes';
+		}else if( $deceased_date_before_sunset == '0'){
+			$deceased_date_before_sunset_formated = 'No';
+		}
+		
+		// get English date of death formatted, if it exists.
+		if(strlen($deceased_year) > 0 && strlen($deceased_month) > 0 && strlen($deceased_day) > 0){
+			//$deceased_date_english_raw = new DateTime($deceased_year.'-'.$deceased_month.'-'.$deceased_day);
+			$deceased_date_english_raw = $deceased_year.'-'.$deceased_month.'-'.$deceased_day;
+				
+			//$formated_english_deceased_date = $tmp_date->format('F d, Y');
+		}else{
+			//$formated_english_deceased_date = "Unknown date";
+			$deceased_date_english_raw = "";
+		}
+		
+		//
+		$plaque_location = 'Unknown or No Plaque';		
+		
+		$yahrzeit_type_hebrew = '0' ;  // 'Hebrew'
+		$yahrzeit_type_english = '1'; // English
+		if(strlen($mourner_contact_id) == 0){
+			$mourner_contact_id = 0;
+		
+		}
+		
+		if(isset($deceased_date_before_sunset_formated)){
+			// do nothing.
+		}else{
+			$deceased_date_before_sunset_formated = "";
+		}
+		
+		//
 		$relationship_name_formated = $tmpHebCal->determine_relationship_name($mourner_contact_id, $deceased_contact_id  ) ;
 
 		$hebrew_deceased_date  = $tmpHebCal->util_convert2hebrew_date($deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $hebrew_date_format);
@@ -771,36 +848,56 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 
 		$gregorian_date_format_plain = 'yyyy-mm-dd';
 
-		$next_flag = 'next';
-		$prev_flag = 'prev';
-
-		$params = array(
-		  'version' => 3,
-		  'sequential' => 1,
-		  'previous_next_flag' => $next_flag,
-		  'gregorian_year' => $deceased_year,
-		  'gregorian_month' => $deceased_month,
-		  'gregorian_day' => $deceased_day,
-		  'gregorian_before_after_sunset_flag' => $deceased_date_before_sunset,
-		  'result_evening_start_flag' =>  $erev_start_flag,
-		  'result_date_format' => $gregorian_date_format_plain
-
-		);
+		$yahr_years_to_get = array( 1, 2, 3, 4, -1, -2, -3, -4) ;      // 1=next yahr, 2=yahr after next, etc.  -1 previous yahr, -2, yahr before previous one, etc.
+		// //$prev_flag = 'prev',  'next';
+		//
+		foreach( $yahr_years_to_get as $year_offset){
+	    
+			$yahrzeit_date_tmp  = $tmpHebCal->util_get_yahrzeit_date($year_offset,  $deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $erev_start_flag, $gregorian_date_format_plain);
+			
+			//print "<br>returned yahrzeit date tmp: ".$yahrzeit_date_tmp;
+			
+			$yahrzeit_date_formated_tmp = "";
+			$tmp_yahrzeit_date_observe_english_formated = "";
+			
+			// Calculate English yahrzeit for mourners who observe the English anniversary.
+			$tmp_yahrzeit_date_observe_english  = $tmpHebCal->getYahrzeitDateEnglishObservance($deceased_year, $deceased_month, $deceased_day, $year_offset);
+				
+			if( $year_offset == 1){
+				// this is only done for the next yahrzeits ( ie year_offset =1 )
+				$rtn_count =  $tmpHebCal->updateCiviCRMCalcYahrzeitFields( $deceased_contact_id, $yahrzeit_date_tmp, $tmp_yahrzeit_date_observe_english, $hebrew_deceased_date  );
+			}
+					
+		//	print "<br> year_offset: $year_offset Deceased name:  $deceased_name ;  Hebrew yahrzeit date: ".$yahrzeit_date_tmp;
+			
+			insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_hebrew, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
+					$deceased_name,  $deceased_date_english_raw,  $deceased_date_before_sunset_formated,
+					$hebrew_deceased_date,
+					$yahrzeit_date_tmp,
+					$relationship_name_formated,
+					$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
+				
+			insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_english, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
+					$deceased_name,  $deceased_date_english_raw,  $deceased_date_before_sunset_formated,
+					$hebrew_deceased_date,
+					$tmp_yahrzeit_date_observe_english,
+					$relationship_name_formated,
+					$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
 		
+		}
+			
+			/*
 		$yahrzeit_date_tmp_next  = $tmpHebCal->util_get_yahrzeit_date($next_flag,  $deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $erev_start_flag, $gregorian_date_format_plain);
-		//    print "<br>Next yahrzeit date: ".$yahrzeit_date_tmp_next;
+		
 
 		$yahrzeit_date_tmp_prev  = $tmpHebCal->util_get_yahrzeit_date($prev_flag,  $deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $erev_start_flag, $gregorian_date_format_plain);
-		//    print "<br>Prev yahrzeit date: ".$yahrzeit_date_tmp_prev;
+		
 
 
-		$yahrzeit_date_formated_tmp_next  = $tmpHebCal->util_get_yahrzeit_date($next_flag,  $deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $erev_start_flag, $gregorian_date_format );
-		//print "<br>Next yahrzeit date (formatted): ".$yahrzeit_date_formated_tmp_next;
-
-		$yahrzeit_date_formated_tmp_prev  = $tmpHebCal->util_get_yahrzeit_date($prev_flag,  $deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $erev_start_flag, $gregorian_date_format );
-		// print "<br>Prev. yahrzeit date (formatted): ".$yahrzeit_date_formated_tmp_prev;
-
-		 
+	//	$yahrzeit_date_formated_tmp_next  = $tmpHebCal->util_get_yahrzeit_date($next_flag,  $deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $erev_start_flag, $gregorian_date_format );
+		
+	//	$yahrzeit_date_formated_tmp_prev  = $tmpHebCal->util_get_yahrzeit_date($prev_flag,  $deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $erev_start_flag, $gregorian_date_format );
+		
 
 		if($mourner_observance_preference <> '1' && $mourner_observance_preference <> '0'){
 			// the Mourner preference is unknown,  use the system default preference.
@@ -827,31 +924,22 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		}else if( $deceased_date_before_sunset == '0'){
 			$deceased_date_before_sunset_formated = 'No';
 		}
-
-
-
-
-		if(strlen($deceased_year) > 0 && strlen($deceased_month) > 0 && strlen($deceased_day) > 0){
-			//$deceased_date_english_raw = new DateTime($deceased_year.'-'.$deceased_month.'-'.$deceased_day);
-			$deceased_date_english_raw = $deceased_year.'-'.$deceased_month.'-'.$deceased_day;
-			
-			//$formated_english_deceased_date = $tmp_date->format('F d, Y');
-		}else{
-			//$formated_english_deceased_date = "Unknown date";
-			$deceased_date_english_raw = ""; 
-		}
+	
 		
 
 		// Calculate English yahrzeit for mourners who observe the English anniversary.
 		$tmp_yahrzeit_date_observe_english_next  = $tmpHebCal->getYahrzeitDateEnglishObservance($deceased_year, $deceased_month, $deceased_day, $next_flag);
 		// print "<br>Next English yahr: ".$tmp_yahrzeit_date_observe_english_next;
-		$tmp_yahrzeit_date_observe_english_formated_next =  $tmpHebCal->getYahrzeitDateEnglishObservanceFormated($deceased_year, $deceased_month, $deceased_day, $next_flag);
+		//$tmp_yahrzeit_date_observe_english_formated_next =  $tmpHebCal->getYahrzeitDateEnglishObservanceFormated($deceased_year, $deceased_month, $deceased_day, $next_flag);
 
 
 		$tmp_yahrzeit_date_observe_english_prev  = $tmpHebCal->getYahrzeitDateEnglishObservance($deceased_year, $deceased_month, $deceased_day, $prev_flag);
 		// print "<br>Prev. English yahr: ".$tmp_yahrzeit_date_observe_english_prev;
-		$tmp_yahrzeit_date_observe_english_formated_prev =  $tmpHebCal->getYahrzeitDateEnglishObservanceFormated($deceased_year, $deceased_month, $deceased_day, $prev_flag);
+		//$tmp_yahrzeit_date_observe_english_formated_prev =  $tmpHebCal->getYahrzeitDateEnglishObservanceFormated($deceased_year, $deceased_month, $deceased_day, $prev_flag);
 		// $mourner_observance_preference = 'Unknown';
+		
+		
+		
 		$plaque_location = 'Unknown or No Plaque';
 
 
@@ -872,6 +960,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		
 		
 		//CRM_Core_Error::debug("About to put data into yahrzeit temp table for contact id: ".$deceased_contact_id." - ".$deceased_name, $deceased_date_english_raw." - ".$hebrew_deceased_date);
+		
+		// Now insert record for next Hebrew yahrzeit
 		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_hebrew, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
 				$deceased_name,  $deceased_date_english_raw,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,
@@ -881,7 +971,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 				$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
 			
 
-			
+		// Now insert record for previous Hebrew yahrzeit
 		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_hebrew, $mourner_contact_id, $mourner_name, $deceased_contact_id,
 				$deceased_name,   $deceased_date_english_raw,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,
@@ -889,7 +979,9 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 				$yahrzeit_date_formated_tmp_prev,
 				$relationship_name_formated,
 				$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
-			
+		
+		
+		// Now insert record for next English yahrzeit 
 		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_english, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
 				$deceased_name,  $deceased_date_english_raw,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,
@@ -897,7 +989,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 				$tmp_yahrzeit_date_observe_english_formated_next,
 				$relationship_name_formated,
 				$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
-			
+		
+		// Now insert record for previous English yahrzeit
 		insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type_english, $mourner_contact_id, $mourner_name,  $deceased_contact_id,
 				$deceased_name,  $deceased_date_english_raw,  $deceased_date_before_sunset_formated,
 				$hebrew_deceased_date,
@@ -905,6 +998,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 				$tmp_yahrzeit_date_observe_english_formated_prev,
 				$relationship_name_formated,
 				$mourner_observance_preference, $plaque_location, $yahrzeit_relationship_id   ) ;
+				
+		*/
 		
 		$mourner_contacts_count = $mourner_contacts_count + 1; 
 

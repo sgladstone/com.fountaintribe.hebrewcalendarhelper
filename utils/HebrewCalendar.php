@@ -173,21 +173,23 @@ class HebrewCalendar{
 		
 		$year_parm = substr($date_parm, 0, 4 );
 		
-		$tmp_hebcal_data = $tmp_hebcal_data_all_years[$year_parm];
-		//CRM_Core_Error::debug($year_parm." Heb data: ", $tmp_hebcal_data );
-		foreach( $tmp_hebcal_data as $cur ){
-			if( $cur->category == "parashat" &&  $cur->date == $date_parm ){
-		
-				$parashat_title_hebrew = $cur->hebrew;
-				$parashat_date = $cur->date;
-		
-				return $parashat_title_hebrew ;
-		
-			}else{
-				// keep looking.
+		if( isset( $tmp_hebcal_data_all_years[$year_parm] ) ){
+			$tmp_hebcal_data = $tmp_hebcal_data_all_years[$year_parm];
+			//CRM_Core_Error::debug($year_parm." Heb data: ", $tmp_hebcal_data );
+			foreach( $tmp_hebcal_data as $cur ){
+				if( $cur->category == "parashat" &&  $cur->date == $date_parm ){
+			
+					$parashat_title_hebrew = $cur->hebrew;
+					$parashat_date = $cur->date;
+			
+					return $parashat_title_hebrew ;
+			
+				}else{
+					// keep looking.
+				}
+					
+					
 			}
-				
-				
 		}
 		
 		
@@ -200,21 +202,23 @@ class HebrewCalendar{
 		
 		$year_parm = substr($date_parm, 0, 4 );
 		
-		$tmp_hebcal_data = $tmp_hebcal_data_all_years[$year_parm];
-		//CRM_Core_Error::debug($year_parm." Heb data: ", $tmp_hebcal_data );
-		foreach( $tmp_hebcal_data as $cur ){
-			if( $cur->category == "parashat" &&  $cur->date == $date_parm ){
+		if( isset( $tmp_hebcal_data_all_years[$year_parm] ) ){
+			$tmp_hebcal_data = $tmp_hebcal_data_all_years[$year_parm];
+			//CRM_Core_Error::debug($year_parm." Heb data: ", $tmp_hebcal_data );
+			foreach( $tmp_hebcal_data as $cur ){
+				if( $cur->category == "parashat" &&  $cur->date == $date_parm ){
+					
+					$parashat_title = $cur->title;
+					$parashat_date = $cur->date;
+					
+					return $parashat_title ; 
+					
+				}else{
+					// keep looking. 
+				}
 				
-				$parashat_title = $cur->title;
-				$parashat_date = $cur->date;
 				
-				return $parashat_title ; 
-				
-			}else{
-				// keep looking. 
 			}
-			
-			
 		}
 		
 		
@@ -346,12 +350,22 @@ class HebrewCalendar{
 		$tmp_rtn = null; 
 		if(count( HebrewCalendar::$allRemoteHebCalData) == 0){
 			
-			// Use remote hebcal.com API to get needed data for last year, current year, and next year. 
-			$last_year = date("Y") - 1;
-			$current_year = date("Y");
-			$next_year = date("Y") + 1;
+			$years_array = array();
 			
-			$years_array = array($last_year, $current_year, $next_year );
+			// Use remote hebcal.com API to get needed data for last year, current year, and next year. 
+			$years_offsets_arr = array(-4, -3, -2, -1, 0, 1, 2, 3, 4) ;
+			foreach($years_offsets_arr as $year_offset){
+				
+				$tmp_year = date("Y") + $year_offset;
+				$years_array[] = $tmp_year;
+			}
+			
+			
+		//	$last_year = date("Y") - 1;
+		//	$current_year = date("Y");
+		//	$next_year = date("Y") + 1;
+			
+		//	$years_array = array($last_year, $current_year, $next_year );
 			
 			foreach($years_array as $tmp_year){
 				
@@ -1294,10 +1308,7 @@ class HebrewCalendar{
 		$yahrzeit_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
 		
 		/*
-		 * CREATE TABLE `sepg1_crm1`.`sarahtest1` ( `id` INT(10) NOT NULL AUTO_INCREMENT , 
-		 * `aaa` VARCHAR(25) NOT NULL , `bbb` VARCHAR(50) NOT NULL , 
-		 * `ccc` VARCHAR(100) NOT NULL , 
-		 *  PRIMARY KEY (`id`)) ENGINE = InnoDB;
+		 *
 		 */
 		$sql_create = "CREATE TABLE $yahrzeit_table_name (
 		id int(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
@@ -1311,7 +1322,7 @@ class HebrewCalendar{
 		yahrzeit_date datetime,
 		yahrzeit_hebrew_date_format_hebrew varchar(256),
 		yahrzeit_hebrew_date_format_english varchar(256),
-		yahrzeit_date_display varchar(256),
+		yahrzeit_hebrew_year int(10),
 		relationship_name_formatted varchar(256),
 		yahrzeit_type varchar(256),
 		mourner_observance_preference varchar(256),
@@ -3780,7 +3791,7 @@ class HebrewCalendar{
 	 *  occured before sunset or not.
 	 * it returns the formatted Gregorian date of the yarhzeit.
 	 ***********************************************************************************/
-	function util_get_next_yahrzeit_date(&$iyear, &$imonth, &$iday, &$gregorian_ibeforesunset, $erev_start_flag, &$gregorian_format){
+	function XXXXutil_get_next_yahrzeit_date(&$iyear, &$imonth, &$iday, &$gregorian_ibeforesunset, $erev_start_flag, &$gregorian_format){
 		$next_flag = 'next';
 		return self::util_get_yahrzeit_date($next_flag, $iyear, $imonth, $iday, $gregorian_ibeforesunset, $erev_start_flag, $gregorian_format);
 
@@ -3788,11 +3799,17 @@ class HebrewCalendar{
 
 
 
-	function util_get_yahrzeit_date($previous_next_flag , $iyear, $imonth, $iday, $gregorian_ibeforesunset, $erev_start_flag, $gregorian_format){
+	function util_get_yahrzeit_date($year_offset , $iyear, $imonth, $iday, $gregorian_ibeforesunset, $erev_start_flag, $gregorian_format){
 
 		//print "<br>Inside util_get_yahrzeit_date";
 		// print " PARMS: flag: ".$previous_next_flag." iyear: ".$iyear." imonth: ".$imonth." iday: ".$iday;
-
+        if(is_numeric( $year_offset)){
+        	
+        }else{
+        	return "The year_offset parm ( '".$year_offset."' ) must be numeric. ";
+        }
+		
+		
 		$defaultmsg = "Cannot determine yahrzeit date";
 		if($iyear == ''  ){
 			return $defaultmsg;
@@ -3829,15 +3846,8 @@ class HebrewCalendar{
 		# Get yahrzeit date for the current Hebrew year.
 		$tmpformat = 'yyyy-mm-dd';
 		$purpose = "yahrzeit";
-		//$current_year_yahrzetit  = self::util_convert_hebrew2gregorian_date($current_hebrew_year, $hebrewdeathMonth, $hebrewdeathDay, $erev_start_flag, $tmpformat);
-
 		
-
-		//if($current_year_yahrzetit ==  "Date requested does not exist."  ){
 		$current_year_yahrzetit = self::util_adjust_hebrew_date($hebrewdeathYear, $current_hebrew_year, $hebrewdeathMonth, $hebrewdeathDay, $erev_start_flag, $tmpformat, $purpose);
-		//	$heb_date_is_adjusted = " (adjusted)";
-		
-		//}else if ($current_year_yahrzetit == "Cannot determine Hebrew date" ){
 		
 			
 		if ($current_year_yahrzetit == "Cannot determine Hebrew date" ){
@@ -3848,56 +3858,64 @@ class HebrewCalendar{
 		$yesterday =  date( mktime(0, 0, 0, date("m") , date("d") - 1, date("Y")));
 		$yesterday_formatted = date('M j Y',  $yesterday);
 
+		$full_format = 'MM dd, yy sunset';
+		$heb_date_is_adjusted = "";
+		$wanted_hebrew_year = "";
 		
-		//print "<br> ready to check flag";
-		if( $previous_next_flag == 'next'){
+		// 1 = next yahrzeit, 2 = yahr after the next one, etc. 
+		if($year_offset > 0 ){
+			
+			//$tmp_hebrew_year_of_next_yahr = ""; 
+			
 			if( strtotime($current_year_yahrzetit)  >= $yesterday  ){
 				// Current year yarhzeit: $current_year_yahrzetit  is equal to or later than yesterday: $yesterday.
-				$correct_yarzheit = $current_year_yahrzetit;
+				//$correct_yarzheit = $current_year_yahrzetit;
+				//$tmp_hebrew_year_of_next_yahr = $current_hebrew_year; 
+				
+				$wanted_hebrew_year = ($current_hebrew_year - 1  ) +  $year_offset;
 
 			}else{
 				// Current year yarhzeit has already past the date: $yesterday. Advance hebrew year by 1.
-				$next_hebrew_year = $current_hebrew_year + 1;
-				$full_format = 'MM dd, yy sunset';
-				$heb_date_is_adjusted = "";
-				//$next_year_yahrzetit  = self::util_convert_hebrew2gregorian_date($next_hebrew_year, $hebrewdeathMonth, $hebrewdeathDay, $erev_start_flag, $tmpformat);
-				//if($next_year_yahrzetit ==  "Date requested does not exist."  ){
+				//$next_hebrew_year = $current_hebrew_year + 1;
+				//$tmp_hebrew_year_of_next_yahr = $next_hebrew_year ; 
+				
+				$wanted_hebrew_year = $current_hebrew_year  +  $year_offset;
 						
-						
-				$next_year_yahrzetit = self::util_adjust_hebrew_date($hebrewdeathYear , $next_hebrew_year, $hebrewdeathMonth, $hebrewdeathDay, $erev_start_flag, $tmpformat, $purpose);
-					// $heb_date_is_adjusted = " (adjusted)";
-				//}
-
-
-				$correct_yarzheit = $next_year_yahrzetit;
+				//$next_year_yahrzetit = self::util_adjust_hebrew_date($hebrewdeathYear , $next_hebrew_year, $hebrewdeathMonth, $hebrewdeathDay, $erev_start_flag, $tmpformat, $purpose);
+				//$correct_yarzheit = $next_year_yahrzetit;
 			}
 		}else{
 			
-	  // get previous yahrzeit.
+	  		// get previous yahrzeit. -1 = previous yahr, -2 = the yahrzeit before the previous one. 
 			if( strtotime($current_year_yahrzetit)  < $yesterday  ){
 				// Current year yarhzeit: $current_year_yahrzetit  is before yesterday: $yesterday.
-				$correct_yarzheit = $current_year_yahrzetit;
+				//$correct_yarzheit = $current_year_yahrzetit;
+				$wanted_hebrew_year = $current_hebrew_year + 1  +  $year_offset;
 
 			}else{
 				// Current hebrew year yarhzeit in the future:  Subtract 1 from hebrew year.
-				$prev_hebrew_year = $current_hebrew_year - 1;
-				$full_format = 'MM dd, yy sunset';
-				$heb_date_is_adjusted = "";
-				//$prev_year_yahrzetit  = self::util_convert_hebrew2gregorian_date($prev_hebrew_year, $hebrewdeathMonth, $hebrewdeathDay, $erev_start_flag, $tmpformat);
-
-				
-				//if($prev_year_yahrzetit ==  "Date requested does not exist."  ){
-					 
+				//$prev_hebrew_year = $current_hebrew_year - 1;
 						
-				$prev_year_yahrzetit = self::util_adjust_hebrew_date($hebrewdeathYear , $prev_hebrew_year, $hebrewdeathMonth, $hebrewdeathDay, $erev_start_flag, $tmpformat, $purpose);
-					//$heb_date_is_adjusted = " (adjusted)";
-				//}
-
-
-				$correct_yarzheit = $prev_year_yahrzetit;
+				//$prev_year_yahrzetit = self::util_adjust_hebrew_date($hebrewdeathYear , $prev_hebrew_year, $hebrewdeathMonth, $hebrewdeathDay, $erev_start_flag, $tmpformat, $purpose);
+				
+				$wanted_hebrew_year = $current_hebrew_year  +  $year_offset;
+				
+				//$correct_yarzheit = $prev_year_yahrzetit;
 			}
 
 
+		}
+		
+		//
+		// $wanted_hebrew_year
+		if(strlen( $wanted_hebrew_year) > 0 ){
+			//print "<br>wanted heb year: ".$wanted_hebrew_year."  heb month: ".$hebrewdeathMonth;
+			$correct_yarzheit = self::util_adjust_hebrew_date($hebrewdeathYear , $wanted_hebrew_year, $hebrewdeathMonth, $hebrewdeathDay, $erev_start_flag, $tmpformat, $purpose);
+			//print "<br>Correct yahrzeit:  $correct_yarzheit ";
+			
+		}else{
+			return "Cannot determine yahrzeit because wanted_hebrew_year is blank.";
+			
 		}
 
 		// print "<br><br><b>correct yahrzeit to return : </b> ".$correct_yarzheit;
@@ -3914,7 +3932,10 @@ class HebrewCalendar{
 		$gregorianYear =$tmp_date->format('Y');
 
 
-		'yyyy-mm-dd';
+		//'yyyy-mm-dd';
+		
+		//print "<br> gregorian format: ".$gregorian_format;
+		
 		if( $gregorian_format == "MM dd, yyyy"){
 			$gregorianMonthName = $tmp_date->format('F');
 			$gregorianDay = $tmp_date->format('j');
@@ -4356,38 +4377,56 @@ class HebrewCalendar{
 
 
 
-	function getYahrzeitDateEnglishObservance(&$deceased_year, &$deceased_month, &$deceased_day, &$previous_next_flag ){
+	function getYahrzeitDateEnglishObservance(&$deceased_year, &$deceased_month, &$deceased_day, &$year_offset ){
 
 		$tmp_return = '';
 		$cur_year = date('Y');
-
+        
+		if(is_numeric($year_offset)){
+			
+		}else{
+			$tmp_return = "Year offset parm must be numeric: ".$year_offset;
+			return $tmp_return;
+		}
 
 		if(strlen($deceased_year) > 0 && strlen($deceased_month) > 0 && strlen($deceased_day) > 0){
 
-
+            $wanted_year = ""; 
 			$tmp_yahrzeit_date_observe_english = new DateTime($cur_year.'-'.$deceased_month.'-'.$deceased_day);
 			// Since this function is expected to return the evening of the yahrzeit, need to subtract 1 day.
 			$tmp_yahrzeit_date_observe_english = $tmp_yahrzeit_date_observe_english->sub(new DateInterval('P1D')) ;
 
-			if( $previous_next_flag == 'next'){
+			// 1= next yahrzeit, 2 = yahrzeit after next, etc.
+			if( $year_offset > 0 ){
 				if( $tmp_yahrzeit_date_observe_english < new DateTime()){
-			  // add a year.
-					$tmp_yahrzeit_date_observe_english->add(new DateInterval('P1Y')) ;
+			 
+					$wanted_year = $cur_year + $year_offset; 
+					
+					//$tmp_yahrzeit_date_observe_english->add(new DateInterval('P1Y')) ;
+				}else{
+					$wanted_year = ($cur_year -1 ) + $year_offset; 
 				}
-			}else if($previous_next_flag == 'prev'){
+			}else if($year_offset < 0){
 				// print "<br>Need prev. English yahrzeit date. ";
 				if( $tmp_yahrzeit_date_observe_english >= new DateTime()){
 			  // subtract a year.
-					$tmp_yahrzeit_date_observe_english->sub(new DateInterval('P1Y')) ;
+					$wanted_year = $cur_year + $year_offset ;
+					//$tmp_yahrzeit_date_observe_english->sub(new DateInterval('P1Y')) ;
+				}else{
+					$wanted_year = $cur_year  + 1  + $year_offset; 
 				}
 
 
 			}else{
-				$tmp_return = "Unknown previous/next flag";
+				$tmp_return = "Unknown year_offset parm: ".$year_offset;
 
 			}
 
-
+			$tmp_yahrzeit_date_observe_english = new DateTime($wanted_year.'-'.$deceased_month.'-'.$deceased_day);
+			// Since this function is expected to return the evening of the yahrzeit, need to subtract 1 day.
+			$tmp_yahrzeit_date_observe_english = $tmp_yahrzeit_date_observe_english->sub(new DateInterval('P1D')) ;
+			
+			
 			$tmp_return = $tmp_yahrzeit_date_observe_english->format('Y-m-d');
 		}else{
 			$tmp_return = "Unknown date";
@@ -4402,7 +4441,7 @@ class HebrewCalendar{
 	}
 
 
-	function getYahrzeitDateEnglishObservanceFormated(&$deceased_year, &$deceased_month, &$deceased_day, &$previous_next_flag){
+	function XXXXgetYahrzeitDateEnglishObservanceFormated(&$deceased_year, &$deceased_month, &$deceased_day, &$previous_next_flag){
 		$tmp_return = '';
 		$cur_year = date('Y');
 

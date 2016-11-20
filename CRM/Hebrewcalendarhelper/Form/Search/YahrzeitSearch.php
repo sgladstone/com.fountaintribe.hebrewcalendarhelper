@@ -178,8 +178,19 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   
   	// $form->add('select', 'membership_type_in_notin' , ts('Mourner Has or Not') ,  $tmp_in_out_mem, FALSE, array('id' => 'membership_type_in_notin' , 'title' => ts('-- select --')) ) ;
-  
-  
+  	
+  	require_once('utils/HebrewCalendar.php');
+  	$tmpHebCal = new HebrewCalendar();
+  	$h_format_str = 'yy' ;
+  	$cur_hebrew_year = 	$tmpHebCal->util_convert_today2hebrew_date($h_format_str);
+    $next_heb_year = $cur_hebrew_year + 1;
+    $prev_heb_year = $cur_hebrew_year - 1 ;
+  	
+    
+  	$hebrew_years = array('' => '-- select --',  $prev_heb_year =>  $prev_heb_year, $cur_hebrew_year => $cur_hebrew_year,  $next_heb_year =>  $next_heb_year   );
+  	$tmp_hebrew_year_select = $form->add  ('select', 'hebrew_year_choice', ts('Hebrew Year'),
+  			$hebrew_years,
+  			false);
   
   	$tmp_yes_no =  array('all' => '-- select --',   'yes' => 'Deceased has Plaque', 'no' => 'Deceased does not have Plaque');
   	$tmp_has_plaque_select = $form->add  ('select', 'deceased_has_plaque', ts('Plaque Filter Choice'),
@@ -270,7 +281,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 * for the search form.
   	 */
   	$form->assign( 'elements', array(  'group_of_contact',  'membership_org_of_contact',  'membership_type_of_contact',
-  			'relative_time' , 'start_date', 'end_date' , 'date_to_filter' ,  'deceased_has_plaque' ,
+  			'relative_time' , 'start_date', 'end_date' , 'hebrew_year_choice' , 'date_to_filter' ,  'deceased_has_plaque' ,
   			'yahrzeit_type_selection', 'living_mourners', 'gender_choice',  'comm_prefs' ) );
   
   
@@ -889,6 +900,14 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	}
   	 
+  	
+  	// 'hebrew_year_choice'
+  	$hebrew_year_choice = $this->_formValues['hebrew_year_choice'];
+  	
+  	if( strlen($hebrew_year_choice) > 0){
+  		$clauses[] =  " yahrzeit_hebrew_year = $hebrew_year_choice"; 
+  	}
+  	
   	//  $clauses[] = "contact_b.created_date >= DATE_SUB(CURDATE(), INTERVAL 10  MINUTE)";
   	 
   
