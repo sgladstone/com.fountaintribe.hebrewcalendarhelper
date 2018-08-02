@@ -3530,7 +3530,7 @@ class HebrewCalendar{
             [13] => Elul
             */
 		
-		list($hebrewMonth, $hebrewDay, $hebrewYear) = split('/',$hebrew_date);
+		list($hebrewMonth, $hebrewDay, $hebrewYear) = explode("/",$hebrew_date);
 
 		if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_TISHREI){
 			return ts("Tishrei");	
@@ -3656,7 +3656,7 @@ class HebrewCalendar{
 		//  birthdate_hebrew ( will be used for bar bat Mitzvah calculation: $birthdate_hebrew ;
 		
 		$dob_heb_array = explode( '/',$birthdate_hebrew);   //
-		//list($hebrewbirthMonth, $hebrewbirthDay, $hebrewbirthYear) = split('/',$birthdate_hebrew);
+		
 		
 		if(count( $dob_heb_array ) == 3){
 			$hebrewbirthMonth = $dob_heb_array[0];
@@ -3744,7 +3744,6 @@ class HebrewCalendar{
 
 		//  birthdate_hebrew ( will be used for bar bat Mitzvah calculation: $birthdate_hebrew ;
 		$dob_heb_array = explode( '/',$birthdate_hebrew);   // 
-		//list($hebrewbirthMonth, $hebrewbirthDay, $hebrewbirthYear) = split('/',$birthdate_hebrew);
 		
 		if(count( $dob_heb_array ) == 3){
 			$hebrewbirthMonth = $dob_heb_array[0];
@@ -3992,7 +3991,7 @@ class HebrewCalendar{
 
 		//print "<br>Hebrew death date: ".$deathdate_hebrew;
 
-		list($hebrewdeathMonth, $hebrewdeathDay, $hebrewdeathYear) = split('/',$deathdate_hebrew);
+		list($hebrewdeathMonth, $hebrewdeathDay, $hebrewdeathYear) = explode("/",$deathdate_hebrew);
 
 		$heb_year_format = "yy";
 		$current_hebrew_year = self::util_convert_today2hebrew_date($heb_year_format);
@@ -4161,7 +4160,7 @@ class HebrewCalendar{
 		
 
 		
-		list($hebrewMonth_tmp, $hebrewDay_tmp, $hebrewYear_tmp) = split('/',$hebrewDate_tmp);
+		list($hebrewMonth_tmp, $hebrewDay_tmp, $hebrewYear_tmp) = explode("/",$hebrewDate_tmp);
 		
 		$tmp_heb_test = cal_from_jd($julian_datetmp, CAL_JEWISH  );
  	//CRM_Core_Error::debug($hebyear."-".$hebmonth."-".$hebday.": inside verify function : ", $hebrewDate_tmp." Test heb: ".$tmp_heb_test['date']);
@@ -4246,27 +4245,27 @@ class HebrewCalendar{
 
 		if($hebrewformat == 'mm/dd/yy'){
 			$hebrewDate = jdtojewish($jdDate);
-			list($hebrewMonth, $hebrewDay, $hebrewYear) = split('/',$hebrewDate);
+			list($hebrewMonth, $hebrewDay, $hebrewYear) = explode("/",$hebrewDate);
 			$hebrew_date_formated = "$hebrewMonth/$hebrewDay/$hebrewYear";
 		}else if($hebrewformat == 'dd MM yy sunset'){
 			$hebrewDate = jdtojewish($jdDate);
-			list($hebrewMonth, $hebrewDay, $hebrewYear) = split('/',$hebrewDate);
+			list($hebrewMonth, $hebrewDay, $hebrewYear) = explode("/",$hebrewDate);
 			$hebrewMonthName = self::util_get_hebrew_month_name($jdDate, $hebrewDate);
 			$hebrew_date_formated = "$hebrewDay  $hebrewMonthName  $hebrewYear $sunset_info_formated";
 		}else if($hebrewformat == 'dd MM yy' || $hebrewformat == 'dd_MM_yy'){
 			$hebrewDate = jdtojewish($jdDate);
-			list($hebrewMonth, $hebrewDay, $hebrewYear) = split('/',$hebrewDate);
+			list($hebrewMonth, $hebrewDay, $hebrewYear) = explode("/",$hebrewDate);
 			$hebrewMonthName = self::util_get_hebrew_month_name($jdDate, $hebrewDate);
 			$hebrew_date_formated = "$hebrewDay $hebrewMonthName $hebrewYear";
 		}else if($hebrewformat == 'dd MM' || $hebrewformat == 'dd_MM'  ){
 			$hebrewDate = jdtojewish($jdDate);
-			list($hebrewMonth, $hebrewDay, $hebrewYear) = split('/',$hebrewDate);
+			list($hebrewMonth, $hebrewDay, $hebrewYear) = explode("/",$hebrewDate);
 			$hebrewMonthName = self::util_get_hebrew_month_name($jdDate, $hebrewDate);
 			$hebrew_date_formated = "$hebrewDay $hebrewMonthName";
 
 		}else if($hebrewformat == 'yy'){
 			$hebrewDate = jdtojewish($jdDate);
-			list($hebrewMonth, $hebrewDay, $hebrewYear) = split('/',$hebrewDate);
+			list($hebrewMonth, $hebrewDay, $hebrewYear) = explode("/",$hebrewDate);
 			$hebrew_date_formated  = "$hebrewYear";
 		}else if($hebrewformat == 'hebrew'){
 			$hebrew_date_formated =  mb_convert_encoding( jdtojewish( $jdDate, true ), "UTF-8", "ISO-8859-8");
