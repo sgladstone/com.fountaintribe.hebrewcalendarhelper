@@ -369,7 +369,7 @@ class HebrewCalendar{
 				// CRM_Core_Error::debug("Will use  HebCal.com API setting for diaspora. ", $tmp_in_israel);
 			}
 		
-			$service_url = "http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&min=on&lg=".
+			$service_url = "https://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&min=on&lg=".
 			   $language_api_parm."&i=".$tmp_in_israel."&mod=on&nx=on&year=".$year_parm.
 			   "&month=x&ss=on&mf=on".$geo_api_query_string."&c=on&m=50&s=on";
 			
