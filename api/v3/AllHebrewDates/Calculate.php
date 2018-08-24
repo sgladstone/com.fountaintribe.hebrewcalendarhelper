@@ -21,7 +21,6 @@ function _civicrm_api3_all_hebrew_dates_Calculate_spec(&$spec) {
  * @see civicrm_api3_create_error
  * @throws API_Exception
  
-function civicrm_api3_all_hebrew_dates_Calculate($params) {
  
 */
 
