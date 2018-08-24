@@ -21,7 +21,6 @@ function _civicrm_api3_all_hebrew_dates_Calculate_spec(&$spec) {
  * @see civicrm_api3_create_error
  * @throws API_Exception
  
- 
 */
 
 
@@ -73,7 +72,6 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 	
 	if( $table_exists){
 
-		
 		// deal with getting general stuff, ie table that tracks if individual was born/died before sunset or not. 
 		$result = civicrm_api3('CustomGroup', 'get', array(
 				'sequential' => 1,
@@ -140,15 +138,19 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 		
 		
 		$rtn_data = $tmpHebCal->scrubDeceasedCalculatedFields( $tmp_contact_ids  );
-			
+		
+		
 		if(isset( $rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0   ){
+		    
+		    CRM_Core_Error::debug("Just did scrub: ".$rtn_data['error_message'] , "");	
 			throw new API_Exception("Yahrzeit Error: ".$rtn_data['error_message'],  1234);
 				
 				
 		}else{
 			
+			//CRM_Core_Error::debug("About to do fill table: ".$tmp_contact_ids, "");
 				$rtn_data = fillYahrzeitTempTable( $tmpHebCal, $extended_date_table , $yahrzeit_table_name, $tmp_contact_ids   );
-				
+			//	CRM_Core_Error::debug("About to do parasha: ".$tmp_contact_ids, "");
 				$parashat_rtn = $tmpHebCal->fillYahrzeitParashat($tmp_contact_ids );
 			
 				$rtn_data['record_count_birthdays'] = $record_count_birthdays; 
@@ -202,8 +204,11 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  
 	   $sql_date_format = "Y-m-d";
 	 
-	 $do_shabbat_calcs = true;
+	 $have_valid_yah_date = false;
 	  if( $yahrzeit_date_raw <> "0000-00-00"  &&  is_numeric (substr($yahrzeit_date_raw, 0 , 4)) ) {
+	       
+	       
+	       $have_valid_yah_date = true;
 	      
 	    //  CRM_Core_Error::debug("yahrzeit date raw has a numeric year", "");
 		 $yar = explode( '-', $yahrzeit_date_tmp);
@@ -227,12 +232,7 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 		  
 		  $yah_hebrew_year_num = $yah_tmp_sortable_arr[2];
 		  
-		  
-	 
-	   
-
-	  
-	  	 
+		 
 	  	//CRM_Core_Error::debug("Debug: yahrzeit date raw, will do shabbat calcs : ",  $yahrzeit_date_raw );
 	  	// take care of tokens for Friday, Saturday before the yahrzeit, and the Friday, Saturday after the yahrzeit.
 	  	$yah_timestamp = strtotime($yahrzeit_date_raw);
@@ -268,37 +268,39 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 
 	  	} 	
 	  	
-	  	$sql_friday_before = "'".date($sql_date_format, $raw_friday_before )."'";
-	  	$sql_friday_after = "'".date($sql_date_format, $raw_friday_after )."'";
+	  	$sql_friday_before = date($sql_date_format, $raw_friday_before );
+	  	$sql_friday_after = date($sql_date_format, $raw_friday_after );
 
-	  	$sql_saturday_before = "'".date($sql_date_format, $raw_saturday_before )."'";
-	  	$sql_saturday_after = "'".date($sql_date_format, $raw_saturday_after )."'";
+	  	$sql_saturday_before = date($sql_date_format, $raw_saturday_before );
+	  	$sql_saturday_after = date($sql_date_format, $raw_saturday_after );
 
-	  	$sql_yahrzeit_date_morning = "'".date($sql_date_format, $raw_yahrzeit_date_morning )."'";
+	  	$sql_yahrzeit_date_morning = date($sql_date_format, $raw_yahrzeit_date_morning );
 	  	 
-	  	 $do_shabbat_calcs = true;
+	  	 $have_valid_yah_date = true;
 
 	  }else{
 	  	 //CRM_Core_Error::debug("Debug: yahrzeit date raw does not have numeric year, will NOT do shabbat calcs : ",  $yahrzeit_date_raw );
 	  	
-		  	$sql_friday_before = "null";
-		  	$sql_friday_after = "null";
+		  //	$sql_friday_before = "";
+		  //	$sql_friday_after = "";
 		  	
-		  	$sql_saturday_before = "null";
-		  	$sql_saturday_after = "null";
+		  //	$sql_saturday_before = "";
+		  //	$sql_saturday_after = "";
 		  	
-		  	$sql_yahrzeit_date_morning = "null";
+		  //	$sql_yahrzeit_date_morning = "";
 		  	 
-		  	 $do_shabbat_calcs = false;
+		  	 $have_valid_yah_date = false;
 		  	  
 	  	
 	  }
 	  // verify this is a valid SQL date
-	  if( strlen( $yahrzeit_date_tmp ) > 10 ){
-	  	$yahrzeit_date_tmp = "null" ;
+	  if($have_valid_yah_date ){
+	     	$yahrzeit_date_tmp = "'$yahrzeit_date_tmp'" ;
 
 	  }else{
-	  	$yahrzeit_date_tmp = "'$yahrzeit_date_tmp'" ;
+	       //  CRM_Core_Error::debug("yah date is NULL", "");
+	  	$yahrzeit_date_tmp = "null" ;
+	  
 
 	  }
 	  
@@ -311,7 +313,7 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  }
 	  
 	  
-	 if(  $do_shabbat_calcs){
+	 if(  $have_valid_yah_date){
 	  // prepare for dealing with Shabbat before the yahrzeit.
 
    //CRM_Core_Error::debug("Do shabbat calcs", "");
@@ -396,17 +398,17 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  $yah_shabbat_after_hebrew_day_num = "";
 		}
 		
-	
-		
-	  $insert_sql = "INSERT INTO $TempTableName ( 
-	  mourner_contact_id,
+	if( $have_valid_yah_date){
+	   // CRM_Core_Error::debug("insert sql has shabbat cols.", "");
+	    
+	   $col_names_part =    "mourner_contact_id,
 	  mourner_name, 
 	  deceased_contact_id,
 	  deceased_name, 
 	  deceased_date, 
 	  d_before_sunset,
 	  hebrew_deceased_date, 
-	  yahrzeit_date ,
+	  yahrzeit_relationship_id,
 	  yahrzeit_hebrew_date_format_hebrew, 
 	  yahrzeit_hebrew_date_format_english,
 	  yahrzeit_hebrew_year, 
@@ -416,6 +418,8 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  yahrzeit_type,
 	  mourner_observance_preference, 
 	  plaque_location,
+	  yahrzeit_date ,
+	  yahrzeit_date_morning, 
 	  shabbat_before_hebrew_date_format_english,
 	  shabbat_before_hebrew_year_num,
 	  shabbat_before_hebrew_month_num,
@@ -427,26 +431,65 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	   shabbat_after_hebrew_year_num,
 	  shabbat_after_hebrew_month_num,
 	  shabbat_after_hebrew_day_num,
-	  shabbat_after_hebrew_date_format_english,
-	  yahrzeit_date_morning, 
-	  yahrzeit_relationship_id
-	  )
+	  shabbat_after_hebrew_date_format_english";
+	  
+	  // 31 columns.
+	  
+	  $insert_sql = "INSERT INTO $TempTableName ( $col_names_part )
 			VALUES($mourner_contact_id, %1 , $deceased_contact_id,
 			%2, 
 			 $english_deceased_date_sql , '$deceased_date_before_sunset_formated',
-			 %3 , $yahrzeit_date_tmp,
+			 %3 , '$yahrzeit_relationship_id', 
 			%4, 
 			%5, %6, %7, %8,
 		 '$relationship_name_formated', %9,
 			'$mourner_observance_preference', %10,
-			%11, 
-			 $yah_shabbat_before_hebrew_year_num,  $yah_shabbat_before_hebrew_month_num,  $yah_shabbat_before_hebrew_day_num,
-			$sql_friday_before, $sql_saturday_before, $sql_friday_after, $sql_saturday_after,
-			$yah_shabbat_after_hebrew_year_num,  $yah_shabbat_after_hebrew_month_num,  $yah_shabbat_after_hebrew_day_num,
-			%12 , 
-	  		$sql_yahrzeit_date_morning, '$yahrzeit_relationship_id'  )";
+			 $yahrzeit_date_tmp, 	%11,
+			%12, 
+			 %13, 
+			 %14, %15, %16, %17, %18, %19, %20, %21,
+			%22 , %23	  	  )";
+	    
+	}else{
+	 //    CRM_Core_Error::debug("insert sql does NOT have Hebrew yahrzeit cols, shabbat cols", "");
+	     $col_names_part =    "mourner_contact_id,
+	  mourner_name, 
+	  deceased_contact_id,
+	  deceased_name, 
+	  deceased_date, 
+	  d_before_sunset,
+	  hebrew_deceased_date, 
+	  yahrzeit_relationship_id,
+	  yahrzeit_hebrew_date_format_hebrew, 
+	  yahrzeit_hebrew_date_format_english,
+	  yahrzeit_hebrew_year, 
+	  yahrzeit_hebrew_month,
+	  yahrzeit_hebrew_day,
+	  relationship_name_formatted, 
+	  yahrzeit_type,
+	  mourner_observance_preference, 
+	  plaque_location";
+	  // 17 cols. 
+	  
+	  $insert_sql = "INSERT INTO $TempTableName ( $col_names_part )
+			VALUES($mourner_contact_id, %1 , $deceased_contact_id,
+			%2, 
+			 $english_deceased_date_sql , '$deceased_date_before_sunset_formated',
+			 %3 , '$yahrzeit_relationship_id', 
+			%4, 
+			%5, %6, %7, %8,
+		 '$relationship_name_formated', %9,
+			'$mourner_observance_preference', %10	  )";
+	  	  
+	}  
+		
+	  
 	  	
-		// 	print "<br><br><b>Insert sql: </b>".$insert_sql;
+	  	
+	  	$sql_null_date = "";
+	  	
+	  //	CRM_Core_Error::debug("Insert sql: ".$insert_sql, "");
+		// 	print "<br><br><b>Insert sql: </b>".;
   //shabbat_before_hebrew_date_format_english
   // shabbat_before_hebrew_date_format_english
 			$params_a = array();
@@ -470,7 +513,7 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 				$params_a[3] =  array( '', 'String' );
 			}
 			
-			//
+			
 
 			if( isset($yahrzeit_hebrew_date_format_hebrew) && strlen($yahrzeit_hebrew_date_format_hebrew) > 0 ){
 				$params_a[4] =  array($yahrzeit_hebrew_date_format_hebrew, 'String');
@@ -487,21 +530,21 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			
 
 			if( isset($yah_hebrew_year_num ) && strlen($yah_hebrew_year_num) > 0 ){
-				$params_a[6] =  array($yah_hebrew_year_num, 'String');
+				$params_a[6] =  array($yah_hebrew_year_num, 'Integer');
 			}else{
-				$params_a[6] =  array( '', 'String' );
+				$params_a[6] =  array( 0, 'Integer' );
 			}
 			
 			if( isset( $yah_hebrew_month_num) && strlen($yah_hebrew_month_num) > 0 ){
-				$params_a[7] =  array($yah_hebrew_month_num, 'String');
+				$params_a[7] =  array($yah_hebrew_month_num, 'Integer');
 			}else{
-				$params_a[7] =  array( '', 'String' );
+				$params_a[7] =  array( 0, 'Integer' );
 			}
 			
 			if( isset( $yah_hebrew_day_num ) && strlen($yah_hebrew_day_num) > 0 ){
-				$params_a[8] =  array($yah_hebrew_day_num, 'String');
+				$params_a[8] =  array($yah_hebrew_day_num, 'Integer');
 			}else{
-				$params_a[8] =  array( '', 'String' );
+				$params_a[8] =  array( 0, 'Integer' );
 			}
 			
 			
@@ -519,22 +562,95 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			}else{
 				$params_a[10] =  array( '', 'String' );
 			}
-			//CRM_Core_Error::debug("Insert SQL : ". $insert_sql, $params_a );
-			if(isset($shabbat_before_hebrew_date_format_english) && strlen($shabbat_before_hebrew_date_format_english) > 0 ){
-				$params_a[11] =  array($shabbat_before_hebrew_date_format_english, 'String');
+			
+			
+				// $sql_yahrzeit_date_morning
+			if(isset( $sql_yahrzeit_date_morning ) &&  strlen($sql_yahrzeit_date_morning) > 0 ){
+				$params_a[11] =  array($sql_yahrzeit_date_morning, 'String');
 			}else{
-				$params_a[11] =  array( '', 'String' );
+				$params_a[11] =  array( 	$sql_null_date, 'String' );
+			}
+			//
+			if(isset($shabbat_before_hebrew_date_format_english) && strlen($shabbat_before_hebrew_date_format_english) > 0 ){
+				$params_a[12] =  array($shabbat_before_hebrew_date_format_english, 'String');
+			}else{
+				$params_a[12] =  array( '', 'String' );
+			}
+			
+			if( isset($yah_shabbat_before_hebrew_year_num) && strlen($yah_shabbat_before_hebrew_year_num) >0 ){
+			    $params_a[13] = array( $yah_shabbat_before_hebrew_year_num, 'Integer');
+			    
+			}else{
+			    $params_a[13] =  array( 0, 'Integer' );
+			}
+			
+			if(isset($yah_shabbat_before_hebrew_month_num ) && strlen($yah_shabbat_before_hebrew_month_num) > 0  ){
+			    $params_a[14] =  array($yah_shabbat_before_hebrew_month_num , 'Integer' );
+			}else{
+			    $params_a[14] =  array( 0, 'Integer' );
+			}
+			
+			
+			if(isset( $yah_shabbat_before_hebrew_day_num) && strlen($yah_shabbat_before_hebrew_day_num) > 0  ){
+			    $params_a[15] =  array($yah_shabbat_before_hebrew_day_num , 'Integer' );
+			}else{
+			    $params_a[15] =  array( 0, 'Integer' );
+			}
+			
+			
+			if(isset( $sql_friday_before) && strlen($sql_friday_before) > 0  ){
+			    $params_a[16] =  array( $sql_friday_before , 'String' );
+			}else{
+			    $params_a[16] =  array( 	$sql_null_date, 'String' );
+			}
+			
+			
+			if(isset($sql_saturday_before ) && strlen($sql_saturday_before) > 0  ){
+			    $params_a[17] =  array( $sql_saturday_before, 'String' );
+			}else{
+			    $params_a[17] =  array( 	$sql_null_date, 'String' );
+			}	
+			
+			if(isset($sql_friday_after ) && strlen($sql_friday_after) > 0  ){
+			    $params_a[18] =  array( $sql_friday_after, 'String' );
+			}else{
+			    $params_a[18] =  array( 	$sql_null_date, 'String' );
+			}
+			
+			if(isset($sql_saturday_after ) && strlen( $sql_saturday_after) > 0  ){
+			    $params_a[19] =  array($sql_saturday_after , 'String' );
+			}else{
+			    $params_a[19] =  array( 	$sql_null_date, 'String' );
+			}	
+			
+			if(isset(	$yah_shabbat_after_hebrew_year_num ) && strlen(	$yah_shabbat_after_hebrew_year_num) > 0  ){
+			    $params_a[20] =  array( 	$yah_shabbat_after_hebrew_year_num , 'Integer' );
+			}else{
+			    $params_a[20] =  array( 0, 'Integer' );
+			}
+			
+			if(isset($yah_shabbat_after_hebrew_month_num ) && strlen($yah_shabbat_after_hebrew_month_num) > 0  ){
+			    $params_a[21] =  array($yah_shabbat_after_hebrew_month_num , 'Integer' );
+			}else{
+			    $params_a[21] =  array( 0, 'Integer' );
+			}	
+			
+			if(isset( $yah_shabbat_after_hebrew_day_num ) && strlen( $yah_shabbat_after_hebrew_day_num) > 0  ){
+			    $params_a[22] =  array($yah_shabbat_after_hebrew_day_num , 'Integer' );
+			}else{
+			    $params_a[22] =  array( 0, 'Integer' );
 			}
 			
 			
 			// $shabbat_after_hebrew_date_format_english
 			if(isset( $shabbat_after_hebrew_date_format_english ) &&  strlen($shabbat_after_hebrew_date_format_english) > 0 ){
-				$params_a[12] =  array($shabbat_after_hebrew_date_format_english, 'String');
+				$params_a[23] =  array($shabbat_after_hebrew_date_format_english, 'String');
 			}else{
-				$params_a[12] =  array( '', 'String' );
+				$params_a[23] =  array( '', 'String' );
 			}
 			
 			
+		//	CRM_Core_Error::debug(CRM_Core_DAO::composeQuery($insert_sql, $params_a), "");
 			
 			$dao = 		CRM_Core_DAO::executeQuery( $insert_sql,   $params_a ) ;
 			$dao->free();
@@ -999,6 +1115,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		$yahr_years_to_get = array( 1, 2, 3, 4, -1, -2, -3, -4) ;      // 1=next yahr, 2=yahr after next, etc.  -1 previous yahr, -2, yahr before previous one, etc.
 		// //$prev_flag = 'prev',  'next';
 		//
+		//CRM_Core_Error::debug("About to loop through records", "");
+		 
 		foreach( $yahr_years_to_get as $year_offset){
 	    
 			$yahrzeit_date_tmp  = $tmpHebCal->util_get_yahrzeit_date($year_offset,  $deceased_year, $deceased_month, $deceased_day, $deceased_date_before_sunset, $erev_start_flag, $gregorian_date_format_plain);
@@ -1042,13 +1160,10 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 
 	$dao->free( );
 	
+	//CRM_Core_Error::debug("Mourner contact count: ". $mourner_contacts_count, "");
 	$rtn_data['mourner_contacts_count'] = $mourner_contacts_count; 
 	
 	return $rtn_data;
 
 }
-
-
-
-
 
