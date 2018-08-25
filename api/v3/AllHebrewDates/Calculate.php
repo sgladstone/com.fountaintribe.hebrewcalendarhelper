@@ -398,8 +398,8 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  $yah_shabbat_after_hebrew_day_num = "";
 		}
 		
-	if( $have_valid_yah_date){
-	   // CRM_Core_Error::debug("insert sql has shabbat cols.", "");
+//	if(true ||  $have_valid_yah_date){
+	   // CRM_Core_Error::debug("insert sql has yahrzeit date cols.", "");
 	    
 	   $col_names_part =    "mourner_contact_id,
 	  mourner_name, 
@@ -448,9 +448,9 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			%12, 
 			 %13, 
 			 %14, %15, %16, %17, %18, %19, %20, %21,
-			%22 , %23	  	  )";
+			%22 , %23 )";
 	    
-	}else{
+/*	}else{
 	 //    CRM_Core_Error::debug("insert sql does NOT have Hebrew yahrzeit cols, shabbat cols", "");
 	     $col_names_part =    "mourner_contact_id,
 	  mourner_name, 
@@ -483,7 +483,7 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 	  	  
 	}  
 		
-	  
+	*/  
 	  	
 	  	
 	  	$sql_null_date = "";
@@ -568,7 +568,7 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			if(isset( $sql_yahrzeit_date_morning ) &&  strlen($sql_yahrzeit_date_morning) > 0 ){
 				$params_a[11] =  array($sql_yahrzeit_date_morning, 'String');
 			}else{
-				$params_a[11] =  array( 	$sql_null_date, 'String' );
+				$params_a[11] =  array( 	$sql_null_date, 'Date' );
 			}
 			//
 			if(isset($shabbat_before_hebrew_date_format_english) && strlen($shabbat_before_hebrew_date_format_english) > 0 ){
@@ -601,26 +601,26 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 			if(isset( $sql_friday_before) && strlen($sql_friday_before) > 0  ){
 			    $params_a[16] =  array( $sql_friday_before , 'String' );
 			}else{
-			    $params_a[16] =  array( 	$sql_null_date, 'String' );
+			    $params_a[16] =  array( 	$sql_null_date, 'Date' );
 			}
 			
 			
 			if(isset($sql_saturday_before ) && strlen($sql_saturday_before) > 0  ){
 			    $params_a[17] =  array( $sql_saturday_before, 'String' );
 			}else{
-			    $params_a[17] =  array( 	$sql_null_date, 'String' );
+			    $params_a[17] =  array( 	$sql_null_date, 'Date' );
 			}	
 			
 			if(isset($sql_friday_after ) && strlen($sql_friday_after) > 0  ){
 			    $params_a[18] =  array( $sql_friday_after, 'String' );
 			}else{
-			    $params_a[18] =  array( 	$sql_null_date, 'String' );
+			    $params_a[18] =  array( 	$sql_null_date, 'Date' );
 			}
 			
 			if(isset($sql_saturday_after ) && strlen( $sql_saturday_after) > 0  ){
 			    $params_a[19] =  array($sql_saturday_after , 'String' );
 			}else{
-			    $params_a[19] =  array( 	$sql_null_date, 'String' );
+			    $params_a[19] =  array( 	$sql_null_date, 'Date' );
 			}	
 			
 			if(isset(	$yah_shabbat_after_hebrew_year_num ) && strlen(	$yah_shabbat_after_hebrew_year_num) > 0  ){
@@ -1166,4 +1166,8 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	return $rtn_data;
 
 }
+
+
+
+
 
