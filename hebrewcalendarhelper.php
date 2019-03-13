@@ -168,6 +168,15 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
  
 function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job = null, $tokens = array(), $context = null) {
 	
+  // When running from Scheduled Jobs, we only receive a single contactId,
+  // not an array. CiviCRM also expects us to return a flat array.
+  $is_scheduled_job = FALSE;
+
+  if (!is_array($contactIDs)) {
+    $contactIDs = [$contactIDs];
+    $is_scheduled_job = TRUE;
+  }
+
 	if(!empty($tokens['hebrewcalendar'])){
 		require_once 'utils/HebrewCalendar.php';
 		$hebrew_format = 'dd MM yy';
@@ -300,7 +309,13 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 				$token_date_portion,
 				$token_yah_hebrew_date_hebrew) ;
 		
-
+    if ($is_scheduled_job) {
+      foreach ($contactIDs as $cid) {
+        foreach ($values[$cid] as $key => $val) {
+          $values[$key] = $val;
+        }
+      }
+    }
 	}
 	 
 }
