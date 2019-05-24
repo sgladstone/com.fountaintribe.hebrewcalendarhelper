@@ -1,7 +1,6 @@
 <?php
 
-class {
-
+class HebrewCalendar {
   // Put Purim in Adar II, if its not a leap year it should be shifted to Adar.
   // yom hazikaron needs to be shifted if it or the day after fall on a shabbat.
   // yom haatzmaut needs to be shifted if it or the day before fall on a shabbat.
