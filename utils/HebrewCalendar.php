@@ -1097,71 +1097,69 @@ class HebrewCalendar {
   }
 
   function scrubBirthCalculatedFields($contact_ids){
-    $rtn_data = array();
+    $rtn_data = [];
 
-    if( strlen( $contact_ids) > 0){
+    if (strlen($contact_ids) > 0) {
       $contactids_sql = " AND bcg.entity_id IN ( $contact_ids )";
-
-    }else{
+    }
+    else {
       $contactids_sql = "";
     }
 
-    $params = array(
+    $result = civicrm_api('CustomGroup', 'getsingle', [
       'version' => 3,
       'sequential' => 1,
       'name' => HebrewCalendar::HEB_BIRTH_CUSTOM_FIELD_GROUP_NAME,
-    );
-    $result = civicrm_api('CustomGroup', 'getsingle', $params);
+    ]);
 
-    if(isset($result['table_name'])){
+    if (isset($result['table_name'])) {
       $heb_cal_table_name = $result['table_name'];
       $heb_cal_set_id = $result['id'];
-    }else{
+    }
+    else {
       $heb_cal_table_name = "";
     }
 
-    if( strlen( $heb_cal_table_name) > 0){
-
-      $params = array(
+    if (!empty($heb_cal_table_name)) {
+      $result = civicrm_api('CustomField', 'getsingle', [
         'version' => 3,
         'sequential' => 1,
         'custom_group_id' => $heb_cal_set_id,
         'name' => HebrewCalendar::HEB_BIRTH_DATE_NAME,
-      );
-      $result = civicrm_api('CustomField', 'getsingle', $params);
+      ]);
 
-      if( isset ( $result['column_name'])){
+      if (isset($result['column_name'])) {
         $col_name_heb_birth_date = $result['column_name'];
-      }else{
+      }
+      else {
         $col_name_heb_birth_date = "";
-
       }
 
-      $params = array(
+      $result = civicrm_api('CustomField', 'getsingle', [
         'version' => 3,
         'sequential' => 1,
         'custom_group_id' => $heb_cal_set_id,
         'name' => HebrewCalendar::HEB_EARLIEST_BARBAT_MITZVAH_NAME,
-      );
-      $result = civicrm_api('CustomField', 'getsingle', $params);
+      ]);
 
-      if( isset ( $result['column_name'])){
+      if (isset($result['column_name'])) {
         $col_name_earliest_barbat = $result['column_name'];
-      }else{
+      }
+      else {
         $col_name_earliest_barbat = "";
       }
 
-      $params = array(
+      $result = civicrm_api('CustomField', 'getsingle', [
         'version' => 3,
         'sequential' => 1,
         'custom_group_id' => $heb_cal_set_id,
         'name' => HebrewCalendar::HEB_NEXT_BIRTHDAY_NAME,
-      );
-      $result = civicrm_api('CustomField', 'getsingle', $params);
+      ]);
 
-      if( isset ( $result['column_name'])){
+      if (isset($result['column_name'])) {
         $col_name_hebrew_next_birthday = $result['column_name'];
-      }else{
+      }
+      else {
         $col_name_hebrew_next_birthday = "";
       }
 
@@ -1171,14 +1169,10 @@ class HebrewCalendar {
                     "bcg.".$col_name_hebrew_next_birthday." = null ".
                     " WHERE 1=1 ".$contactids_sql;
 
-      //$rtn_data['error_message'] = "SQL - ".$sql;
-      //return $rtn_data;
-      $dao_update =& CRM_Core_DAO::executeQuery( $sql, CRM_Core_DAO::$_nullArray );
-      $dao_update->free();
-
-    }else{
+      $dao_update = CRM_Core_DAO::executeQuery($sql);
+    }
+    else{
       // something is wrong, could not find the table.
-
     }
 
     //$rtn_data['error_message'] = "Debug, birthday scrub is done";
@@ -2030,62 +2024,55 @@ class HebrewCalendar {
                     'is_searchable' => "1",
                     'help_pre' => "",
                     'help_post' => "",
-
           ));
-
     }
-
   }
 
+  /**
+   *
+   */
+  function calculateBirthDates($extended_dates_table_name, $contact_ids) {
+    $eb_result = civicrm_api3('CustomField', 'get', [
+      'sequential' => 1,
+      'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+      'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME ,
+    ]);
 
-
-
-  function calculateBirthDates($extended_dates_table_name, $contact_ids){
-
-    $eb_result = civicrm_api3('CustomField', 'get', array(
-                'sequential' => 1,
-                'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
-                'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME ,
-    ));
-
-    if($eb_result['is_error'] <> 0 || $eb_result['count'] == 0  ){
+    if ($eb_result['is_error'] <> 0 || $eb_result['count'] == 0) {
       $rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."' ";
       return $rtn_data;
-
-    }else{
-
+    }
+    else {
       $tmp_values = $eb_result['values'][0];
       $extended_birth_date_col_name = $tmp_values['column_name'];
       $extended_birth_custom_field_id = $tmp_values['id'];
-
     }
 
-    if(  strlen( $extended_birth_date_col_name) == 0 ){
+    if (strlen($extended_birth_date_col_name) == 0) {
       $rtn_data['error_message'] = "Could not get SQL column name for '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."'";
       return $rtn_data;
     }
 
     // done with validation steps
 
-    if( strlen( $contact_ids) > 0){
-      $contactids_sql = " AND c.id IN ( $contact_ids )";
-
-    }else{
+    if (!empty($contact_ids)) {
+      $contactids_sql = " AND c.id IN ($contact_ids)";
+    }
+    else {
       $contactids_sql = "";
     }
 
-    $result = civicrm_api3('CustomField', 'get', array(
-                'sequential' => 1,
-                'custom_group_id' => HebrewCalendar::HEB_BIRTH_CUSTOM_FIELD_GROUP_NAME,
-                'name' => HebrewCalendar::HEB_BIRTH_DATE_NAME,
-        ));
+    $result = civicrm_api3('CustomField', 'get', [
+      'sequential' => 1,
+      'custom_group_id' => HebrewCalendar::HEB_BIRTH_CUSTOM_FIELD_GROUP_NAME,
+      'name' => HebrewCalendar::HEB_BIRTH_DATE_NAME,
+    ]);
 
-    if($result['is_error'] == 0 && $result['count'] == 1  ){
-
+    if ($result['is_error'] == 0 && $result['count'] == 1  ){
       $tmp_id = $result['values'][0]['id'];    //$result['id'];
       $api_name_heb_birth_date = 'custom_'.$tmp_id;
-
-    }else{
+    }
+    else {
       $rtn_data['error_message'] = "Error: Missing custom field: '".HebrewCalendar::HEB_BIRTH_DATE_NAME."'";
       return $rtn_data;
     }
@@ -2098,11 +2085,10 @@ class HebrewCalendar {
         ));
 
     if($result['is_error'] == 0 && $result['count'] == 1  ){
-
       $tmp_id = $result['values'][0]['id'];    //$result['id'];
       $api_name_earliest_barbat = 'custom_'.$tmp_id;
-
-    }else{
+    }
+    else {
       $rtn_data['error_message'] = "Error: Missing custom field: '".HebrewCalendar::HEB_EARLIEST_BARBAT_MITZVAH_NAME."'";
       return $rtn_data;
     }
@@ -2143,8 +2129,9 @@ class HebrewCalendar {
 	  		  		c.birth_date is not null ".$contactids_sql;
 
     $contacts_updated = 0;
-    $dao =& CRM_Core_DAO::executeQuery( $sql, CRM_Core_DAO::$_nullArray );
-    while ( $dao->fetch( ) ) {
+    $dao = CRM_Core_DAO::executeQuery($sql);
+
+    while ($dao->fetch()) {
       $contact_id = $dao->contact_id;
       $birth_year = $dao->birth_year;
       $birth_month = $dao->birth_month;
@@ -2237,7 +2224,7 @@ class HebrewCalendar {
        */
 
       // Do NOT use CiviCRM API here, use SQL. This is because using API creates a infinite loop because this is called from a hook
-      $rtn_code  = $this->updateCiviCRMCalcBirthdayFields(  $contact_id, $hebrew_birth_date_formated, $bat_mitzvah_date_formated, $next_hebrew_birthday_formated );
+      $rtn_code = $this->updateCiviCRMCalcBirthdayFields($contact_id, $hebrew_birth_date_formated, $bat_mitzvah_date_formated, $next_hebrew_birthday_formated);
 
       if( $rtn_code > 0 ){
         $contacts_updated = $contacts_updated + 1;
@@ -2248,13 +2235,10 @@ class HebrewCalendar {
       //	$contacts_updated = $contacts_updated + 1;
 
       //}
-
     }
-    $dao->free();
 
     $rtn_data['contacts_updated_birthdays'] = $contacts_updated;
     return $rtn_data;
-
   }
 
   function updateCiviCRMCalcYahrzeitFields(&$deceased_contact_id, &$yahrzeit_date_tmp_next, &$tmp_yahrzeit_date_observe_english_next, &$hebrew_deceased_date){
@@ -2369,41 +2353,41 @@ class HebrewCalendar {
 
       }
     }
-
   }
-  function updateCiviCRMCalcBirthdayFields(&$contact_id, &$hebrew_birth_date_formated, &$bat_mitzvah_date_formated, &$next_hebrew_birthday_formated){
 
+  /**
+   *
+   */
+  function updateCiviCRMCalcBirthdayFields(&$contact_id, &$hebrew_birth_date_formated, &$bat_mitzvah_date_formated, &$next_hebrew_birthday_formated) {
     $rtn_did_update = 0;
 
-    $params = array(
+    $result = civicrm_api('CustomGroup', 'getsingle', [
       'version' => 3,
       'sequential' => 1,
       'name' => HebrewCalendar::HEB_BIRTH_CUSTOM_FIELD_GROUP_NAME,
-    );
-    $result = civicrm_api('CustomGroup', 'getsingle', $params);
+    ]);
 
     if(isset($result['table_name'])){
       $heb_cal_table_name = $result['table_name'];
       $heb_cal_set_id = $result['id'];
-    }else{
+    }
+    else {
       $heb_cal_table_name = "";
     }
 
-    if( strlen( $heb_cal_table_name) > 0){
-
-      $params = array(
+    if (strlen($heb_cal_table_name) > 0) {
+      $result = civicrm_api('CustomField', 'getsingle', [
         'version' => 3,
         'sequential' => 1,
         'custom_group_id' => $heb_cal_set_id,
         'name' => HebrewCalendar::HEB_NEXT_BIRTHDAY_NAME,
-      );
-      $result = civicrm_api('CustomField', 'getsingle', $params);
+      ]);
 
-      if( isset ( $result['column_name'])){
+      if (isset($result['column_name'])) {
         $col_name_next_heb_birthday = $result['column_name'];
-      }else{
+      }
+      else{
         $col_name_next_heb_birthday = "";
-
       }
 
       $params = array(
@@ -2436,7 +2420,7 @@ class HebrewCalendar {
 
       // if all three columns exist, do sql.
       if( strlen($col_name_next_heb_birthday) > 0 && strlen($col_name_earliest_barbat) > 0 && strlen( $col_name_hebrew_date_of_birth ) > 0  ){
-        $dao_exists =& CRM_Core_DAO::executeQuery(
+        $dao_exists = CRM_Core_DAO::executeQuery(
                         "select count(*) as count from $heb_cal_table_name where entity_id =  $contact_id ",
                         CRM_Core_DAO::$_nullArray );
         $rec_exists = FALSE;
@@ -2467,21 +2451,15 @@ class HebrewCalendar {
 					VALUES( $contact_id , $sql_next_heb_birthday ,$sql_earliest_barbat_date, '".$sql_heb_date_of_birth."' ) ";
         }
 
-        //CRM_Core_Error::debug("Debug: Date of birth sql for custom fields : ", $sql );
-        $dao =& CRM_Core_DAO::executeQuery( $sql, CRM_Core_DAO::$_nullArray );
-        $dao->free();
-
+        $dao = CRM_Core_DAO::executeQuery($sql);
         $rtn_did_update = 1;
       }
     }
 
     return $rtn_did_update;
-
   }
 
-
   private function cleanDateForSQL(&$date_parm){
-
     $date_cleaned  = "null";
     // 'Cannot determine date'
     if(  is_numeric(substr($date_parm, 0, 4)) ){
@@ -3494,7 +3472,6 @@ class HebrewCalendar {
    *
    *********************************************************************/
   function  util_get_bar_bat_mizvah_date(&$iyear, &$imonth, &$iday, &$ibeforesunset, &$erev_start_flag, &$bar_bat_mitzvah_flag, &$gregorian_date_format){
-
     //date_default_timezone_set('America/Chicago');
     $heb_format_tmp = 'mm/dd/yy';
     $birthdate_hebrew = self::util_convert2hebrew_date($iyear, $imonth, $iday, $ibeforesunset, $heb_format_tmp );
@@ -3502,15 +3479,15 @@ class HebrewCalendar {
     //  birthdate_hebrew ( will be used for bar bat Mitzvah calculation: $birthdate_hebrew ;
     $dob_heb_array = explode( '/', $birthdate_hebrew);   //
 
-    if(count( $dob_heb_array ) == 3){
+    if (count($dob_heb_array) == 3) {
       $hebrewbirthMonth = $dob_heb_array[0];
       $hebrewbirthDay = $dob_heb_array[1];
       $hebrewbirthYear = $dob_heb_array[2];
-    }else{
+    }
+    else {
       $hebrewbirthMonth = "";
       $hebrewbirthDay = "";
       $hebrewbirthYear = "";
-
     }
 
     $bar_bat_mitzvah_year = '';

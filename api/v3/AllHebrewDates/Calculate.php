@@ -56,16 +56,14 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
   }
 
   // deal with getting general stuff, ie table that tracks if individual was born/died before sunset or not.
-  $result = civicrm_api3('CustomGroup', 'get', array(
-              'sequential' => 1,
-              'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
-              'extends' => "Individual",
-    ));
+  $result = civicrm_api3('CustomGroup', 'get', [
+    'sequential' => 1,
+    'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
+    'extends' => "Individual",
+  ]);
 
-  if($result['is_error'] <> 0 || $result['count'] == 0  ){
+  if ($result['is_error'] <> 0 || $result['count'] == 0  ){
     $rtn_data['error_message'] = "Could not find custom field set '". HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."' ";
-    //return $rtn_data;
-
   }
   else {
     $tmp_values = $result['values'][0];
@@ -74,30 +72,24 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 
     if(strlen( $extended_date_table) == 0){
       $rtn_data['error_message'] = "Could not get SQL table name for custom field set '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_TITLE."'";
-      //return $rtn_data;
-
     }
   }
 
   // Now deal with birthday-related stuff.
+  $rtn_data = $tmpHebCal->scrubBirthCalculatedFields($tmp_contact_ids);
 
-  $rtn_data = $tmpHebCal->scrubBirthCalculatedFields( $tmp_contact_ids );
-
-  if(isset( $rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0   ){
+  if (isset($rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0) {
     throw new API_Exception("Hebrew Birthday Error: ".$rtn_data['error_message'], 1234);
   }
 
-  $rtn_data = $tmpHebCal->calculateBirthDates( $extended_date_table, $tmp_contact_ids);
+  $rtn_data = $tmpHebCal->calculateBirthDates($extended_date_table, $tmp_contact_ids);
 
-  if( isset( $rtn_data['error_message'] )  && strlen($rtn_data['error_message']) > 0 ){
-    //return $rtn_data;
-    $rtn_data['error_message_birthday_calcs'] = $rtn_data['error_message'];
-    throw new API_Exception("Error: ".$rtn_data['error_message'], 1234);
+  if (isset($rtn_data['error_message']) && !empty($rtn_data['error_message'])) {
+    throw new API_Exception("Error: " . $rtn_data['error_message'], 1234);
   }
 
   // Should be poplulated now: $rtn_data['contacts_updated_birthdays'];
   $record_count_birthdays = $rtn_data['contacts_updated_birthdays'];
-  // All done with birthday calculations.
 
   // Now deal with yahrzeit data
   if( array_key_exists('contact_ids', $params) && strlen($params['contact_ids']) > 0) {

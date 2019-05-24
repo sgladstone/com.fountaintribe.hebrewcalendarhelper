@@ -9,14 +9,18 @@ function hebrewcalendarhelper_civicrm_post($op, $objectName, $objectId, &$object
   // if an individual is being created or edited, rebuild yahrzeit data, hebrew birthday info.
   if ($objectName == 'Individual' && ($op == 'create' || $op == 'edit' || $op == 'restore')) {
     // If there is a date of birth or date of death, then calculate Hebrew dates.
-    if ((isset($objectRef->death_date) && strlen($objectRef->death_date) > 0) || (isset($objectRef->birth_date) && strlen($objectRef->birth_date) > 0)) {
+    // If InlineEdit was used, we may not have the birth/death date.
+    $contact = civicrm_api3('Contact', 'getsingle', [
+      'id' => $objectId,
+      'return' => ['birth_date', 'death_date', 'is_deceased'],
+    ]);
+
+    if (!empty($contact['birth_date']) || !empty($contact['death_date'])) {
       // Calculate Hebrew demographic dates, such as next yahrzeit date, next hebrew birthday date for this contact.
-      $params = [
-        'version' => 3,
+      civicrm_api3('AllHebrewDates', 'calculate', [
         'sequential' => 1,
         'contact_ids' => $objectId,
-      ];
-      $result = civicrm_api('AllHebrewDates', 'calculate', $params);
+      ]);
     }
   }
 }
