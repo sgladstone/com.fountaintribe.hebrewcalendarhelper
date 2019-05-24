@@ -3514,18 +3514,21 @@ class HebrewCalendar {
     }
 
     $bar_bat_mitzvah_year = '';
-    if ( is_int(  $hebrewbirthYear)){
-      if(  $bar_bat_mitzvah_flag == 'bat'){
-        // Technically a girl can be done as early as 12, but most congregations wait until 13.
-        // TODO: Make this configurable by the congregation
-        $bar_bat_mitzvah_year = $hebrewbirthYear + 13;
-      }else if( $bar_bat_mitzvah_flag == 'bar'){
-        $bar_bat_mitzvah_year = $hebrewbirthYear + 13;
-      }else{
-        return "bar_bat_mitzvah_flag must be either bar or bat. ";
-      }
-    }else{
-      return "";
+
+    if (!is_numeric($hebrewbirthYear)) {
+      return '';
+    }
+
+    if ($bar_bat_mitzvah_flag == 'bat') {
+      // Technically a girl can be done as early as 12, but most congregations wait until 13.
+      // TODO: Make this configurable by the congregation
+      $bar_bat_mitzvah_year = $hebrewbirthYear + 13;
+    }
+    elseif ($bar_bat_mitzvah_flag == 'bar') {
+      $bar_bat_mitzvah_year = $hebrewbirthYear + 13;
+    }
+    else {
+      return "bar_bat_mitzvah_flag must be either bar or bat. ";
     }
 
     //$tmpformat = 'MM dd, yy sunset';
