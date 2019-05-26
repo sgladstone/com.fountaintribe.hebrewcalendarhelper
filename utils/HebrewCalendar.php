@@ -2076,18 +2076,14 @@ class HebrewCalendar {
     $birth_day = NULL;
     $birth_date_before_sunset = NULL;
 
-    $sql = "select c.id as contact_id ,
-	  		year(c.birth_date) as birth_year,
-		month(c.birth_date) as birth_month,
-		day(c.birth_date) as birth_day,
-	  		civicrm_option_value.label as gender_label,
-	  		 edt.".$extended_birth_date_col_name." as birth_date_before_sunset
-	  		  FROM civicrm_contact c
-	  		  JOIN ".$extended_dates_table_name." edt ON c.id = edt.entity_id
-	  		  LEFT JOIN civicrm_option_value ON civicrm_option_value.option_group_id = 3 AND c.gender_id = civicrm_option_value.value
-	          where c.is_deleted <> 1 AND
-	  		  		c.contact_type = 'Individual' AND
-	  		  		c.birth_date is not null ".$contactids_sql;
+    $sql = "SELECT c.id as contact_id, year(c.birth_date) as birth_year, month(c.birth_date) as birth_month, day(c.birth_date) as birth_day,
+        civicrm_option_value.label as gender_label, edt.".$extended_birth_date_col_name." as birth_date_before_sunset
+      FROM civicrm_contact c
+      JOIN ".$extended_dates_table_name." edt ON c.id = edt.entity_id
+      LEFT JOIN civicrm_option_value ON civicrm_option_value.option_group_id = 3 AND c.gender_id = civicrm_option_value.value
+      WHERE c.is_deleted <> 1
+        AND c.contact_type = 'Individual'
+        AND c.birth_date is not null " . $contactids_sql;
 
     $contacts_updated = 0;
     $dao = CRM_Core_DAO::executeQuery($sql);
@@ -2108,94 +2104,47 @@ class HebrewCalendar {
       $heb_date_format = 'hebrew';
       $hebrew_birth_date_formated_as_hebrew = self::util_convert2hebrew_date($birth_year, $birth_month, $birth_day, $birth_date_before_sunset, $heb_date_format);
 
-      // $rtn_data["hebrew_date_of_birth_hebrew"] = $hebrew_birth_date_formated_as_hebrew;
-
       /*
       $config = CRM_Core_Config::singleton( );
-
       $tmp_system_date_format = 	$config->dateInputFormat;
+
       if($tmp_system_date_format == 'dd/mm/yy'){
-      $gregorian_date_format = "dd MM yyyy" ;
-
+        $gregorian_date_format = "dd MM yyyy" ;
       }else if($tmp_system_date_format == 'mm/dd/yy' ){
-      $gregorian_date_format = "MM dd, yyyy";
-
+        $gregorian_date_format = "MM dd, yyyy";
       }else{
-
-      $rtn_data['error_message'] = "Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
-      return $rtn_data ;
-
+        $rtn_data['error_message'] = "Configuration Issue: Unrecognized System date format: ".$tmp_system_date_format;
+        return $rtn_data ;
       }
-       */
+      */
 
       $erev_start_flag = '1';
       $gregorian_date_format = "MM dd, yyyy";
-      if($gender == 'Male'){
+
+      if($gender == 'Male') {
         $bar_bat_mitzvah_flag = "bar";
         // $bar_bat_label = "Bar Mitzvah";  // Son of the commandments.
-      }else if( $gender == 'Female' ){
+      }
+      elseif ($gender == 'Female') {
         $bar_bat_mitzvah_flag = "bat";
         // $bar_bat_label = "Bat Mitzvah";  // Daughter of the commandments.
-      }else{
+      }
+      else {
         // unrecognized gender option, treat as 'bar' which means person must be 13 or older.
         $bar_bat_mitzvah_flag = "bar";
         // $bar_bat_label = "B'nai Mitzvah";  // Technically this is the plural, ie "Sons and daughters of the commandments" . Need input from community on this.
       }
 
       $tmp_date_gregorian_format = 'crm_api';
-
       $bat_mitzvah_date_formated = self::util_get_bar_bat_mizvah_date($birth_year, $birth_month, $birth_day, $birth_date_before_sunset, $erev_start_flag, $bar_bat_mitzvah_flag, $tmp_date_gregorian_format);
-
       $next_hebrew_birthday_formated = self::util_get_next_hebrew_birthday_date($birth_year, $birth_month, $birth_day, $birth_date_before_sunset, $erev_start_flag, $tmp_date_gregorian_format);
-
-      /*
-      if( $contact_id == 4){
-      $rtn_data['error_message'] = "Debug:  $contact_id next heb birthday: ".$next_hebrew_birthday_formated;
-      return $rtn_data;
-      }
-       */
-      //$rtn_data["bar_bat_mitzvah_label"] =  $bar_bat_label ;
-      //$rtn_data["earliest_bar_bat_mitzvah_date"]  = $bat_mitzvah_date_formated ;
-
-      // Now update the contact with the newly calculated values.
-      /*
-      $api_parms = array(
-      'sequential' => 1,
-      'id' =>  $contact_id,
-      );
-
-
-      $api_parms[$api_name_heb_birth_date] = $hebrew_birth_date_formated;
-
-
-      if( is_numeric(substr( $bat_mitzvah_date_formated, 0 , 4)) ){
-
-      $api_parms[$api_name_earliest_barbat] = $bat_mitzvah_date_formated;
-      }
-
-      if( is_numeric(substr( $next_hebrew_birthday_formated, 0 , 4)) ){
-
-      $api_parms[$api_name_next_hebrew_birthday] = $next_hebrew_birthday_formated;
-      }
-
-       */
-      /*
-       * $api_name_heb_birth_date => $hebrew_birth_date_formated,
-      $api_name_earliest_barbat => $bat_mitzvah_date_formated,
-       */
 
       // Do NOT use CiviCRM API here, use SQL. This is because using API creates a infinite loop because this is called from a hook
       $rtn_code = $this->updateCiviCRMCalcBirthdayFields($contact_id, $hebrew_birth_date_formated, $bat_mitzvah_date_formated, $next_hebrew_birthday_formated);
 
-      if( $rtn_code > 0 ){
+      if ($rtn_code > 0) {
         $contacts_updated = $contacts_updated + 1;
       }
-      //$result = civicrm_api3('Contact', 'create', $api_parms);
-
-      //if( $result['is_error'] == 0 && $result['count'] == 1){
-      //	$contacts_updated = $contacts_updated + 1;
-
-      //}
     }
 
     $rtn_data['contacts_updated_birthdays'] = $contacts_updated;
@@ -3435,10 +3384,10 @@ class HebrewCalendar {
   function  util_get_bar_bat_mizvah_date(&$iyear, &$imonth, &$iday, &$ibeforesunset, &$erev_start_flag, &$bar_bat_mitzvah_flag, &$gregorian_date_format){
     //date_default_timezone_set('America/Chicago');
     $heb_format_tmp = 'mm/dd/yy';
-    $birthdate_hebrew = self::util_convert2hebrew_date($iyear, $imonth, $iday, $ibeforesunset, $heb_format_tmp );
+    $birthdate_hebrew = self::util_convert2hebrew_date($iyear, $imonth, $iday, $ibeforesunset, $heb_format_tmp);
 
     //  birthdate_hebrew ( will be used for bar bat Mitzvah calculation: $birthdate_hebrew ;
-    $dob_heb_array = explode( '/', $birthdate_hebrew);   //
+    $dob_heb_array = explode( '/', $birthdate_hebrew);
 
     if (count($dob_heb_array) == 3) {
       $hebrewbirthMonth = $dob_heb_array[0];
@@ -3460,7 +3409,8 @@ class HebrewCalendar {
     if ($bar_bat_mitzvah_flag == 'bat') {
       // Technically a girl can be done as early as 12, but most congregations wait until 13.
       // TODO: Make this configurable by the congregation
-      $bar_bat_mitzvah_year = $hebrewbirthYear + 13;
+      $bat_mitzvah_age = Civi::settings()->get('hebrewcalendarhelper_bat_mitzvah_age');
+      $bar_bat_mitzvah_year = $hebrewbirthYear + $bat_mitzvah_age;
     }
     elseif ($bar_bat_mitzvah_flag == 'bar') {
       $bar_bat_mitzvah_year = $hebrewbirthYear + 13;
@@ -3484,7 +3434,6 @@ class HebrewCalendar {
     //}
 
     return $bar_bat_gregorian_date;
-
   }
 
   /**********************************************************************************
@@ -3862,9 +3811,9 @@ class HebrewCalendar {
    *
    *********************************************************************/
   function util_convert2hebrew_date(&$iyear, &$imonth, &$iday, &$ibeforesunset, &$hebrewformat){
-
     $defaultmsg = "Cannot determine Hebrew date";
-    if($iyear == ''  ){
+
+    if($iyear == '') {
       return $defaultmsg." because year is blank";
     }
 
