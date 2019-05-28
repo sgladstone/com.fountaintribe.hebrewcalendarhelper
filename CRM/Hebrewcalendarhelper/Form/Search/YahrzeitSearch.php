@@ -109,13 +109,25 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	);
   		
+  
+  
+  
   	$form->addDate('start_date', ts('Date From'), false, array( 'formatType' => 'custom' ) );
   
   	$form->addDate('end_date', ts('...Through'), false, array( 'formatType' => 'custom' ) );
   
   	
+  	
+  	$relative_time_interval_type_choices = array('' => '-- select --' ,
+  	'day' => 'Day', 'week' => 'Week', 'month' => 'Month' );
+  	
+  	$relative_time_interval_count_choices = array('' => '-- select --');
+  	
+  	for( $i=1; $i < 32; $i++){
+  	    	$relative_time_interval_count_choices[$i] = $i;
+  	}
   
-  	$relative_times_choices = array( '1_day' => 'In Exactly 1 Day',
+  	$relative_times_choices = array(  '1_day' => 'In Exactly 1 Day',
   			'6_day' => 'In Exactly 6 Days', 
   			'7_day' => 'In Exactly 7 Days', 
   			'8_day' => 'In Exactly 8 Days',
@@ -173,16 +185,61 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   				$select2style
   				);
   
+  
+  $date_ui_arr =array( '' => '-- select --', 
+  'relative_from_today_interval' => 'Relative from today-choose interval', 
+  'relative_from_today_common' => 'Relative from today-common choices', 
+  'specific_dates' => 'Specific dates',
+  'hebrew_month_year' => 'Hebrew year/month');
+  				      
+  			/*	      
+foreach ($date_ui_arr as $key => $var) {
+  $date_ui_choices[$key] = HTML_QuickForm::createElement('radio', null, ts('sample'), $var, $key);
+}
+$form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
+*/
+  		
+  		
+  	$form->add('select', 'date_range_ui',
+  				ts('How to choose dates?'),
+  			 $date_ui_arr 	,
+  				FALSE
+  				);
+  				
+  				
+  //	$form->add('static', 'help_text', ts('something nice'));
+  	
+  	
+  // let the user choose from some common choices. 
   		$form->add('select', 'relative_time',
-  				ts('Timeframe relative to today'),
+  				ts('Relative from today: common choices'),
   				$relative_times_choices,
   				FALSE,
   				$select2style
   				);
   
+  // let the user chooose any interval type combos ()
   
   
+  $form->add('select', 'relative_time_interval_type',
+  				ts('Relative to today: interval type'),
+  				$relative_time_interval_type_choices,
+  				FALSE
+  				);
   
+  $form->add('select', 'relative_time_interval_count',
+  				ts('Relative to today: interval count '),
+  				$relative_time_interval_count_choices,
+  				FALSE
+  				);
+  //
+  
+
+  
+  //$hebyearmonth_fieldset = $form->addElement('hebyearmonth_fieldset')->setLabel('Choose Hebrew Year and Month');
+  
+   // $form->add('group', 'fieldset_hebmonthyear');
+    
   	// $form->add('select', 'membership_type_in_notin' , ts('Mourner Has or Not') ,  $tmp_in_out_mem, FALSE, array('id' => 'membership_type_in_notin' , 'title' => ts('-- select --')) ) ;
   	
   	require_once('utils/HebrewCalendar.php');
@@ -192,6 +249,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
     $next_heb_year = $cur_hebrew_year + 1;
     $prev_heb_year = $cur_hebrew_year - 1 ;
   	
+    
     
   	$hebrew_years = array('' => '-- select --',  $prev_heb_year =>  $prev_heb_year, $cur_hebrew_year => $cur_hebrew_year." (current year)",  $next_heb_year =>  $next_heb_year   );
   	$tmp_hebrew_year_select = $form->add  ('select', 'hebrew_year_choice', ts('Hebrew Year'),
@@ -225,8 +283,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 
   	$tmp_deceased_mourners = array(   'only_living' => 'Only Include Individuals with Living Mourners',
   			'only_deceased' => 'Only Include Individuals with Deceased Mourners',
-  			'no_mourner' => 'Only Include Individuals with No Mourners (Does NOT allow creation of PDF letters/email to mourner)',
-  			'all' => 'Include any record (living, deceased, or no mourner. Does NOT allow creation of PDF letters/email to mourner)',);
+  			'no_mourner' => 'Only Include Individuals with No Mourners (NO creation of PDF letters/email)',
+  			'all' => 'Any (living, deceased, or no mourner. NO creation of PDF letters/email)',);
   	$tmp_deceased_mourners_select = $form->add('select', 'living_mourners', ts('Mourner Status Choice'),
   			$tmp_deceased_mourners,
   			false);
@@ -234,12 +292,12 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	 
   	$tmp_date_options = array('' => '-- select --',
-  			'yahrzeit_date' => 'Yahrzeit Date - Evening (default)',
-  			'yahrzeit_date_morning' => 'Yahrzeit Date - Morning',
-  			'yahrzeit_erev_shabbat_before' => 'Friday Night Before Yahrzeit',
-  			'yahrzeit_erev_shabbat_after' => 'Friday Night After Yahrzeit',
-  			'yahrzeit_shabbat_morning_before' => 'Saturday Morning Before Yahrzeit' ,
-  			'yahrzeit_shabbat_morning_after' => 'Saturday Morning After Yahrzeit'
+  			'yahrzeit_date' => 'Yahrzeit date - evening (default)',
+  			'yahrzeit_date_morning' => 'Yahrzeit date - morning',
+  			'yahrzeit_erev_shabbat_before' => 'Friday night before yahrzeit',
+  			'yahrzeit_erev_shabbat_after' => 'Friday night after yahrzeit',
+  			'yahrzeit_shabbat_morning_before' => 'Saturday morning before yahrzeit' ,
+  			'yahrzeit_shabbat_morning_after' => 'Saturday morning after yahrzeit'
   	);
   	$tmp_date_options_select = $form->add('select', 'date_to_filter', ts('Date to Filter'),
   			$tmp_date_options,
@@ -307,7 +365,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 * for the search form.
   	 */
   	$form->assign( 'elements', array(  'group_of_contact',  'membership_org_of_contact',  'membership_type_of_contact',
-  			'relative_time' , 'start_date', 'end_date' , 'hebrew_year_choice' , 'hebrew_month_choice' , 'date_to_filter' ,  'deceased_has_plaque' ,
+  			 'date_range_ui', 'relative_time',
+  			  'relative_time_interval_type', 'relative_time_interval_count', 'start_date', 'end_date' , 'hebrew_year_choice', 'hebrew_month_choice' , 'date_to_filter' ,  'deceased_has_plaque' ,
   			'yahrzeit_type_selection', 'living_mourners', 'gender_choice',  'comm_prefs' ) );
   
   
@@ -367,8 +426,8 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
    * Define the smarty template used to layout the search form and results listings.
    */
   function templateFile( ) {
-  		 
-  		return 'CRM/Contact/Form/Search/Custom.tpl';
+  		return 'YahrzeitSearch/Custom.tpl';
+  	//	return 'CRM/Contact/Form/Search/Custom.tpl';
   	
   }
    
@@ -796,12 +855,180 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 return $tmp_from;
   }
   
+  
+  function getAllDateFiltersFromForm($clauses ){
+      
+      $date_range_ui = "";
+      
+  	   if(isset($this->_formValues['date_range_ui'] )){
+  	       $date_range_ui = $this->_formValues['date_range_ui'];
+  	   }else{
+  	       
+  	   }
+  		
+  	if(isset( $this->_formValues['date_to_filter'] )){
+  		$date_to_filter = $this->_formValues['date_to_filter'];
+  	}else{
+  		$date_to_filter = "";
+  	}
+  	
+  	// Determine correct SQL field names for filtering on  dates. 
+  	$date_sql_field_name = "";
+  	if(  strlen($date_to_filter) > 0 ){
+  		$date_sql_field_name = $date_to_filter;  // English-based date field.
+  		
+  		if( $date_to_filter == "yahrzeit_erev_shabbat_before"  || $date_to_filter == "yahrzeit_shabbat_morning_before" ){
+  			$hebrew_year_sql_field_name = "shabbat_before_hebrew_year_num";
+  			$hebrew_month_sql_field_name = "shabbat_before_hebrew_month_num";
+  		}else if($date_to_filter == "yahrzeit_erev_shabbat_after"  || $date_to_filter == "yahrzeit_shabbat_morning_after" ){
+  			$hebrew_year_sql_field_name = "shabbat_after_hebrew_year_num";
+  			$hebrew_month_sql_field_name = "shabbat_after_hebrew_month_num";
+  		}else{
+  			
+  			$hebrew_year_sql_field_name = "yahrzeit_hebrew_year";
+  			$hebrew_month_sql_field_name = "yahrzeit_hebrew_month";
+  		}
+  	
+  	}else{
+  		$date_sql_field_name = "yahrzeit_date" ; // English-based date field.
+  		$hebrew_year_sql_field_name = "yahrzeit_hebrew_year";
+  		$hebrew_month_sql_field_name = "yahrzeit_hebrew_month";
+  	}
+  	
+  	
+  	// if the user is filtering based on Hebrew year/month.
+  	if (  $date_range_ui  == "hebrew_month_year" ){
+          	$hebrew_year_choice = $this->_formValues['hebrew_year_choice'];
+          	
+          	if( strlen($hebrew_year_choice) > 0){
+          		$clauses[] =  $hebrew_year_sql_field_name."  =  ".$hebrew_year_choice; 
+          	}
+          	
+          	// 'hebrew_month_choice'
+          	$hebrew_month_choice = $this->_formValues['hebrew_month_choice'];
+          	 
+          	if( strlen($hebrew_month_choice) > 0){
+          		$clauses[] =  $hebrew_month_sql_field_name." =  ".$hebrew_month_choice;
+          	}
+    }else if( $date_range_ui  == "specific_dates" ){
+        // only check start_date and end_date if the user chose 'specific_dates'    
+        if( isset( $this->_formValues['start_date'])){
+  		    $startDate = CRM_Utils_Date::processDate( $this->_formValues['start_date'] );
+        }else{
+   		    $startDate = "";
+        }
+   
+   
+   
+       if ( strlen($startDate) > 0  ) {
+      		$clauses[] = $date_sql_field_name." >= $startDate";
+      	}
+      
+      	if(isset( $this->_formValues['end_date'])){
+      		$endDate = CRM_Utils_Date::processDate( $this->_formValues['end_date'] );
+      	}else{
+      		$endDate = "";
+      	}
+      	if ( strlen($endDate) > 0  ) {
+      		$clauses[] = $date_sql_field_name." <= $endDate";
+      	}
+  
+        
+    }else if(  $date_range_ui  == "relative_from_today_common"){
+        
+        if( isset( $this->_formValues['relative_time'] )){
+          		$relative_time_array = $this->_formValues['relative_time'];
+          
+          		if( is_array( $relative_time_array ) && count($relative_time_array) > 0){
+          		 
+          		$i = 0;
+          		foreach( $relative_time_array as $relative_time){
+          			if( $i == 0){
+          				$rel_time_str = "(";
+          			}else if( $i > 0 && strlen($rel_time_str) > 2 ){
+          				$rel_time_str = $rel_time_str." OR ";
+          			}
+          			
+          			$parm_as_arr = explode("_", $relative_time);
+          			$interval_count = $parm_as_arr[0];
+          			$interval_type = $parm_as_arr[1];
+          			
+          			if( $interval_type == "month" ){
+        	  			$rel_time_str = $rel_time_str." ( month($date_sql_field_name) =  MONTH( date_add( now() ,  INTERVAL $interval_count MONTH) )
+        	  			AND year( $date_sql_field_name )  = YEAR ( date_add( now() ,  INTERVAL $interval_count MONTH) ) ) " ;
+          			}else if($interval_type == "day"){
+          				$rel_time_str = $rel_time_str." date( $date_sql_field_name )  = date( date_add( now() ,  INTERVAL $interval_count DAY) ) ";
+          				
+          			}else{
+          				$rel_time_str = " 1=1 ";
+          			}
+          		
+          			$i = $i + 1;
+          
+          		}
+          	}
+          	if( isset( $rel_time_str ) &&  strlen( $rel_time_str) > 0){
+          		$rel_time_str = $rel_time_str.")";
+          		$clauses[] = $rel_time_str;
+          	}
+          	
+          	}
+        
+    }else if(  $date_range_ui  == "relative_from_today_interval"){
+        
+        	$rel_time_str = "";
+        	
+         if( isset( $this->_formValues['relative_time_interval_type'] )){
+          		$interval_type = $this->_formValues['relative_time_interval_type'];
+        }
+        
+        if( isset( $this->_formValues['relative_time_interval_count'] )){
+          		$interval_count = $this->_formValues['relative_time_interval_count'];
+        }
+        
+        // "relative_time_interval_count" ( ie a number)
+        // "relative_time_interval_type"  ( ie 'day', 'week' or 'month')
+
+       	$tmp_cal = $this->_localHebrewCalendar;
+       $rel_time_str =  $tmp_cal->get_yahrzeit_relative_date_sql( $date_sql_field_name,  $interval_type, $interval_count  ); 
+       
+/*
+        if( $interval_type == "month" ){
+        	  			$rel_time_str = $rel_time_str." ( month($date_sql_field_name) =  MONTH( date_add( now() ,  INTERVAL $interval_count MONTH) )
+        	  			AND year( $date_sql_field_name )  = YEAR ( date_add( now() ,  INTERVAL $interval_count MONTH) ) ) " ;
+  		}else if($interval_type == "day"){
+  			$rel_time_str = $rel_time_str." date( $date_sql_field_name )  = date( date_add( now() ,  INTERVAL $interval_count DAY) ) ";
+  			
+  		}else if($interval_type == "week"){
+  		    // TODO: create week clause. 
+  		}else{
+  		    // error!
+  		}
+  */		
+  		if( isset( $rel_time_str ) &&  strlen( $rel_time_str) > 0){
+          	
+          	$clauses[] = $rel_time_str;
+          }
+          	
+          			
+    }else{
+        // nothing to do, user did not filter on dates. 
+    }
+      
+  	
+  	return $clauses;
+   
+  }
+  
+  
   function where($includeContactIDs = false){
   	$clauses = array( );
   
   	$clauses[] = "contact_deceased.is_deleted <> 1";
   	$clauses[] = "( contact_a.id is null OR contact_a.is_deleted <> 1 ) ";
   
+   
+   $clauses =  $this->getAllDateFiltersFromForm($clauses );
   
   	// TODO: get Plaque table via API
   	
@@ -859,9 +1086,6 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	}else{
   		$mem_type_IN_OR_NOT = ""; 
   	}
-  
-  
-  
   
   	$tmp_membership_sql_list = implode( ", ", $membership_types_of_con );
   	
@@ -937,68 +1161,10 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 */ 
   	
   	
-  	if(isset( $this->_formValues['date_to_filter'] )){
-  		$date_to_filter = $this->_formValues['date_to_filter'];
-  	}else{
-  		$date_to_filter = "";
-  	}
-  	
-  	// Determine correct SQL field names for filtering on  dates. 
-  	$date_sql_field_name = "";
-  	if(  strlen($date_to_filter) > 0 ){
-  		$date_sql_field_name = $date_to_filter;  // English-based date field.
-  		
-  		if( $date_to_filter == "yahrzeit_erev_shabbat_before"  || $date_to_filter == "yahrzeit_shabbat_morning_before" ){
-  			$hebrew_year_sql_field_name = "shabbat_before_hebrew_year_num";
-  			$hebrew_month_sql_field_name = "shabbat_before_hebrew_month_num";
-  		}else if($date_to_filter == "yahrzeit_erev_shabbat_after"  || $date_to_filter == "yahrzeit_shabbat_morning_after" ){
-  			$hebrew_year_sql_field_name = "shabbat_after_hebrew_year_num";
-  			$hebrew_month_sql_field_name = "shabbat_after_hebrew_month_num";
-  		}else{
-  			
-  			$hebrew_year_sql_field_name = "yahrzeit_hebrew_year";
-  			$hebrew_month_sql_field_name = "yahrzeit_hebrew_month";
-  		}
-  	
-  	}else{
-  		$date_sql_field_name = "yahrzeit_date" ; // English-based date field.
-  		$hebrew_year_sql_field_name = "yahrzeit_hebrew_year";
-  		$hebrew_month_sql_field_name = "yahrzeit_hebrew_month";
-  	}
-  	
-  	
-  	
-  	// 'hebrew_year_choice'
-  	$hebrew_year_choice = $this->_formValues['hebrew_year_choice'];
-  	
-  	if( strlen($hebrew_year_choice) > 0){
-  		$clauses[] =  $hebrew_year_sql_field_name."  =  ".$hebrew_year_choice; 
-  	}
-  	
-  	
-  	// 'hebrew_month_choice'
-  	$hebrew_month_choice = $this->_formValues['hebrew_month_choice'];
-  	 
-  	if( strlen($hebrew_month_choice) > 0){
-  		$clauses[] =  $hebrew_month_sql_field_name." =  ".$hebrew_month_choice;
-  	}
-  	
-  	
   	//  $clauses[] = "contact_b.created_date >= DATE_SUB(CURDATE(), INTERVAL 10  MINUTE)";
-  	 
-  
-  
-  
-  	 
+  	
   	$clauses[] = "(yahrzeit_type = mourner_observance_preference) " ;
-  
-   if( isset( $this->_formValues['start_date'])){
-  		$startDate = CRM_Utils_Date::processDate( $this->_formValues['start_date'] );
-   }else{
-   		$startDate = "";
-   }
-  
-  
+   
    /*
   	$date_sql_field_name = "";
   	if( strlen($date_to_filter) > 0 ){
@@ -1009,60 +1175,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	}
   */
   
-  	if ( strlen($startDate) > 0  ) {
-  		$clauses[] = $date_sql_field_name." >= $startDate";
-  	}
-  
-  	if(isset( $this->_formValues['end_date'])){
-  		$endDate = CRM_Utils_Date::processDate( $this->_formValues['end_date'] );
-  	}else{
-  		$endDate = "";
-  	}
-  	if ( strlen($endDate) > 0  ) {
-  		$clauses[] = $date_sql_field_name." <= $endDate";
-  	}
-  
-  
-  	if( isset( $this->_formValues['relative_time'] )){
-  		$relative_time_array = $this->_formValues['relative_time'];
-  
-  		if( is_array( $relative_time_array ) && count($relative_time_array) > 0){
-  		 
-  		$i = 0;
-  		foreach( $relative_time_array as $relative_time){
-  			if( $i == 0){
-  				$rel_time_str = "(";
-  			}else if( $i > 0 && strlen($rel_time_str) > 2 ){
-  				$rel_time_str = $rel_time_str." OR ";
-  			}
-  			
-  			$parm_as_arr = explode("_", $relative_time);
-  			$interval_count = $parm_as_arr[0];
-  			$interval_type = $parm_as_arr[1];
-  			
-  			if( $interval_type == "month" ){
-	  			$rel_time_str = $rel_time_str." ( month($date_sql_field_name) =  MONTH( date_add( now() ,  INTERVAL $interval_count MONTH) )
-	  			AND year( $date_sql_field_name )  = YEAR ( date_add( now() ,  INTERVAL $interval_count MONTH) ) ) " ;
-  			}else if($interval_type == "day"){
-  				$rel_time_str = $rel_time_str." date( $date_sql_field_name )  = date( date_add( now() ,  INTERVAL $interval_count DAY) ) ";
-  				
-  			}else{
-  				$rel_time_str = " 1=1 ";
-  			}
-  		
-  			$i = $i + 1;
-  
-  		}
-  	}
-  	if( isset( $rel_time_str ) &&  strlen( $rel_time_str) > 0){
-  		$rel_time_str = $rel_time_str.")";
-  		$clauses[] = $rel_time_str;
-  	}
-  	}
-  	 
-  	 
-  	 
-  	/*
+  		/*
   
   	$relative_time = $this->_formValues['relative_time'];
   	if( ($relative_time <> '' ) && is_numeric ($relative_time) ){
@@ -1089,7 +1202,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	$tmp_rtn = implode( ' AND ', $clauses );
   
-  	//  print "<br>where: ".$tmp_rtn ;
+    	CRM_Core_Error::debug( "<br>where: ".$tmp_rtn , "");
   	return $tmp_rtn;
   }
   
