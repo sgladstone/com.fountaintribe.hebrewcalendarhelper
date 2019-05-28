@@ -426,7 +426,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
    * Define the smarty template used to layout the search form and results listings.
    */
   function templateFile( ) {
-  		return 'YahrzeitSearch/Custom.tpl';
+  		return 'YahCustom.tpl';
   	//	return 'CRM/Contact/Form/Search/Custom.tpl';
   	
   }
