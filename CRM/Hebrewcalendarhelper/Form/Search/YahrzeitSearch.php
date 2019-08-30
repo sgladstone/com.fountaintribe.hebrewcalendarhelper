@@ -1202,7 +1202,6 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   
   	$tmp_rtn = implode( ' AND ', $clauses );
   
-    	CRM_Core_Error::debug( "<br>where: ".$tmp_rtn , "");
   	return $tmp_rtn;
   }
   
