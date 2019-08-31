@@ -3320,6 +3320,10 @@ class HebrewCalendar{
 
 						$default_seperator = ", ";
 
+            if (!isset($values[$cid])) {
+              $values[$cid] = [];
+            }
+
 						if(array_key_exists($cid,  $values)){
 							// print "<br>Fill in token values.";
 							if( isset( $tmp_deceasedids_for_con[$cid] )){
