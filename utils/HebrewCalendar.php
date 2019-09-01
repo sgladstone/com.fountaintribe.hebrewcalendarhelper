@@ -1414,7 +1414,7 @@ class HebrewCalendar{
 		
 		$yahrzeit_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
 		
-		/*
+                		/*
 		 *
 		 */
 		$sql_create = "CREATE TABLE $yahrzeit_table_name (
@@ -1459,13 +1459,23 @@ class HebrewCalendar{
 		yahrzeit_date_morning datetime,
 		yahrzeit_relationship_id varchar(25),
 		created_date TIMESTAMP ,
-		PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
+		PRIMARY KEY (`id`))
+                ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
 		
+
+
 		$dao =& CRM_Core_DAO::executeQuery( $sql_create,   CRM_Core_DAO::$_nullArray ) ;
 		$dao->free();
-		
-		
-		
+	
+                $sql_alter = " ALTER TABLE $yahrzeit_table_name
+                               ADD UNIQUE KEY mourner_to_yah_date
+                               (mourner_contact_id , deceased_contact_id , yahrzeit_date, yahrzeit_relationship_id, yahrzeit_type)  " ;
+
+		$dao =& CRM_Core_DAO::executeQuery( $sql_alter,   CRM_Core_DAO::$_nullArray ) ;
+		$dao->free();
+
+
+
 	}
 	
 	
@@ -3319,10 +3329,6 @@ class HebrewCalendar{
 
 
 						$default_seperator = ", ";
-
-            if (!isset($values[$cid])) {
-              $values[$cid] = [];
-            }
 
 						if(array_key_exists($cid,  $values)){
 							// print "<br>Fill in token values.";
