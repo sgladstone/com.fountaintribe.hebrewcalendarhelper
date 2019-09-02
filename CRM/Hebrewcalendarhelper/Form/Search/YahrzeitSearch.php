@@ -634,8 +634,8 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
 		 contact_a.display_name as mourner_display_name,
 		 contact_a.first_name as mourner_first_name,
 		  contact_a.last_name as mourner_last_name,
-		  group_concat(distinct hh.display_name) as household_display_name,
-		  group_concat(distinct hh.id) as household_id,
+		  hh.display_name as household_display_name,
+		  hh.id as household_id,
 		  rd.description as relationship_description,
 		  rnote.note as relationship_note,
 		 		shabbat_before_parashat, shabbat_before_parashat_hebrew,
@@ -655,24 +655,13 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	  }
   
   
-  	  $tmp_group_by = " GROUP BY mourner_contact_id, deceased_contact_id, yahrzeit_date   ";
+//  	   $tmp_group_by = " GROUP BY mourner_contact_id, deceased_contact_id, yahrzeit_date   ";
+  	  $tmp_group_by = "";
   
   	  $sql = "SELECT $select
   	  FROM $from
   	  WHERE $where
   	  ".$tmp_group_by ;
-  
-  	  /*
-  	  $downstream_sql = "SELECTxx $full_select
-  	  FROM $from
-  	  WHERE $where
-  	  ".$tmp_group_by.
-  	  " ORDER BY yahrzeit_date, deceased_name ASC ";
-  	  */
-  
-  
-  	   
-  
   
   
   	  if ( !($onlyIDs )) {
@@ -698,27 +687,20 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	  }
   
   
-  	  // print "<br><br>SQL: ".$sql ;
-  	  // print "<br>";
   	  if ( $rowcount > 0 && $offset >= 0 ) {
   	  	$sql .= " LIMIT $offset, $rowcount ";
   	  }
   
-  	  //  Put the sql statemetn in the session so it is avilable to downstream logic for tokens.  
-  	  
-  	 //  $_SESSION['yahrzeit_sql'] ='';
-  	 //  $_SESSION['yahrzeit_sql'] =  $downstream_sql;
-  	
-  
-  	 //  $yahrzeit_data= $_SESSION['yahrzeit_sql'];
-  
+        // $pdir = $_SERVER["DOCUMENT_ROOT"] ; 	
+        // $myfile = fopen($pdir."/sites/default/files/civicrm/ConfigAndLog/yah_sql_testing.txt", "w") or die("Unable to open file!");
+        // fwrite($myfile, $sql."\n\n\n");
+
   	  return $sql;
   }
   
   function from(){
   	 
   	$tmp_cal = $this->_localHebrewCalendar;
-  //	$tmp_sql_table_name = $tmp_cal::get_sql_table_name() ;
   	$tmp_sql_table_name = HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
   	
   	
@@ -750,7 +732,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	$customFieldLabels = array($custom_hebrewname_field_label );
   	$extended_religious_table = "";
   	$outCustomColumnNames = array();
-  	$error_msg = getCustomTableFieldNames($custom_religious_field_group_label , $customFieldLabels, $extended_religious_table, $outCustomColumnNames ) ;
+   	$error_msg = getCustomTableFieldNames($custom_religious_field_group_label , $customFieldLabels, $extended_religious_table, $outCustomColumnNames ) ;
   
   	$extended_hebrewname  =  $outCustomColumnNames[$custom_hebrewname_field_label];
   */
@@ -770,16 +752,21 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   
   */
   
+
+/*
   	$tmp_group_join = "";
+
   	if(isset( $this->_formValues['group_of_contact'] ) && count( $this->_formValues['group_of_contact'] ) > 0 ){
   		$tmp_group_join = "LEFT JOIN civicrm_group_contact as groups on contact_b.mourner_contact_id = groups.contact_id
   		 LEFT JOIN civicrm_group_contact_cache as groupcache ON contact_b.mourner_contact_id = groupcache.contact_id ";
   		 
   	}
   	 
-  	 
+*/  	 
+ /* 	
+
   	$tmp_mem_join = "";
-  	
+
   	if( isset ($this->_formValues['membership_type_of_contact'] ) ){
   		$tmp_mem_types_of_contact = $this->_formValues['membership_type_of_contact'];
   	}else{
@@ -799,8 +786,9 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
 	 	";
   		 
   	}
-  
+  */
   	
+
   	$tmp_hh_rel_ids_arr = array();
   	// Get household of the mourner, if one exists.
   	$result = civicrm_api3('RelationshipType', 'get', array(
@@ -820,11 +808,16 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	}
   	
   	$tmp_rel_type_ids = implode(", ", $tmp_hh_rel_ids_arr );
-  	
-  //	$tmp_rel_type_ids = "7, 6 ";   // Household member of , Head of Household
+/*  	
   	$tmp_from_sql_hh_join = " LEFT JOIN civicrm_relationship rel ON contact_b.mourner_contact_id = rel.contact_id_a AND rel.is_active = 1 AND rel.relationship_type_id IN ( ".$tmp_rel_type_ids." ) ";
-  
-  
+  */
+ // we have to do a nested subquery to avoid extra records when the mourner has multiple relationships to a household 
+ // for example: a person could have 'Head of household' and  'Household member of ' relationships
+ // Another example: a person is a member of 2 households ( such as a child of divorced parents)
+       $tmp_from_sql_hh_join = "LEFT JOIN civicrm_relationship rel ON rel.id = (select subr.id from civicrm_relationship subr where 
+        contact_b.mourner_contact_id = subr.contact_id_a AND subr.is_active = 1 AND subr.relationship_type_id IN ( ".$tmp_rel_type_ids." ) LIMIT 1 )";  
+
+
   if( isset($extended_religious_table) &&  strlen( $extended_religious_table ) > 0 ){
   	$religious_sql = " LEFT JOIN ".$extended_religious_table." extra_religious on contact_deceased.id = extra_religious.entity_id ";
   }else{
@@ -847,9 +840,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	" left join civicrm_email on contact_a.id = civicrm_email.contact_id AND civicrm_email.is_primary = 1
   	 left join civicrm_phone on contact_a.id = civicrm_phone.contact_id AND civicrm_phone.is_primary = 1
   	 left join civicrm_address on contact_a.id = civicrm_address.contact_id AND civicrm_address.is_primary = 1
-  	 left join civicrm_state_province on civicrm_address.state_province_id = civicrm_state_province.id
-  	 $tmp_group_join
-  	 $tmp_mem_join";
+  	 left join civicrm_state_province on civicrm_address.state_province_id = civicrm_state_province.id ";
   	  
   	 //print "<br><br> tmp from: ".$tmp_from ;
   	 return $tmp_from;
@@ -954,8 +945,11 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
           			$interval_type = $parm_as_arr[1];
           			
           			if( $interval_type == "month" ){
-        	  			$rel_time_str = $rel_time_str." ( month($date_sql_field_name) =  MONTH( date_add( now() ,  INTERVAL $interval_count MONTH) )
-        	  			AND year( $date_sql_field_name )  = YEAR ( date_add( now() ,  INTERVAL $interval_count MONTH) ) ) " ;
+        	  			$rel_time_str = $rel_time_str." ( month($date_sql_field_name) =  MONTH( date_add( now() , INTERVAL $interval_count MONTH) )
+        	  			AND year( $date_sql_field_name ) = YEAR ( date_add( now() ,  INTERVAL $interval_count MONTH) ) ) " ;
+                                }else if($interval_type == "week"){
+        	                        $rel_time_str = $rel_time_str." ( week($date_sql_field_name) =  week( date_add( now() ,  INTERVAL $interval_count WEEK) ) 
+                                        AND year( $date_sql_field_name ) = YEAR ( date_add( now() ,  INTERVAL $interval_count WEEK) ) ) " ;
           			}else if($interval_type == "day"){
           				$rel_time_str = $rel_time_str." date( $date_sql_field_name )  = date( date_add( now() ,  INTERVAL $interval_count DAY) ) ";
           				
@@ -976,7 +970,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
         
     }else if(  $date_range_ui  == "relative_from_today_interval"){
         
-        	$rel_time_str = "";
+         $rel_time_str = "";
         	
          if( isset( $this->_formValues['relative_time_interval_type'] )){
           		$interval_type = $this->_formValues['relative_time_interval_type'];
@@ -985,12 +979,63 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
         if( isset( $this->_formValues['relative_time_interval_count'] )){
           		$interval_count = $this->_formValues['relative_time_interval_count'];
         }
+
+
+        if( $interval_type == "month" ){
+        	$rel_time_str = $rel_time_str." ( month($date_sql_field_name) =  MONTH( date_add( now() ,  INTERVAL $interval_count MONTH) ) 
+                   AND year( $date_sql_field_name ) = YEAR ( date_add( now() ,  INTERVAL $interval_count MONTH) ) ) " ;
+        }else if($interval_type == "day"){
+          	$rel_time_str = $rel_time_str." date( $date_sql_field_name )  = date( date_add( now() ,  INTERVAL $interval_count DAY) ) ";			
+        }else if($interval_type == "week"){
+        	$rel_time_str = $rel_time_str." ( week($date_sql_field_name) =  week( date_add( now() ,  INTERVAL $interval_count WEEK) ) 
+                    AND year( $date_sql_field_name ) = YEAR ( date_add( now() ,  INTERVAL $interval_count WEEK) ) ) " ;
+
+        }else{
+          	$rel_time_str = " 1=1 ";
+        }
+
+  	if( isset( $rel_time_str ) &&  strlen( $rel_time_str) > 0){
+          	
+                 $clauses[] = $rel_time_str;
+        }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+      //  if( isset( $this->_formValues['relative_time'] )){
+      //    		$relative_time_array = $this->_formValues['relative_time'];
+          
+    //      		if( is_array( $relative_time_array ) && count($relative_time_array) > 0){
+          		 
+   //       		$i = 0;
+   //       		foreach( $relative_time_array as $relative_time){
+   //       			if( $i == 0){
+   //       				$rel_time_str = "(";
+   //       			}else if( $i > 0 && strlen($rel_time_str) > 2 ){
+   //       				$rel_time_str = $rel_time_str." OR ";
+   //       			}
+          			
+   //       			$parm_as_arr = explode("_", $relative_time);
+   //       			$interval_count = $parm_as_arr[0];
+   //       			$interval_type = $parm_as_arr[1];
+          			
+//          		
+ //         			$i = $i + 1;
+          
+   //       		}
+    //      	}
+     //     	if( isset( $rel_time_str ) &&  strlen( $rel_time_str) > 0){
+      //    		$rel_time_str = $rel_time_str.")";
+      //    		$clauses[] = $rel_time_str;
+       //   	}
+          	
+       //   	}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
         // "relative_time_interval_count" ( ie a number)
         // "relative_time_interval_type"  ( ie 'day', 'week' or 'month')
 
-       	$tmp_cal = $this->_localHebrewCalendar;
-       $rel_time_str =  $tmp_cal->get_yahrzeit_relative_date_sql( $date_sql_field_name,  $interval_type, $interval_count  ); 
+//       	$tmp_cal = $this->_localHebrewCalendar;
+//       $rel_time_str =  $tmp_cal->get_yahrzeit_relative_date_sql( $date_sql_field_name,  $interval_type, $interval_count  ); 
        
 /*
         if( $interval_type == "month" ){
@@ -1005,10 +1050,6 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   		    // error!
   		}
   */		
-  		if( isset( $rel_time_str ) &&  strlen( $rel_time_str) > 0){
-          	
-          	$clauses[] = $rel_time_str;
-          }
           	
           			
     }else{
@@ -1064,17 +1105,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
     	$clauses[] = "contact_a.preferred_communication_method = '".$comm_prefs."' "; 	
     }
   
-  
-   $tmp_sql_list = implode( ", ", $groups_of_individual);
-  
-  	if(strlen($tmp_sql_list) > 0 ){
-  
-  
-  		$clauses[] = "(   (groups.group_id IN (".$tmp_sql_list.") AND groups.status = 'Added') OR
-				( groupcache.group_id IN (".$tmp_sql_list.") )  )";
-  
-  	}
-  
+
   	if(isset($this->_formValues['membership_type_of_contact'])){
   		$membership_types_of_con = $this->_formValues['membership_type_of_contact'];
   	}else{
@@ -1087,39 +1118,31 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   		$mem_type_IN_OR_NOT = ""; 
   	}
   
-  	$tmp_membership_sql_list = implode( ", ", $membership_types_of_con );
-  	
-  	if(strlen($tmp_membership_sql_list) > 0 ){
-  		$in_tmp = "IN";
-  		if(strcmp ($mem_type_IN_OR_NOT, "NOT IN" ) == 0){
-  			$clauses[] = "( memberships.membership_type_id is NULL OR  memberships.membership_type_id NOT IN (".$tmp_membership_sql_list.")  )" ;
-  		}else{
-  			$clauses[] = "memberships.membership_type_id IN (".$tmp_membership_sql_list.")" ;
-  			$clauses[] = "mem_status.is_current_member = '1'";
-  			$clauses[] = "mem_status.is_active = '1'";
-  
-  		}
-  	}
-  
+
   	// 'membership_org_of_contact'
   	if( isset($this->_formValues['membership_org_of_contact']) ){
   		$membership_org_of_con = $this->_formValues['membership_org_of_contact'];
   	}else{
   		$membership_org_of_con = array();
   	}
-  	//$tmp_membership_org_sql_list = $searchTools->convertArrayToSqlString( $membership_org_of_con ) ;
-  	$tmp_membership_org_sql_list = implode( ", ", $membership_org_of_con );
+
+ ///////////////////////////////////////////////////////////////////////////////
+	// Need to deal with group and membership filters. 
+	$tmp_where_grps_mems = "";
+	
+	
+	require_once('utils/CustomSearchTools.php');
+	$searchTools = new CustomSearchTools();
+	
+	//$contact_field_name = "f1.contact_id"; 
+	$contact_field_name = "contact_b.mourner_contact_id"; 
+		
+	$searchTools->updateWhereClauseForGroupsChosen($groups_of_individual, $contact_field_name,  $clauses );
+			
   	
-  	if(strlen($tmp_membership_org_sql_list) > 0 ){
-  		// print "<br>membership orgs: <br>".$tmp_membership_org_sql_list;
-  			
-  		$clauses[] = "mt.member_of_contact_id IN (".$tmp_membership_org_sql_list.")" ;
-  		$clauses[] = "mt.is_active = '1'" ;
-  		$clauses[] = "mem_status.is_current_member = '1'";
-  		$clauses[] = "mem_status.is_active = '1'";
-  		//print_r($clauses);
-  	}
-  
+	$searchTools->updateWhereClauseForMemberships( $membership_types_of_con,  $membership_org_of_con, $contact_field_name,  $clauses   ) ; 
+	
+	////////////////////////////////////////////////////////////////////////////////
   
   	$has_plaque = $this->_formValues['deceased_has_plaque'];
   	if(strcmp($has_plaque, 'yes') == 0  ){

@@ -25,68 +25,6 @@ function hebrewcalendarhelper_civicrm_post( $op, $objectName, $objectId, &$objec
 }
 
 
-// This functionality is now handled by read-only custom fields. 
-function XXXhebrewcalendarhelper_civicrm_summary( $contactID, &$content, &$contentPlacement ) {
-	
-	
-		// Add Hebrew date of death, Hebrew birthday and add this info 
-		// to the back-office summary tab.
-		require_once 'utils/HebrewCalendar.php';
-		
-		$contentPlacement = CRM_Utils_Hook::SUMMARY_BELOW; 
-		$content = "";
-		$tmpHebCal = new HebrewCalendar();
-		$hebrew_data = $tmpHebCal->retrieve_hebrew_demographic_dates( $contactID);
-
-		//if( isset($hebrew_data['error_message'] )){
-		//$tmp_error_message  = $hebrew_data['error_message'] ;
-		if(  isset($hebrew_data['error_message'])  && strlen( $hebrew_data['error_message']) > 0 ){
-				
-			$begin_content = contact_summary_determine_beginning_content();
-			$middle_content = "<tr><td>Error Occured: ".$hebrew_data['error_message']."</td></tr>";
-			$end_content = contact_summary_determine_ending_content();
-				
-			$content = $begin_content.$middle_content.$end_content;
-				
-		}else if( isset( $hebrew_data['contact_type']  ) && $hebrew_data['contact_type'] == 'Individual' ){
-		
-	
-			$begin_content = contact_summary_determine_beginning_content();
-			$middle_content = contact_summary_determine_middle_content( $hebrew_data  ) ;
-			$end_content = contact_summary_determine_ending_content();
-
-			$content = $begin_content.$middle_content.$end_content;
-        
-
-		}else{
-		
-			$content = "";
-
-		 } // end of else
-		
-	
-	
-}
-
-
-function hebrewcalendarhelper_civicrm_alterContent(  &$content, $context, $tplName, &$object ){
-
-	/*
-
-	if( $tplName ==  'CRM/Mailing/Form/Upload.tpl' ){
-		
-			$extra = "<h3>This area <b>CANNOT</b> be used to send personalized <b>yahrzeit</b> reminders</h3>
-	 	     If you want to send personalized yahrzeit reminders using email, then use the 'Send Email to Contacts' action
-	 	     from the 'Upcoming Yahrzeits' screen instead. ";
-
-			$content = $extra.$content;
-
-	}
-	
-	*/
-}
-
-
 function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 	
 	
@@ -140,7 +78,7 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 				'day_14' => 'in exactly 14 days',
 				'day_30' => 'in exactly 30 days',	
 				'month_cur' => 'during current month',
-				'month_next' => 'during next month',
+ 				'month_next' => 'during next month',
 				'month_2' => '2 months from now',
 				'month_3' => '3 months from now',
 				'month_4' => '4 months from now',
@@ -162,7 +100,6 @@ function hebrewcalendarhelper_civicrm_tokens( &$tokens ){
 	    	}	    	
 	    	
 	    }
-
 
 }
  
@@ -227,7 +164,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 		$token_yah_english_date_morning = 'yahrzeit.morning_format_english'; // English date of yahrzeit (morning after candle is lit)
 		
 	
-
+                // make sure the value array has a key for each contact.
 		
 		// CiviCRM is buggy here, if token is being used in CiviMail, we need to use the key
 		// as the token. Otherwise ( PDF Letter, one-off email, etc) we
@@ -244,7 +181,6 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 			}
 		
 			$token_to_fill = 'yahrzeit.'.$cur_token;
-			//print "<br><br>Token to fill: ".$token_to_fill."<br>";
 		
 			$token_as_array = explode("___",  $cur_token );
 		
@@ -254,7 +190,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 			if( isset( $token_as_array[1] ) && strlen($token_as_array[1]) > 0 ){
 				$token_date_portion =  $token_as_array[1];
 			}
-				
+			
 			if( $partial_token ==  'deceased_name' ){
 				$token_yah_dec_name = $token_to_fill;
 			}else if($partial_token == 'english_date'){
@@ -288,8 +224,7 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 			next($tokens['yahrzeit']);
 		}
 		
-		
-		
+			
 		require_once('utils/HebrewCalendar.php');
 		$tmpHebCal = new HebrewCalendar();
 		$tmpHebCal->process_yahrzeit_tokens( $values, $contactIDs , 
@@ -308,117 +243,56 @@ function hebrewcalendarhelper_civicrm_tokenValues( &$values, &$contactIDs, $job 
 				$token_yah_shabbat_parashat_after,
 				$token_date_portion,
 				$token_yah_hebrew_date_hebrew) ;
+    //         debug_helper($contactIDs, $is_scheduled_job, $values);	 
 		
-    if ($is_scheduled_job) {
-      foreach ($contactIDs as $cid) {
-        foreach ($values[$cid] as $key => $val) {
-          $values[$key] = $val;
-        }
-      }
-    }
+                  if ($is_scheduled_job) {
+                     foreach ($contactIDs as $cid) {
+                        foreach ($values[$cid] as $key => $val) {
+                           $values[$key] = $val;
+                        }
+                      }
+                  }
 	}
-	 
+
+
+
 }
  
-function XXXcontact_summary_determine_middle_content( &$hebrew_data ){
+function  debug_helper($contactIDs, $is_scheduled_job, $values){
 
-	$heb_date_of_birth =  $hebrew_data['hebrew_date_of_birth'];
-	if(isset($hebrew_data['bar_bat_mitzvah_label'])){
-		$bar_bat_mitzvah_label = $hebrew_data['bar_bat_mitzvah_label'] ;
-	}else{
-		$bar_bat_mitzvah_label = "Bar/Bat Mitzvah";
-	}
-	if(isset($hebrew_data['earliest_bar_bat_mitzvah_date'])){
-		$earliest_bar_bat_mitzvah_date = $hebrew_data['earliest_bar_bat_mitzvah_date'];
-	}else{
-		$earliest_bar_bat_mitzvah_date = "";
-	}
-	
-	
-	/*
-	if(isset($hebrew_data['is_deceased'])){   
-		$is_deceased = $hebrew_data['is_deceased'];
-	}
-	
-	if(isset($hebrew_data['hebrew_date_of_death']) ){ 
-		$hebrew_date_of_death = $hebrew_data['hebrew_date_of_death'];
-		$hebrew_date_of_death_html   = " <tr> <td class='label'>Hebrew Date of Death</td> <td class='html-adjust'>$hebrew_date_of_death</td> </tr> \n  ";
-	
-	}
-	
-	
-	if( isset($hebrew_data['yahrzeit_date_observe_hebrew'])  && isset($hebrew_data['yahrzeit_date_observe_english'])  ){   
-		$yahrzeit_date_observe_hebrew = $hebrew_data['yahrzeit_date_observe_hebrew'];
-		$yahrzeit_date_observe_english = $hebrew_data['yahrzeit_date_observe_english'];
-		
-		$next_yehrzeit_date_html     = " <tr> <td class='label'>Next Hebrew Yahrzeit</td> <td class='html-adjust'>$yahrzeit_date_observe_hebrew</td> </tr> \n
-		<tr> <td class='label'>Next English Yahrzeit</td> <td class='html-adjust'>$yahrzeit_date_observe_english</td> </tr> \n ";
-	}
-	*/
-	
+        $debug_contacts="";
+        if (is_array($contactIDs)) {
+          $debug_contacts_str = implode(" , ",$contactIDs); 
+          $debug_contact_arr = $contactIDs;  
+        }else{
+          $debug_contacts_str = $contactIDs;
+          $debug_contact_arr = [$contactIDs];
+        }
 
-	$heb_date_of_birth_html = " <tr> <td class='label'>Hebrew Date of Birth</td> <td class='html-adjust'> $heb_date_of_birth </td>  </tr> \n  ";
-	$earliest_bar_bat_date_html  = " <tr> <td class='label'>Earliest Possible $bar_bat_mitzvah_label Date</td><td class='html-adjust'>$earliest_bar_bat_mitzvah_date </td> </tr> \n";
-	
-	
-/*
-	if($is_deceased){
-		$middle_html = $heb_date_of_birth_html.$hebrew_date_of_death_html.$next_yehrzeit_date_html ;
-	}else{
-		$middle_html = $heb_date_of_birth_html.$earliest_bar_bat_date_html;
-	}
-	*/
-	
-	$middle_html = $heb_date_of_birth_html.$earliest_bar_bat_date_html;
-	
-	return $middle_html;
+       $date = date('Ymd');
+ 
+       $pdir = $_SERVER["DOCUMENT_ROOT"] ;
+       $debug_filename = $pdir."/sites/default/files/civicrm/ConfigAndLog/yah_token_testing___".$date.".txt";
+       $debug_scheduled_job = "";
+       if ($is_scheduled_job){
+          $debug_scheduled_job = "Scheduled job is TRUE\n";
+       }
+       $debug_message =  "\n------------------------------------------------------------------------------------------------------------\n";
+       $debug_message = $debug_message."Yahrzeit Token contact ids: ".$debug_contacts_str."\n\nscheduled?: ".$debug_scheduled_job ; 
+       $debug_message = $debug_message."\n-------------------\n";
+   
+//       $myfile = fopen($pdir."/sites/default/files/civicrm/ConfigAndLog/yah_token_testing.txt", "w+") or die("Unable to open file!");
+//       fwrite($myfile, "Yahrzeit token values:\n\n".$debug_values."\n\n\n\nToken contact ids: ".$debug_contacts."\n\nJob: ".$job."\n\nContext: ".$context."\n\n\n");
+       file_put_contents($debug_filename, $debug_message, FILE_APPEND | LOCK_EX);
+       foreach ($debug_contact_arr as $cid) {
+             file_put_contents($debug_filename, "\n\ncontact id: ".$cid , FILE_APPEND | LOCK_EX);  
+         foreach ($values[$cid] as $key => $val) {
+             $tmp = "\nkey: ".$key." ---- value: ".$val; 
+             file_put_contents($debug_filename, $tmp, FILE_APPEND | LOCK_EX);
+         }
+       }  
 
 }
-
-
-/*
-function XXXcontact_summary_determine_beginning_content(){
-
-	$html_rtn = "   <div id='customFields'>
-		                    <div class='contact_panel'>
-		                        <div class='contactCardLeft'>
-		                                                        <div class='customFieldGroup ui-corner-all'>
-		                <table>
-
-		                  <tr>
-		                    <td colspan='2' class='grouplabel'>Hebrew Calendar Demographics</td>
-		                  </tr> \n
-		            ";
-
-	return $html_rtn;
-
-
-}
-*/
-
-
-/*
-
-function XXXcontact_summary_determine_ending_content(){
-
-	$html_rtn = " </table>
-		            </div>
-		                        </div><!--contactCardLeft-->
-
-		                        <div class='contactCardRight'>
-		                                                                </div>
-
-		                        <div class='clear'></div>
-		                    </div>
-		                </div>  \n
-		   ";
-
-	return $html_rtn;
-
-
-}
-
-*/
 
 
 /**

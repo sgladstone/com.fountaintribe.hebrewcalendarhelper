@@ -1414,7 +1414,7 @@ class HebrewCalendar{
 		
 		$yahrzeit_table_name =  HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
 		
-		/*
+                		/*
 		 *
 		 */
 		$sql_create = "CREATE TABLE $yahrzeit_table_name (
@@ -1458,14 +1458,29 @@ class HebrewCalendar{
 	  shabbat_after_hebrew_day_num int(10),
 		yahrzeit_date_morning datetime,
 		yahrzeit_relationship_id varchar(25),
-		created_date TIMESTAMP ,
-		PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
+		created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+		PRIMARY KEY (`id`))
+                ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
 		
+
+
 		$dao =& CRM_Core_DAO::executeQuery( $sql_create,   CRM_Core_DAO::$_nullArray ) ;
 		$dao->free();
-		
-		
-		
+	
+                $sql = " ALTER TABLE $yahrzeit_table_name
+                               ADD UNIQUE KEY mourner_to_yah_date
+                               (mourner_contact_id , deceased_contact_id , yahrzeit_date, yahrzeit_relationship_id, yahrzeit_type)  " ;
+
+		$dao =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
+		$dao->free();
+
+//                $sql = "ALTER TABLE $yahrzeit_table_name CHANGE `created_date` `created_date` 
+//                        TIMESTAMP on update CURRENT_TIMESTAMP NULL DEFAULT NULL";
+
+//		$dao =& CRM_Core_DAO::executeQuery( $sql,   CRM_Core_DAO::$_nullArray ) ;
+//		$dao->free();
+
+
 	}
 	
 	
@@ -3063,7 +3078,7 @@ class HebrewCalendar{
       yahrzeit_type, mourner_observance_preference
        FROM ".$yahrzeit_temp_table_name." contact_b INNER JOIN civicrm_contact contact_a ON contact_a.id = contact_b.mourner_contact_id
        JOIN civicrm_contact deceased_contact_table ON deceased_contact_table.id = contact_b.deceased_contact_id
-       WHERE contact_b.created_date >= DATE_SUB(CURDATE(), INTERVAL 10 MINUTE) AND (yahrzeit_type = mourner_observance_preference)
+       WHERE yahrzeit_type = mourner_observance_preference 
        AND yahrzeit_date >= CURDATE()
        AND contact_b.mourner_contact_id in (   $cid_list )
        ORDER BY sort_name asc";
@@ -3247,11 +3262,11 @@ class HebrewCalendar{
        FROM ".$yahrzeit_temp_table_name." contact_b 
        INNER JOIN civicrm_contact contact_a ON contact_a.id = contact_b.mourner_contact_id
        JOIN civicrm_contact deceased_contact_table ON deceased_contact_table.id = contact_b.deceased_contact_id
-       WHERE contact_b.created_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR) AND (yahrzeit_type = mourner_observance_preference)
+       WHERE yahrzeit_type = mourner_observance_preference
         AND contact_b.mourner_contact_id in (   $cid_list ) ".$date_where_clause."  ORDER BY sort_name asc";
 					
-				
-		//	CRM_Core_Error::debug("SQL: ".$yahrzeit_sql, "");
+
+  //  was part of SQL where:  contact_b.created_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
 		if( strlen($yahrzeit_sql) > 0 ){
 			$dao =& CRM_Core_DAO::executeQuery( $yahrzeit_sql ,   CRM_Core_DAO::$_nullArray ) ;
 /*
@@ -3277,7 +3292,6 @@ class HebrewCalendar{
 
 
 					$tmp_deceasedids_for_con= array();
-					// print "<br<br>About to process yahrzeit records. ";
 					while ( $dao->fetch( ) ) {
 						 
 						
@@ -3294,7 +3308,6 @@ class HebrewCalendar{
 						$yahrzeit_hebrew_date_format_hebrew = $dao->yahrzeit_hebrew_date_format_hebrew;
 						$yahrzeit_date_raw = $dao->yahrzeit_date_sort;
 						$yahrzeit_morning_format_english =  $dao->yahrzeit_date_morning;
-						
 						
 						$formatted_friday_before = $dao->yah_erev_shabbat_before;
 						$formatted_saturday_before = $dao->yah_shabbat_morning_before;
@@ -3320,12 +3333,7 @@ class HebrewCalendar{
 
 						$default_seperator = ", ";
 
-            if (!isset($values[$cid])) {
-              $values[$cid] = [];
-            }
-
 						if(array_key_exists($cid,  $values)){
-							// print "<br>Fill in token values.";
 							if( isset( $tmp_deceasedids_for_con[$cid] )){
 								$arr_dec_ids = explode(";",  $tmp_deceasedids_for_con[$cid] );
 							}else{
@@ -3954,11 +3962,6 @@ class HebrewCalendar{
 	 *  occured before sunset or not.
 	 * it returns the formatted Gregorian date of the yarhzeit.
 	 ***********************************************************************************/
-	function XXXXutil_get_next_yahrzeit_date(&$iyear, &$imonth, &$iday, &$gregorian_ibeforesunset, $erev_start_flag, &$gregorian_format){
-		$next_flag = 'next';
-		return self::util_get_yahrzeit_date($next_flag, $iyear, $imonth, $iday, $gregorian_ibeforesunset, $erev_start_flag, $gregorian_format);
-
-	}
 
 
 
@@ -4385,70 +4388,6 @@ class HebrewCalendar{
 	}
 
 
-
-	public function XXXget_sql_table_name(){
-
-
-		$yahrzeit_table_name = 'tests';
-
-		 
-		$tmp_table_name = $yahrzeit_table_name;
-
-		return $tmp_table_name;
-		/*
-		  
-		// check if table with this key already exists.
-		//$table_missing = true;
-		 
-		$cur_schema_name = self::getSQLschema();
-		 
-		$table_sql = "SELECT table_name FROM information_schema.tables
-		WHERE
-		table_schema = '$cur_schema_name'
-		AND table_name = '$tmp_table_name'"  ;
-
-
-		//  print "<Br>sql: ".$table_sql;
-		$table_dao =& CRM_Core_DAO::executeQuery( $table_sql ,   CRM_Core_DAO::$_nullArray ) ;
-
-		//   print "<br>sql: ".$yahrzeit_sql;
-		if( $table_dao->fetch( ) ) {
-		// print "<br>Table already exists.";
-		// $table_missing = false;
-		}else{
-		// print "<br>Table does NOT exist.";
-		self::buildTempTable($tmp_table_name);
-		}
-		 
-		 
-		$table_dao->free();
-		 
-		$temp_table_data_needs_refresh  = true;
-
-		// print "<br>Check if data is stale";
-		// If data is stale, rebuild it. Also remove old records.
-		if(self::ALWAYS_CLEAR_TEMP_TABLE){
-		// this is typically only set in development environments.
-		$temp_table_data_needs_refresh  = true;
-		 
-		}else{
-		//      print "<br>About to call freshness function";
-		$temp_table_data_needs_refresh  =  self::CheckFreshnessTempTable($yahrzeit_table_name );
-		//	print "<br> done with freshness function";
-
-		}
-		if( $temp_table_data_needs_refresh ){
-		//print "<br>Data needs refresh, refill temp table: ".$tmp_table_name;
-		self::fillTempTable($tmp_table_name, false);
-		}else{
-		//print "<br>Data is okay, use existing records.";
-		}
-		 
-		return $tmp_table_name;
-		*/
-	}
-
-
 	public static function getSQLschema(){
 
 		$tmp_schema_name = '';
@@ -4458,86 +4397,13 @@ class HebrewCalendar{
 		if($dao->fetch( )){
 			$tmp_schema_name = $dao->tmp_sname;
 		}else{
-			print "<br><br>Pogstone message: Cound NOT find schema using query: ".$sql;
+			print "<br><br>HebrewCalendar rror message: Cound NOT find CiviCRM db schema using query: ".$sql;
 		}
 		 
 		$dao->free();
 		// print "<br>About to return schema name: ".$tmp_schema_name;
 		return $tmp_schema_name;
 	}
-
-	private static function XXXCheckFreshnessTempTable($yahrzeit_table_name ){
-
-		/*
-		 // Check if its been more than x minutes since last data load.
-		 $tmp_minutes = self::YAHRZEIT_CACHE_TIMEOUT;
-		  
-
-
-		 $sql_str = "SELECT min(TIMEDIFF(now(),created_date)) as time_diff from $yahrzeit_table_name
-		 having time_diff > '00:$tmp_minutes:00'
-		 order by time_diff ";
-
-		 // print "<br>sql: ".$sql_str;
-		 $record_found = false;
-		 $return_needs_refresh = false;
-		 $dao =& CRM_Core_DAO::executeQuery(  $sql_str ,   CRM_Core_DAO::$_nullArray ) ;
-
-		 // print "<br>sql: ".$yahrzeit_sql;
-		 if( $dao->fetch( ) ) {
-		 $tmp_min_time = $dao->time_diff;
-		 $record_found = true;
-		 // print "<br>Found time diff: ".$tmp_min_time;
-
-		 }
-		  
-		 $dao->free( );
-
-		 // check for empty table
-		 $sql_count = "Select count(*) as count from $yahrzeit_table_name";
-		 $dao_count =& CRM_Core_DAO::executeQuery(  $sql_count ,   CRM_Core_DAO::$_nullArray ) ;
-
-		 	
-		 if( $dao_count->fetch( ) ) {
-		 $tmp_count = $dao_count->count;
-		 //print "<Br>Num records in temp table: ".$tmp_count;
-		 if( $tmp_count == 0){
-		 self::fillTempTable($yahrzeit_table_name, false);
-		 }
-		  
-		 }
-		 $dao_count->free();
-
-		 if($record_found){
-		 // print "<br>Time diff more than limit. Need to remove old records.";
-		 $return_needs_refresh = true;
-		 self::removeStaleRecords($yahrzeit_table_name, $tmp_minutes);
-		  
-		 }
-
-		 return $return_needs_refresh;
-
-		 */
-
-	}
-
-
-	private static function XXXremoveStaleRecords($yahrzeit_table_name, $tmp_limit){
-
-		//  $sql_str = "DELETE from $yahrzeit_table_name where TIMEDIFF(now(),created_date) > '00:$tmp_limit:00'";
-		//  $dao =& CRM_Core_DAO::executeQuery(  $sql_str ,   CRM_Core_DAO::$_nullArray ) ;
-
-		// self::fillTempTable($yahrzeit_table_name, false);
-
-	}
-
-
-
-
-
-
-
-
 
 
 	function getYahrzeitDateEnglishObservance(&$deceased_year, &$deceased_month, &$deceased_day, &$year_offset ){
@@ -4602,47 +4468,6 @@ class HebrewCalendar{
 
 
 	}
-
-
-	function XXXXgetYahrzeitDateEnglishObservanceFormated(&$deceased_year, &$deceased_month, &$deceased_day, &$previous_next_flag){
-		$tmp_return = '';
-		$cur_year = date('Y');
-
-		if( strlen($deceased_month) == 0){
-	  return "Cannot determine yahrzeit date";
-
-		}
-
-		if( strlen($deceased_day) == 0){
-	  return "Cannot determine yahrzeit date";
-
-		}
-
-		$tmp_yahrzeit_date_observe_english = new DateTime($cur_year.'-'.$deceased_month.'-'.$deceased_day);
-
-		if($previous_next_flag == 'next'){
-			if( $tmp_yahrzeit_date_observe_english < new DateTime()){
-				// add a year.
-				$tmp_yahrzeit_date_observe_english->add(new DateInterval('P1Y')) ;
-			}
-		}else if($previous_next_flag == 'prev'){
-			if( $tmp_yahrzeit_date_observe_english >= new DateTime()){
-				// subtract a year.
-				$tmp_yahrzeit_date_observe_english->sub(new DateInterval('P1Y')) ;
-			}
-
-		}else{
-			print "<br><br>Inside function: getYahrzeitDateEnglishObservanceFormated, unknown previous_next_flag: ".$previous_next_flag;
-
-		}
-		$tmp_return = $tmp_yahrzeit_date_observe_english->format('F d, Y');
-
-		return $tmp_return;
-
-
-
-	}
-
 
 
 }
