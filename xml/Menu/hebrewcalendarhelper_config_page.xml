@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/fountaintribe/hebrewcalendarhelperconfig</path>
+    <page_callback>CRM_Hebrewcalendarhelper_Page_MainConfig</page_callback>
+    <title>Hebrew Calendar Main Configurations</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>
