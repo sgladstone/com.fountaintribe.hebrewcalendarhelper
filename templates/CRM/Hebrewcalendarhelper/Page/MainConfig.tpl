@@ -39,7 +39,7 @@ function set_female_bmitzvah(){
 mpty, or not female. The default is also used when this setting has never been set.</p>
 
 <h2>Extra Notes about B'nai Mitzvah</h2>
-<p>In some organizations all individuals must wait until 13 years old. The age does not depend on gender</p>
+<p>In some organizations all individuals must wait until 13 years old. The age does not depend on gender.</p>
 
 <p>While in other organizations, girls can become a bat mitzvah as early as age 12./p>
 
