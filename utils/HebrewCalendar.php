@@ -3771,9 +3771,23 @@ class HebrewCalendar{
 		$bar_bat_mitzvah_year = '';
 		if ( intval($hebrewbirthYear)  > 1){
 		if(  $bar_bat_mitzvah_flag == 'bat'){
-			// Technically a girl can be done as early as 12, but most congregations wait until 13.
-			// TODO: Make this configurable by the congregation
-			$bar_bat_mitzvah_year = $hebrewbirthYear + 13;
+			// Technically a girl can be done as early as 12, but many congregations wait until 13.
+			// Check the configuration setting for this. 
+			$result = civicrm_api3('Setting', 'get', [
+  				'sequential' => 1,
+  				'return' => ["hebrewcalendarhelper_bmitzvah_age_female"], ]);
+			if ( $result['is_error'] == 0 && $result['count'] == 1 ){
+  				$tmp_setting= $result['values'][0];
+ 				$tmp_bat_age =  intval($tmp_setting['hebrewcalendarhelper_bmitzvah_age_female']);
+ 				if ( $tmp_bat_age <> 12 && $tmp_bat_age <> 13 ){
+  					// something went wrong, only 12 or 13 are valid ages.
+  					$tmp_bat_age = 13;
+				 }
+
+			}else{
+ 				$tmp_bat_age = 13;
+			}
+                        $bar_bat_mitzvah_year = $hebrewbirthYear + intval($tmp_bat_age);
 		}else if( $bar_bat_mitzvah_flag == 'bar'){
 			$bar_bat_mitzvah_year = $hebrewbirthYear + 13;
 		}else{
