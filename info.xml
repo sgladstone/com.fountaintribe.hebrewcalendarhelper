@@ -14,8 +14,8 @@
     <url desc="Support">https://github.com/sgladstone/com.fountaintribe.hebrewcalendarhelper/issues</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
-  <releaseDate>2019-08-30</releaseDate>
-  <version>4.0.4</version>
+  <releaseDate>2019-09-15</releaseDate>
+  <version>4.0.5</version>
   <develStage>stable</develStage>
   <compatibility>
     <ver>5.9</ver>
