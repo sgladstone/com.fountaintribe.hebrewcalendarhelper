@@ -3769,7 +3769,7 @@ class HebrewCalendar{
 		}
 				
 		$bar_bat_mitzvah_year = '';
-		if ( is_int(  $hebrewbirthYear)){
+		if ( intval($hebrewbirthYear)  > 1){
 		if(  $bar_bat_mitzvah_flag == 'bat'){
 			// Technically a girl can be done as early as 12, but most congregations wait until 13.
 			// TODO: Make this configurable by the congregation
