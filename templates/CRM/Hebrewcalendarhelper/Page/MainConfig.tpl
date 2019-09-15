@@ -35,8 +35,7 @@ function set_female_bmitzvah(){
 </select>
 <br>
 <hr><br><br>
-<p><strong>Default age: 13 years old</strong>.This is used for remaining records, including records where gender is e
-mpty, or not female. The default is also used when this setting has never been set.</p>
+<p><strong>Default age: 13 years old</strong>.This is used for remaining records, including records where gender is empty, or not female. The default is also used when this setting has never been set.</p>
 
 <h2>Extra Notes about B'nai Mitzvah</h2>
 <p>In some organizations all individuals must wait until 13 years old. The age does not depend on gender.</p>
