@@ -18,10 +18,22 @@
   <version>4.0.6</version>
   <develStage>stable</develStage>
   <compatibility>
-    <ver>5.9</ver>
+    <ver>5.45</ver>
   </compatibility>
-  <comments></comments>
+  <comments/>
   <civix>
     <namespace>CRM/Hebrewcalendarhelper</namespace>
+    <format>24.09.1</format>
   </civix>
+  <mixins>
+    <mixin>menu-xml@1.0.0</mixin>
+    <mixin>mgd-php@1.0.0</mixin>
+    <mixin>smarty-v2@1.0.3</mixin>
+    <mixin>entity-types-php@2.0.0</mixin>
+  </mixins>
+  <classloader>
+    <psr0 prefix="CRM_" path="."/>
+    <psr4 prefix="Civi\" path="Civi"/>
+  </classloader>
+  <upgrader>CiviMix\Schema\Hebrewcalendarhelper\AutomaticUpgrader</upgrader>
 </extension>

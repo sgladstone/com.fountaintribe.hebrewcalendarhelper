@@ -2,7 +2,7 @@
 
 class HebrewCalendar{
 
-	// Put Purim in Adar II, if its not a leap year it should be shifted to Adar.
+	// Purim is in Adar or, in leap year, Adar II, which corresponds to '7' in either case.
 	// yom hazikaron needs to be shifted if it or the day after fall on a shabbat.
 	// yom haatzmaut needs to be shifted if it or the day before fall on a shabbat.
 	private  $jewish_holidays_major = array("rosh_hashana" => "1/1",
@@ -606,14 +606,6 @@ class HebrewCalendar{
 		$heb_year = $heb_date_array[2];
 
 		$heb_mm_dd = $heb_month.'/'.$heb_day;
-		// Do special Purim logic for leap years.
-		// When there are 2 Adars, then Purim is celebrated during Adar II.
-		if(self::is_hebrew_year_leap_year( $heb_year)){
-			$this->jewish_holidays_major['purim'] = "7/14";
-		}else{
-			$this->jewish_holidays_major['purim'] = "6/14";
-		}
-
 
 
 		//If the 5th of Iyar falls on a Friday or Saturday, Yom HaAtzmaut is moved up to the preceding Thursday.
@@ -645,7 +637,7 @@ class HebrewCalendar{
 			$this->jewish_holidays_major['yom_hazikaron'] = "9/5";
 		}
 		/************************************************************************/
-		// At this point, we have the correct adjusted dates for purim, yom_haatzmaut and yom_hazikaron
+		// At this point, we have the correct adjusted dates for yom_haatzmaut and yom_hazikaron.
 
 
 
@@ -1460,7 +1452,7 @@ class HebrewCalendar{
 		yahrzeit_relationship_id varchar(25),
 		created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		PRIMARY KEY (`id`))
-                ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
+                ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ";
 		
 
 
@@ -3556,15 +3548,17 @@ class HebrewCalendar{
 			return ts("Sh'vat");
 		}else if( $hebrewMonth == HebrewCalendar::HEBREW_MONTH_ADAR ){
 			/* Its Adar or AdarI */
-			
+		 }else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_ADAR){
+      			 return ts("Adar I");
+    		 }else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_ADAR_2){
+      			 // Its Adar or AdarII
+				
 			$hebrew_leap_year = $this->is_hebrew_year_leap_year($hebrewYear);
-			if( $hebrew_leap_year){
-				return ts("Adar I");
-			}else{
+      			if ($hebrew_leap_year) {
+      			   return ts("Adar II");
+     			  } else {
 				return ts("Adar");
 			}
-		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_ADAR_2){
-			return ts("Adar II");
 		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_NISAN){
 			return ts("Nisan");
 		}else if($hebrewMonth == HebrewCalendar::HEBREW_MONTH_IYYAR){
@@ -3614,19 +3608,6 @@ class HebrewCalendar{
 		
 		
 		
-		
-		/*
-		// Check if the 1st of Adar II is a valid day. If it is, then its a leap year. 
-		$tmp_adarII_month = '7';
-		$tmp_adarII_day = '01';
-
-		$hebrew_leap_year  = self::ver_hebrew_date($hebrewYear , $tmp_adarII_month, $tmp_adarII_day);
-		if( $hebrew_leap_year == '1'){
-			return true;
-		}else{
-			return false;
-		}
-		*/
 
 	}
 	
@@ -3833,8 +3814,8 @@ class HebrewCalendar{
 	 * PHP numbers for impacted months:
 	 *  2 => Cheshvan
      *  3 => Kislev
-	 *  6 => AdarI or Adar
-     *  7 => AdarII
+	 *  6 => AdarI
+     *  7 => Adar or AdarII
 	 ***********************************************************************************/
 	function util_adjust_hebrew_date(&$original_hyear,  &$ihyear, &$original_hmonth, &$original_hday, &$erev_start_flag, &$tmpformat, &$purpose){
 
@@ -3885,7 +3866,7 @@ class HebrewCalendar{
 						$tmp_hmonth = HebrewCalendar::HEBREW_MONTH_ADAR_2;
 					}else if( $purpose == "yahrzeit" ){
 						// Adar (non-leap) yahrzeits are observed in AdarI. 
-						$tmp_hmonth = HebrewCalendar::HEBREW_MONTH_ADAR;
+						$tmp_hmonth = HebrewCalendar::HEBREW_MONTH_ADAR_2;
 						
 					}
 					
