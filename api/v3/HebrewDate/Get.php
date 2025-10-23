@@ -19,7 +19,7 @@ function _civicrm_api3_hebrew_date_Get_spec(&$spec) {
  * @return array API result descriptor
  * @see civicrm_api3_create_success
  * @see civicrm_api3_create_error
- * @throws API_Exception
+ * @throws CRM_Core_Exception
  */
 function civicrm_api3_hebrew_date_Get($params) {
   if (array_key_exists('magicword', $params) && $params['magicword'] == 'sesame') {
@@ -34,7 +34,7 @@ function civicrm_api3_hebrew_date_Get($params) {
     // Spec: civicrm_api3_create_success($values = 1, $params = array(), $entity = NULL, $action = NULL)
     return civicrm_api3_create_success($returnValues, $params, 'NewEntity', 'NewAction');
   } else {
-    throw new API_Exception(/*errorMessage*/ 'Everyone knows that the magicword is "sesame"', /*errorCode*/ 1234);
+    throw new CRM_Core_Exception(/*errorMessage*/ 'Everyone knows that the magicword is "sesame"', /*errorCode*/ 1234);
   }
 }
 
