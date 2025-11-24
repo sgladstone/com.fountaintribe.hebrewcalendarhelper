@@ -44,7 +44,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			ts('Mourner Preference') => 'mourner_observance_preference',
   			ts('Plaque?') => 'has_plaque',
   			ts('Plaque Location') => 'plaque_location',
-  			ts('') => 'deceased_contact_id',
+  			'' => 'deceased_contact_id',
   			ts('Email') => 'email',
   			ts('Phone') => 'phone',
   			ts('Street Address') => 'street_address',

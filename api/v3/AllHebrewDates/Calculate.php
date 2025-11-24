@@ -19,7 +19,7 @@ function _civicrm_api3_all_hebrew_dates_Calculate_spec(&$spec) {
  * @return array API result descriptor
  * @see civicrm_api3_create_success
  * @see civicrm_api3_create_error
- * @throws API_Exception
+ * @throws CRM_Core_Exception
  
 */
 
@@ -103,7 +103,7 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 		$rtn_data = $tmpHebCal->scrubBirthCalculatedFields( $tmp_contact_ids );
 		
 		if(isset( $rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0   ){
-			throw new API_Exception("Hebrew Birthday Error: ".$rtn_data['error_message'],  1234);
+			throw new CRM_Core_Exception("Hebrew Birthday Error: ".$rtn_data['error_message'],  1234);
 		}
 		
 
@@ -114,7 +114,7 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 		if( isset( $rtn_data['error_message'] )  && strlen($rtn_data['error_message']) > 0 ){
 			//return $rtn_data;
 			$rtn_data['error_message_birthday_calcs'] = $rtn_data['error_message'];
-			throw new API_Exception("Error: ".$rtn_data['error_message'],  1234);
+			throw new CRM_Core_Exception("Error: ".$rtn_data['error_message'],  1234);
 		}
 		
 		// Should be poplulated now: $rtn_data['contacts_updated_birthdays']  ;
@@ -143,7 +143,7 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 		if(isset( $rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0   ){
 		    
 		    CRM_Core_Error::debug("Just did scrub: ".$rtn_data['error_message'] , "");	
-			throw new API_Exception("Yahrzeit Error: ".$rtn_data['error_message'],  1234);
+			throw new CRM_Core_Exception("Yahrzeit Error: ".$rtn_data['error_message'],  1234);
 				
 				
 		}else{
@@ -156,11 +156,11 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 				$rtn_data['record_count_birthdays'] = $record_count_birthdays; 
 				
 				if( isset( $rtn_data['error_message']) && strlen($rtn_data['error_message']) > 0   ){
-					throw new API_Exception("Error: ".$rtn_data['error_message'],  1234);
+					throw new CRM_Core_Exception("Error: ".$rtn_data['error_message'],  1234);
 				
 				
 				}else if(isset($rtn_data['error_message_birthday_calcs']) && strlen( $rtn_data['error_message_birthday_calcs'] ) > 0    ){
-					throw new API_Exception("Error: ".$rtn_data['error_message'],  1234);
+					throw new CRM_Core_Exception("Error: ".$rtn_data['error_message'],  1234);
 					
 				}else{
 				 	$returnValues =  $rtn_data ; 
@@ -172,7 +172,7 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 					// Spec: civicrm_api3_create_success($values = 1, $params = array(), $entity = NULL, $action = NULL)
 				}
 		} else {
-			throw new API_Exception(/*errorMessage*/ 'Could not find yahrzeit temp table', /*errorCode*/ 1234);
+			throw new CRM_Core_Exception(/*errorMessage*/ 'Could not find yahrzeit temp table', /*errorCode*/ 1234);
 		}
 	
 }

@@ -23,7 +23,7 @@ function _civicrm_api3_yahrzeit_date_Get_spec(&$spec) {
  * @return array API result descriptor
  * @see civicrm_api3_create_success
  * @see civicrm_api3_create_error
- * @throws API_Exception
+ * @throws CRM_Core_Exception
  */
 function civicrm_api3_yahrzeit_date_Get($params) {
   if (array_key_exists('year', $params) && is_numeric($params['year'] )) {
@@ -31,7 +31,7 @@ function civicrm_api3_yahrzeit_date_Get($params) {
   	if( array_key_exists('mourner_contact_ids', $params) ){
   		$mourner_contact_ids = $params['mourner_contact_ids'];
   	}else{
-  		throw new API_Exception(/*errorMessage*/ '\'mourner_contact_ids\' is a required parm.', /*errorCode*/ 1234);
+  		throw new CRM_Core_Exception(/*errorMessage*/ '\'mourner_contact_ids\' is a required parm.', /*errorCode*/ 1234);
   	}
  
   	 if( strlen($mourner_contact_ids) > 0 ){
@@ -105,7 +105,7 @@ function civicrm_api3_yahrzeit_date_Get($params) {
     // Spec: civicrm_api3_create_success($values = 1, $params = array(), $entity = NULL, $action = NULL)
     return civicrm_api3_create_success($returnValues, $params, 'NewEntity', 'NewAction');
   } else {
-    throw new API_Exception(/*errorMessage*/ '\'Year\' is a required parm, and it must be numeric.', /*errorCode*/ 1234);
+    throw new CRM_Core_Exception(/*errorMessage*/ '\'Year\' is a required parm, and it must be numeric.', /*errorCode*/ 1234);
   }
 }
 
