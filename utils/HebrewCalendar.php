@@ -378,10 +378,8 @@ class HebrewCalendar{
 			$curl_response = curl_exec($curl);
 			if ($curl_response === false) {
 				$info = curl_getinfo($curl);
-				curl_close($curl);
 				CRM_Core_Error::debug("Error getting remote hebcal.com data: ", 'error occured during curl exec. Additional info: ' . var_export($info));
 			}
-			curl_close($curl);
 			$decoded = json_decode($curl_response);
 			if (isset($decoded->response->status) && $decoded->response->status == 'ERROR') {
 				CRM_Core_Error::debug("Error getting remote hebcal.com data: " . $decoded->response->errormessage);
