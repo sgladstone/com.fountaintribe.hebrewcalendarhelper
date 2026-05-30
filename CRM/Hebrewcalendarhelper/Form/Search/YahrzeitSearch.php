@@ -141,7 +141,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	
   	
-  	$group_ids =    CRM_Core_PseudoConstant::nestedGroup();
+  	$group_ids =    CRM_Core_PseudoConstant::nestedGroup(TRUE, NULL, TRUE, "plain");
         
   	$mem_ids = array();
   	$org_ids = array();
