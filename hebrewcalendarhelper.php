@@ -36,13 +36,13 @@ function hebrewcalendarhelper_civicrm_tokens(&$tokens) {
 
   $token_category_label  = " :: Yahrzeits for this Mourner ";
 
-  $tokens['yahrzeit'] = array(
+  $tokens['yahrzeit'] = [
     //  'yahrzeit.all' => "All Yahrzeits".$token_category_label,
-  );
+  ];
 
   // 'communitynews.upcomingevents___day_7' =>   'Events in the next 7 days :: Events',
 
-  $partial_tokens_for_each_date = array(
+  $partial_tokens_for_each_date = [
     'deceased_name' => 'Name of Deceased',
     'english_date' => 'English Yarzeit Date (evening)',
     'morning_format_english' => 'English Yahrzeit Date (morning)',
@@ -61,7 +61,7 @@ function hebrewcalendarhelper_civicrm_tokens(&$tokens) {
     //'yahrzeit.shabbat_morning_before' => 'Yahrzeit: Morning of the Shabbat Before',
     //'yahrzeit.erev_shabbat_after' => 'Yahrzeit: Erev (evening) of the Shabbat After',
     //'yahrzeit.shabbat_morning_after' => 'Yahrzeit: Morning of the Shabbat After',
-  );
+  ];
 
   $partial_date_choices = [
     'day_7' => 'in exactly 7 days',
@@ -92,7 +92,7 @@ function hebrewcalendarhelper_civicrm_tokens(&$tokens) {
 /**
  * Implements hook_civicrm_tokenValues().
  */
-function hebrewcalendarhelper_civicrm_tokenValues(&$values, &$contactIDs, $job = null, $tokens = array(), $context = null) {
+function hebrewcalendarhelper_civicrm_tokenValues(&$values, &$contactIDs, $job = null, $tokens = [], $context = null) {
   // When running from Scheduled Jobs, we only receive a single contactId,
   // not an array. CiviCRM also expects us to return a flat array.
   $is_scheduled_job = FALSE;

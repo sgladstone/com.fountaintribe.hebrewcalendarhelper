@@ -54,7 +54,7 @@ function civicrm_api3_yahrzeit_date_Get($params) {
   	    	$sql_day = "";
   	    }
   	     
-  	    $all_yahs = array();
+  	    $all_yahs = [];
   	 	require_once( 'utils/HebrewCalendar.php');
   	  	$yahrzeit_table_name = HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;    	//"civicrm_fountaintribe_yahrzeits_temp";
 			
@@ -81,7 +81,7 @@ function civicrm_api3_yahrzeit_date_Get($params) {
 			      $yah_date = $dao->yah_date;
 			      $mourner_cid = $dao->mourner_cid;
 			      
-			      $tmp_cur = array('deceased_cid' => $deceased_cid, 'mourner_cid' => $mourner_cid, 'deceased_display_name' => $deceased_display_name, 'yahrzeit_date' => $yah_date);
+			      $tmp_cur = ['deceased_cid' => $deceased_cid, 'mourner_cid' => $mourner_cid, 'deceased_display_name' => $deceased_display_name, 'yahrzeit_date' => $yah_date];
 			     $all_yahs[$count] = $tmp_cur;
 			      
 			      $count = $count + 1;

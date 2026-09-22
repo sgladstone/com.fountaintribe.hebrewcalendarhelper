@@ -23,7 +23,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	/**
   	 * Define the columns for search result rows
   	 */
-  	$this->_columns = array(
+  	$this->_columns = [
   			ts('Mourner Name') => 'sort_name',
   			// ts('Mourner Membership Type') => 'membership_type_name',
   			// ts('Mourner Mem. Status') =>  'membership_status_name',
@@ -73,7 +73,7 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			ts('Mourner Household ID') => 'household_id',
   			ts('Relationship Description') => 'relationship_description',
   			ts('Relationship Note') => 'relationship_note',
-  	);
+  	];
   
   	$tmpHebCal = new HebrewCalendar();
   
@@ -103,31 +103,31 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   	 */
   	$this->setTitle('Yahrzeit Search');
   
-  	$date_options = array(
+  	$date_options = [
   			'language'  => 'en',
   			'formatType'    => 'dMY',
   
-  	);
+  	];
   		
   
   
   
-  	$form->addDate('start_date', ts('Date From'), false, array( 'formatType' => 'custom' ) );
+  	$form->addDate('start_date', ts('Date From'), false, [ 'formatType' => 'custom' ] );
   
-  	$form->addDate('end_date', ts('...Through'), false, array( 'formatType' => 'custom' ) );
+  	$form->addDate('end_date', ts('...Through'), false, [ 'formatType' => 'custom' ] );
   
   	
   	
-  	$relative_time_interval_type_choices = array('' => '-- select --' ,
-  	'day' => 'Day', 'week' => 'Week', 'month' => 'Month' );
+  	$relative_time_interval_type_choices = ['' => '-- select --' ,
+  	'day' => 'Day', 'week' => 'Week', 'month' => 'Month' ];
   	
-  	$relative_time_interval_count_choices = array('' => '-- select --');
+  	$relative_time_interval_count_choices = ['' => '-- select --'];
   	
   	for( $i=1; $i < 32; $i++){
   	    	$relative_time_interval_count_choices[$i] = $i;
   	}
   
-  	$relative_times_choices = array(  '1_day' => 'In Exactly 1 Day',
+  	$relative_times_choices = [  '1_day' => 'In Exactly 1 Day',
   			'6_day' => 'In Exactly 6 Days', 
   			'7_day' => 'In Exactly 7 Days', 
   			'8_day' => 'In Exactly 8 Days',
@@ -137,14 +137,14 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   			'4_month' => '4 Months From Now'
   			, '5_month' => '5 Months From Now', '6_month' => '6 Months From Now', 
   			'7_month' => '7 Months From Now', '8_month' => '8 Months From Now', '9_month' => '9 Months From Now', '10_month' => '10 Months From Now'
-  			, '11_month' => '11 Months From Now', '12_month' => '12 Months From Now'  );
+  			, '11_month' => '11 Months From Now', '12_month' => '12 Months From Now'  ];
   
   	
   	
   	$group_ids =    CRM_Core_PseudoConstant::nestedGroup();
         
-  	$mem_ids = array();
-  	$org_ids = array();
+  	$mem_ids = [];
+  	$org_ids = [];
   	
   	$this->fillMembershipTypeArrays($mem_ids, $org_ids);
  	
@@ -155,12 +155,12 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   
   	
   
-  		$select2style = array(
+  		$select2style = [
   				'multiple' => TRUE,
   				'style' => 'width: 100%; max-width: 60em;',
   				'class' => 'crm-select2',
   				'placeholder' => ts('- select -'),
-  		);
+  		];
   		//
   
   		$form->add('select', 'group_of_contact',
@@ -186,11 +186,11 @@ CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface
   				);
   
   
-  $date_ui_arr =array( '' => '-- select --', 
+  $date_ui_arr =[ '' => '-- select --',
   'relative_from_today_interval' => 'Relative from today-choose interval', 
   'relative_from_today_common' => 'Relative from today-common choices', 
   'specific_dates' => 'Specific dates',
-  'hebrew_month_year' => 'Hebrew year/month');
+  'hebrew_month_year' => 'Hebrew year/month'];
   				      
   			/*	      
 foreach ($date_ui_arr as $key => $var) {
@@ -251,15 +251,15 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	
     
     
-  	$hebrew_years = array('' => '-- select --',  $prev_heb_year =>  $prev_heb_year, $cur_hebrew_year => $cur_hebrew_year." (current year)",  $next_heb_year =>  $next_heb_year   );
+  	$hebrew_years = ['' => '-- select --',  $prev_heb_year =>  $prev_heb_year, $cur_hebrew_year => $cur_hebrew_year." (current year)",  $next_heb_year =>  $next_heb_year   ];
   	$tmp_hebrew_year_select = $form->add  ('select', 'hebrew_year_choice', ts('Hebrew Year'),
   			$hebrew_years,
   			false);
   
   	
   	$tmp = "";
-  	$hebrew_months_to_show = array('' => '-- select --');
-  	$heb_month_numbers = array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+  	$hebrew_months_to_show = ['' => '-- select --'];
+  	$heb_month_numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
   	foreach($heb_month_numbers as $cur ){
   		
   		$tmp_hebrew_date = $cur."/1/5776";
@@ -276,42 +276,42 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   			false);
   	
   	
-  	$tmp_yes_no =  array('all' => '-- select --',   'yes' => 'Deceased has Plaque', 'no' => 'Deceased does not have Plaque');
+  	$tmp_yes_no =  ['all' => '-- select --',   'yes' => 'Deceased has Plaque', 'no' => 'Deceased does not have Plaque'];
   	$tmp_has_plaque_select = $form->add  ('select', 'deceased_has_plaque', ts('Plaque Filter Choice'),
   			$tmp_yes_no,
   			false);
   	 
-  	$tmp_deceased_mourners = array(   'only_living' => 'Only Include Individuals with Living Mourners',
+  	$tmp_deceased_mourners = [   'only_living' => 'Only Include Individuals with Living Mourners',
   			'only_deceased' => 'Only Include Individuals with Deceased Mourners',
   			'no_mourner' => 'Only Include Individuals with No Mourners (NO creation of PDF letters/email)',
-  			'all' => 'Any (living, deceased, or no mourner. NO creation of PDF letters/email)',);
+  			'all' => 'Any (living, deceased, or no mourner. NO creation of PDF letters/email)',];
   	$tmp_deceased_mourners_select = $form->add('select', 'living_mourners', ts('Mourner Status Choice'),
   			$tmp_deceased_mourners,
   			false);
   	 
   
   	 
-  	$tmp_date_options = array('' => '-- select --',
+  	$tmp_date_options = ['' => '-- select --',
   			'yahrzeit_date' => 'Yahrzeit date - evening (default)',
   			'yahrzeit_date_morning' => 'Yahrzeit date - morning',
   			'yahrzeit_erev_shabbat_before' => 'Friday night before yahrzeit',
   			'yahrzeit_erev_shabbat_after' => 'Friday night after yahrzeit',
   			'yahrzeit_shabbat_morning_before' => 'Saturday morning before yahrzeit' ,
   			'yahrzeit_shabbat_morning_after' => 'Saturday morning after yahrzeit'
-  	);
+  	];
   	$tmp_date_options_select = $form->add('select', 'date_to_filter', ts('Date to Filter'),
   			$tmp_date_options,
   			false);
   	 
   
-  	$gender_options = array("" => "-- select --");
+  	$gender_options = ["" => "-- select --"];
   	
-  	$result = civicrm_api3('OptionValue', 'get', array(
+  	$result = civicrm_api3('OptionValue', 'get', [
   			'sequential' => 1,
   			'option_group_id' => "gender",
   			'is_active' => 1,
-  			'options' => array('sort' => "name"),
-  	));
+  			'options' => ['sort' => "name"],
+  	]);
   	
   	if($result['is_error'] == 0 && $result['count'] > 0 ){
   		 
@@ -333,15 +333,15 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	 
 
   
-  	$comm_prefs = array(); 
+  	$comm_prefs = [];
   	$comm_prefs[''] = "-- select --";
   	
-  	$result = civicrm_api3('OptionValue', 'get', array(
+  	$result = civicrm_api3('OptionValue', 'get', [
   			'sequential' => 1,
   			'option_group_id' => "preferred_communication_method",
   			'is_active' => 1,
-  			'options' => array('sort' => "name"),
-  	));
+  			'options' => ['sort' => "name"],
+  	]);
   	
   	if($result['is_error'] == 0 && $result['count'] > 0 ){
   	
@@ -364,10 +364,10 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	 * If you are using the sample template, this array tells the template fields to render
   	 * for the search form.
   	 */
-  	$form->assign( 'elements', array(  'group_of_contact',  'membership_org_of_contact',  'membership_type_of_contact',
+  	$form->assign( 'elements', [  'group_of_contact',  'membership_org_of_contact',  'membership_type_of_contact',
   			 'date_range_ui', 'relative_time',
   			  'relative_time_interval_type', 'relative_time_interval_count', 'start_date', 'end_date' , 'hebrew_year_choice', 'hebrew_month_choice' , 'date_to_filter' ,  'deceased_has_plaque' ,
-  			'yahrzeit_type_selection', 'living_mourners', 'gender_choice',  'comm_prefs' ) );
+  			'yahrzeit_type_selection', 'living_mourners', 'gender_choice',  'comm_prefs' ] );
   
   
   }
@@ -376,10 +376,10 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   
   	$cur_domain_id = "";
   		
-  	$result = civicrm_api3('Domain', 'get', array(
+  	$result = civicrm_api3('Domain', 'get', [
   			'sequential' => 1,
-  			'current_domain' => array('IS NOT NULL' => 1),
-  	));
+  			'current_domain' => ['IS NOT NULL' => 1],
+  	]);
   
   
   	if( $result['is_error'] == 0 && $result['count'] == 1){
@@ -390,12 +390,12 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   		
   	// get membership ids and org contact ids.
   	if( strlen(  $cur_domain_id ) > 0 ){
-  		$api_result = civicrm_api3('MembershipType', 'get', array(
+  		$api_result = civicrm_api3('MembershipType', 'get', [
   				'sequential' => 1,
   				'is_active' => 1,
   				'domain_id' =>  $cur_domain_id ,
-  				'options' => array('sort' => "name"),
-  		));
+  				'options' => ['sort' => "name"],
+  		]);
   
   
   
@@ -408,10 +408,10 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   
   				$org_id = $cur['member_of_contact_id'];
   				// get display name of org
-  				$result = civicrm_api3('Contact', 'getsingle', array(
+  				$result = civicrm_api3('Contact', 'getsingle', [
   						'sequential' => 1,
   						'id' => $org_id ,
-  				));
+  				]);
   				$org_ids[$org_id] = $result['display_name'];
   
   
@@ -443,11 +443,11 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   			$extended_death_date  = "";
   			
   			
-  			$result = civicrm_api3('CustomGroup', 'get', array(
+  			$result = civicrm_api3('CustomGroup', 'get', [
   					'sequential' => 1,
   					'name' =>  HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
   					'extends' => "Individual",
-  			));
+  			]);
   			
   			
   			if($result['is_error'] <> 0 || $result['count'] == 0  ){
@@ -470,11 +470,11 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   			
   			
   			
-  			$eb_result = civicrm_api3('CustomField', 'get', array(
+  			$eb_result = civicrm_api3('CustomField', 'get', [
   					'sequential' => 1,
   					'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
   					'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME ,
-  			));
+  			]);
   			
   			if($eb_result['is_error'] <> 0 || $eb_result['count'] == 0  ){
   				$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_BIRTH_NAME."' ";
@@ -494,11 +494,11 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   			}
   			
   			// Now get field name for date of death before sunset
-  			$ed_result = civicrm_api3('CustomField', 'get', array(
+  			$ed_result = civicrm_api3('CustomField', 'get', [
   					'sequential' => 1,
   					'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
   					'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME ,
-  			));
+  			]);
   			
   			if($ed_result['is_error'] <> 0 || $ed_result['count'] == 0  ){
   				$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME."' ";
@@ -517,11 +517,11 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   			}
   
   
-  			$result = civicrm_api3('CustomField', 'get', array(
+  			$result = civicrm_api3('CustomField', 'get', [
   					'sequential' => 1,
   					'custom_group_id' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
   					'name' => HebrewCalendar::HEB_NAME_FIELD_NAME,
-  			));
+  			]);
   			
   			if($result['is_error'] == 0 && $result['count'] == 1){
   				$extended_hebrewname = $result['values'][0]['column_name'];
@@ -529,21 +529,21 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   			}
   			
   			// get plaque fields.
-  			$result = civicrm_api3('CustomField', 'get', array(
+  			$result = civicrm_api3('CustomField', 'get', [
   					'sequential' => 1,
   					'custom_group_id' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
   					'name' => HebrewCalendar::HAS_PLAQUE_FIELD_NAME,
-  			));
+  			]);
   			if($result['is_error'] == 0 && $result['count'] == 1){
   				$extended_has_plaque = $result['values'][0]['column_name'];
   			
   			}
   			
-  			$result = civicrm_api3('CustomField', 'get', array(
+  			$result = civicrm_api3('CustomField', 'get', [
   					'sequential' => 1,
   					'custom_group_id' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
   					'name' => HebrewCalendar::PLAQUE_LOCATION_NAME,
-  			));
+  			]);
   			if($result['is_error'] == 0 && $result['count'] == 1){
   				$extended_plaque_location = $result['values'][0]['column_name'];
   			
@@ -704,10 +704,10 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	$tmp_sql_table_name = HebrewCalendar::YAHRZEIT_TEMP_TABLE_NAME;
   	
   	
-  	$result = civicrm_api3('CustomGroup', 'get', array(
+  	$result = civicrm_api3('CustomGroup', 'get', [
   			'sequential' => 1,
   			'name' => HebrewCalendar::RELIGIOUS_CUSTOM_FIELD_GROUP_NAME,
-  	));
+  	]);
   	
   	if($result['is_error'] == 0 && $result['count'] == 1){
   		
@@ -715,10 +715,10 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   		
   	}
   	
-  	$result = civicrm_api3('CustomGroup', 'get', array(
+  	$result = civicrm_api3('CustomGroup', 'get', [
   			'sequential' => 1,
   			'name' => HebrewCalendar::PLAQUE_CUSTOM_FIELD_GROUP_NAME,
-  	));
+  	]);
   	
   	if($result['is_error'] == 0 && $result['count'] == 1){
   	
@@ -789,20 +789,20 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   */
   	
 
-  	$tmp_hh_rel_ids_arr = array();
+  	$tmp_hh_rel_ids_arr = [];
   	// Get household of the mourner, if one exists.
-  	$result = civicrm_api3('RelationshipType', 'get', array(
+  	$result = civicrm_api3('RelationshipType', 'get', [
   			'sequential' => 1,
   			'name_a_b' => "Head of Household for",
-  	));
+  	]);
   	if( $result['is_error'] == 0 && $result['count'] == 1 ){
   		$tmp_hh_rel_ids_arr[] = $result['id'];
   	}
   	
-  	$result = civicrm_api3('RelationshipType', 'get', array(
+  	$result = civicrm_api3('RelationshipType', 'get', [
   			'sequential' => 1,
   			'name_a_b' => "Household Member of",
-  	));
+  	]);
   	if( $result['is_error'] == 0 && $result['count'] == 1 ){
   		$tmp_hh_rel_ids_arr[] = $result['id'];
   	}
@@ -1063,7 +1063,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   
   
   function where($includeContactIDs = false){
-  	$clauses = array( );
+  	$clauses = [ ];
   
   	$clauses[] = "contact_deceased.is_deleted <> 1";
   	$clauses[] = "( contact_a.id is null OR contact_a.is_deleted <> 1 ) ";
@@ -1092,7 +1092,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	if( isset($this->_formValues['group_of_contact'])){
   		$groups_of_individual = $this->_formValues['group_of_contact'];
   	}else{
-  		$groups_of_individual = array();
+  		$groups_of_individual = [];
   	}
   
     if( isset( $this->_formValues['comm_prefs'] )){
@@ -1109,7 +1109,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	if(isset($this->_formValues['membership_type_of_contact'])){
   		$membership_types_of_con = $this->_formValues['membership_type_of_contact'];
   	}else{
-  		$membership_types_of_con = array();
+  		$membership_types_of_con = [];
   	}
   
   	if( isset($this->_formValues['membership_type_in_notin'] )){
@@ -1123,7 +1123,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	if( isset($this->_formValues['membership_org_of_contact']) ){
   		$membership_org_of_con = $this->_formValues['membership_org_of_contact'];
   	}else{
-  		$membership_org_of_con = array();
+  		$membership_org_of_con = [];
   	}
 
  ///////////////////////////////////////////////////////////////////////////////
@@ -1209,7 +1209,7 @@ $form->addGroup($date_ui_choices, 'date_range_ui', ts('sample'));
   	 
   
   	if ( $includeContactIDs ) {
-  		$contactIDs = array( );
+  		$contactIDs = [ ];
   		foreach ( $this->_formValues as $id => $value ) {
   			if ( $value &&
   					substr( $id, 0, CRM_Core_Form::CB_PREFIX_LEN ) == CRM_Core_Form::CB_PREFIX ) {

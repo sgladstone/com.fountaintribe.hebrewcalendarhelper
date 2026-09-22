@@ -10,10 +10,10 @@ class CustomSearchTools{
 		
 		$cur_domain_id = "";
 		 
-		$result = civicrm_api3('Domain', 'get', array(
+		$result = civicrm_api3('Domain', 'get', [
 				'sequential' => 1,
-				'current_domain' => array('IS NOT NULL' => 1),
-		));
+				'current_domain' => ['IS NOT NULL' => 1],
+		]);
 		
 		
 		if( $result['is_error'] == 0 && $result['count'] == 1){
@@ -24,12 +24,12 @@ class CustomSearchTools{
 		 
 		// get membership ids and org contact ids.
 		if( strlen(  $cur_domain_id ) > 0 ){
-			$api_result = civicrm_api3('MembershipType', 'get', array(
+			$api_result = civicrm_api3('MembershipType', 'get', [
 					'sequential' => 1,
 					'is_active' => 1,
 					'domain_id' =>  $cur_domain_id ,
-					'options' => array('sort' => "name"),
-			));
+					'options' => ['sort' => "name"],
+			]);
 		
 		
 		
@@ -42,10 +42,10 @@ class CustomSearchTools{
 					 
 					$org_id = $cur['member_of_contact_id'];
 					// get display name of org
-					$result = civicrm_api3('Contact', 'getsingle', array(
+					$result = civicrm_api3('Contact', 'getsingle', [
 							'sequential' => 1,
 							'id' => $org_id ,
-					));
+					]);
 					$org_ids[$org_id] = $result['display_name'];
 		
 					 
@@ -59,7 +59,7 @@ class CustomSearchTools{
 	
 	
 	function getCommunicationPreferencesForSelectList( ){
-		 $comm_prefs =  array('' => '-- select --' );   
+		 $comm_prefs =  ['' => '-- select --' ];
          $sql = " SELECT ov.label, ov.value
 			FROM civicrm_option_value ov
 			JOIN `civicrm_option_group` og ON og.id = ov.option_group_id
@@ -170,11 +170,11 @@ class CustomSearchTools{
 	// that org as the org someone may join. 
 	function getMembershipOrgsforSelectList(){
 	
-		$org_ids = array();
+		$org_ids = [];
 		$sql = "SELECT distinct c.id, c.display_name FROM civicrm_membership_type mt
 		Left join civicrm_contact c on mt.member_of_contact_id = c.id
 		where is_active=1 order by c.display_name, mt.name";
-		 $params = array();
+		 $params = [];
 	
 	   	$dao = CRM_Core_DAO::executeQuery($sql, $params);
 	   
@@ -198,8 +198,8 @@ class CustomSearchTools{
 	function getMembershipsforSelectList(){
 		require_once 'api/api.php';
 	
-	$params = array('action' => 'get' , 'version'    => '3.0');
-	$mem_ids =           array( );
+	$params = ['action' => 'get' , 'version'    => '3.0'];
+	$mem_ids =           [ ];
 	//$myGroups =& civicrm_group_get($params);
 	//$tmp = civicrm_api( 'membership', 'Get', $params);
 	
@@ -221,7 +221,7 @@ class CustomSearchTools{
 	$sql = "SELECT mt.id, mt.name, c.display_name FROM civicrm_membership_type mt
 		Left join civicrm_contact c on mt.member_of_contact_id = c.id
 		where is_active=1 order by c.display_name, mt.name";
-	 $params = array();
+	 $params = [];
 
    	$dao = CRM_Core_DAO::executeQuery($sql, $params);
    
@@ -260,7 +260,7 @@ class CustomSearchTools{
 		
 		//print "<br>sql: ".$sql; 
 		    $dao = CRM_Core_DAO::executeQuery($sql);
-		    $ssWhere = array();
+		    $ssWhere = [];
 		    while ($dao->fetch()) {
 			      if ($tableAlias == NULL) {
 			        $alias = "`civicrm_group_contact_cache_{$group->id}`";
@@ -290,8 +290,8 @@ class CustomSearchTools{
 	//require_once 'api/Group.php';
 	require_once 'api/api.php';
 	
-	$params = array('version'    => '3.0');
-	$group_ids =           array( );
+	$params = ['version'    => '3.0'];
+	$group_ids =           [ ];
 	//$myGroups =& civicrm_group_get($params);
 	$tmp = civicrm_api( 'Group', 'Get', $params);
 	
@@ -367,13 +367,13 @@ class CustomSearchTools{
 
 	
 	private function getAllNestedGroups($grp_id){
-   $all_nested_groups = array();
+   $all_nested_groups = [];
    $all_nested_groups[] = $grp_id;
  
    $sql = "Select * from civicrm_group_nesting where parent_group_id =%1";
  
-   $params = array();
-   $params[1] =  array( $grp_id, 'Integer' );
+   $params = [];
+   $params[1] =  [ $grp_id, 'Integer' ];
    $dao = CRM_Core_DAO::executeQuery($sql, $params);
    
    while( $dao->fetch()){

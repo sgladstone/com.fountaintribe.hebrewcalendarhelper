@@ -26,8 +26,8 @@ function _civicrm_api3_all_hebrew_dates_Calculate_spec(&$spec) {
 
 function civicrm_api3_all_hebrew_dates_calculate($params) {
 	// if (array_key_exists('magicword', $params) && $params['magicword'] == 'sesame') {
-	$returnValues = array( // OK, return several data rows
-	);
+	$returnValues = [ // OK, return several data rows
+	];
 	
 	
 	
@@ -73,11 +73,11 @@ function civicrm_api3_all_hebrew_dates_calculate($params) {
 	if( $table_exists){
 
 		// deal with getting general stuff, ie table that tracks if individual was born/died before sunset or not. 
-		$result = civicrm_api3('CustomGroup', 'get', array(
+		$result = civicrm_api3('CustomGroup', 'get', [
 				'sequential' => 1,
 				'name' =>  HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
 				'extends' => "Individual",
-		));
+		]);
 		
 		
 		if($result['is_error'] <> 0 || $result['count'] == 0  ){
@@ -492,161 +492,161 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 		// 	print "<br><br><b>Insert sql: </b>".;
   //shabbat_before_hebrew_date_format_english
   // shabbat_before_hebrew_date_format_english
-			$params_a = array();
+			$params_a = [];
 				
 			if(strlen($mourner_name) > 0 ){
-				$params_a[1] =  array( $mourner_name, 'String' );
+				$params_a[1] =  [ $mourner_name, 'String' ];
 			}else{
-				$params_a[1] =  array( '', 'String' );
+				$params_a[1] =  [ '', 'String' ];
 					
 			}
 
 			if(strlen($deceased_name) > 0){
-				$params_a[2] =  array( $deceased_name, 'String' );
+				$params_a[2] =  [ $deceased_name, 'String' ];
 			}else{
-				$params_a[2] =  array( '', 'String' );
+				$params_a[2] =  [ '', 'String' ];
 			}
 
 			if(strlen($hebrew_deceased_date) > 0 ){
-				$params_a[3] =  array($hebrew_deceased_date, 'String');
+				$params_a[3] =  [$hebrew_deceased_date, 'String'];
 			}else{
-				$params_a[3] =  array( '', 'String' );
+				$params_a[3] =  [ '', 'String' ];
 			}
 			
 			
 
 			if( isset($yahrzeit_hebrew_date_format_hebrew) && strlen($yahrzeit_hebrew_date_format_hebrew) > 0 ){
-				$params_a[4] =  array($yahrzeit_hebrew_date_format_hebrew, 'String');
+				$params_a[4] =  [$yahrzeit_hebrew_date_format_hebrew, 'String'];
 			}else{
-				$params_a[4] =  array( '', 'String' );
+				$params_a[4] =  [ '', 'String' ];
 			}
 
 			if(isset( $yahrzeit_hebrew_date_format_english) && strlen($yahrzeit_hebrew_date_format_english) > 0 ){
-				$params_a[5] =  array($yahrzeit_hebrew_date_format_english, 'String');
+				$params_a[5] =  [$yahrzeit_hebrew_date_format_english, 'String'];
 			}else{
-				$params_a[5] =  array( ' ', 'String' );
+				$params_a[5] =  [ ' ', 'String' ];
 			}
 
 			
 
 			if( isset($yah_hebrew_year_num ) && strlen($yah_hebrew_year_num) > 0 ){
-				$params_a[6] =  array($yah_hebrew_year_num, 'Integer');
+				$params_a[6] =  [$yah_hebrew_year_num, 'Integer'];
 			}else{
-				$params_a[6] =  array( 0, 'Integer' );
+				$params_a[6] =  [ 0, 'Integer' ];
 			}
 			
 			if( isset( $yah_hebrew_month_num) && strlen($yah_hebrew_month_num) > 0 ){
-				$params_a[7] =  array($yah_hebrew_month_num, 'Integer');
+				$params_a[7] =  [$yah_hebrew_month_num, 'Integer'];
 			}else{
-				$params_a[7] =  array( 0, 'Integer' );
+				$params_a[7] =  [ 0, 'Integer' ];
 			}
 			
 			if( isset( $yah_hebrew_day_num ) && strlen($yah_hebrew_day_num) > 0 ){
-				$params_a[8] =  array($yah_hebrew_day_num, 'Integer');
+				$params_a[8] =  [$yah_hebrew_day_num, 'Integer'];
 			}else{
-				$params_a[8] =  array( 0, 'Integer' );
+				$params_a[8] =  [ 0, 'Integer' ];
 			}
 			
 			
 			
 			if(strlen($yahrzeit_type) > 0 ){
-				$params_a[9] =  array($yahrzeit_type, 'String');
+				$params_a[9] =  [$yahrzeit_type, 'String'];
 			}else{
-				$params_a[9] =  array( ' ', 'String' );
+				$params_a[9] =  [ ' ', 'String' ];
 			}
 			
 			// '$plaque_location'
 				
 			if(strlen($plaque_location) > 0 ){
-				$params_a[10] =  array($plaque_location, 'String');
+				$params_a[10] =  [$plaque_location, 'String'];
 			}else{
-				$params_a[10] =  array( '', 'String' );
+				$params_a[10] =  [ '', 'String' ];
 			}
 			
 			
 				// $sql_yahrzeit_date_morning
 			if(isset( $sql_yahrzeit_date_morning ) &&  strlen($sql_yahrzeit_date_morning) > 0 ){
-				$params_a[11] =  array($sql_yahrzeit_date_morning, 'String');
+				$params_a[11] =  [$sql_yahrzeit_date_morning, 'String'];
 			}else{
-				$params_a[11] =  array( 	$sql_null_date, 'Date' );
+				$params_a[11] =  [ 	$sql_null_date, 'Date' ];
 			}
 			//
 			if(isset($shabbat_before_hebrew_date_format_english) && strlen($shabbat_before_hebrew_date_format_english) > 0 ){
-				$params_a[12] =  array($shabbat_before_hebrew_date_format_english, 'String');
+				$params_a[12] =  [$shabbat_before_hebrew_date_format_english, 'String'];
 			}else{
-				$params_a[12] =  array( '', 'String' );
+				$params_a[12] =  [ '', 'String' ];
 			}
 			
 			if( isset($yah_shabbat_before_hebrew_year_num) && strlen($yah_shabbat_before_hebrew_year_num) >0 ){
-			    $params_a[13] = array( $yah_shabbat_before_hebrew_year_num, 'Integer');
+			    $params_a[13] = [ $yah_shabbat_before_hebrew_year_num, 'Integer'];
 			    
 			}else{
-			    $params_a[13] =  array( 0, 'Integer' );
+			    $params_a[13] =  [ 0, 'Integer' ];
 			}
 			
 			if(isset($yah_shabbat_before_hebrew_month_num ) && strlen($yah_shabbat_before_hebrew_month_num) > 0  ){
-			    $params_a[14] =  array($yah_shabbat_before_hebrew_month_num , 'Integer' );
+			    $params_a[14] =  [$yah_shabbat_before_hebrew_month_num , 'Integer' ];
 			}else{
-			    $params_a[14] =  array( 0, 'Integer' );
+			    $params_a[14] =  [ 0, 'Integer' ];
 			}
 			
 			
 			if(isset( $yah_shabbat_before_hebrew_day_num) && strlen($yah_shabbat_before_hebrew_day_num) > 0  ){
-			    $params_a[15] =  array($yah_shabbat_before_hebrew_day_num , 'Integer' );
+			    $params_a[15] =  [$yah_shabbat_before_hebrew_day_num , 'Integer' ];
 			}else{
-			    $params_a[15] =  array( 0, 'Integer' );
+			    $params_a[15] =  [ 0, 'Integer' ];
 			}
 			
 			
 			if(isset( $sql_friday_before) && strlen($sql_friday_before) > 0  ){
-			    $params_a[16] =  array( $sql_friday_before , 'String' );
+			    $params_a[16] =  [ $sql_friday_before , 'String' ];
 			}else{
-			    $params_a[16] =  array( 	$sql_null_date, 'Date' );
+			    $params_a[16] =  [ 	$sql_null_date, 'Date' ];
 			}
 			
 			
 			if(isset($sql_saturday_before ) && strlen($sql_saturday_before) > 0  ){
-			    $params_a[17] =  array( $sql_saturday_before, 'String' );
+			    $params_a[17] =  [ $sql_saturday_before, 'String' ];
 			}else{
-			    $params_a[17] =  array( 	$sql_null_date, 'Date' );
+			    $params_a[17] =  [ 	$sql_null_date, 'Date' ];
 			}	
 			
 			if(isset($sql_friday_after ) && strlen($sql_friday_after) > 0  ){
-			    $params_a[18] =  array( $sql_friday_after, 'String' );
+			    $params_a[18] =  [ $sql_friday_after, 'String' ];
 			}else{
-			    $params_a[18] =  array( 	$sql_null_date, 'Date' );
+			    $params_a[18] =  [ 	$sql_null_date, 'Date' ];
 			}
 			
 			if(isset($sql_saturday_after ) && strlen( $sql_saturday_after) > 0  ){
-			    $params_a[19] =  array($sql_saturday_after , 'String' );
+			    $params_a[19] =  [$sql_saturday_after , 'String' ];
 			}else{
-			    $params_a[19] =  array( 	$sql_null_date, 'Date' );
+			    $params_a[19] =  [ 	$sql_null_date, 'Date' ];
 			}	
 			
 			if(isset(	$yah_shabbat_after_hebrew_year_num ) && strlen(	$yah_shabbat_after_hebrew_year_num) > 0  ){
-			    $params_a[20] =  array( 	$yah_shabbat_after_hebrew_year_num , 'Integer' );
+			    $params_a[20] =  [ 	$yah_shabbat_after_hebrew_year_num , 'Integer' ];
 			}else{
-			    $params_a[20] =  array( 0, 'Integer' );
+			    $params_a[20] =  [ 0, 'Integer' ];
 			}
 			
 			if(isset($yah_shabbat_after_hebrew_month_num ) && strlen($yah_shabbat_after_hebrew_month_num) > 0  ){
-			    $params_a[21] =  array($yah_shabbat_after_hebrew_month_num , 'Integer' );
+			    $params_a[21] =  [$yah_shabbat_after_hebrew_month_num , 'Integer' ];
 			}else{
-			    $params_a[21] =  array( 0, 'Integer' );
+			    $params_a[21] =  [ 0, 'Integer' ];
 			}	
 			
 			if(isset( $yah_shabbat_after_hebrew_day_num ) && strlen( $yah_shabbat_after_hebrew_day_num) > 0  ){
-			    $params_a[22] =  array($yah_shabbat_after_hebrew_day_num , 'Integer' );
+			    $params_a[22] =  [$yah_shabbat_after_hebrew_day_num , 'Integer' ];
 			}else{
-			    $params_a[22] =  array( 0, 'Integer' );
+			    $params_a[22] =  [ 0, 'Integer' ];
 			}
 			
 			
 			// $shabbat_after_hebrew_date_format_english
 			if(isset( $shabbat_after_hebrew_date_format_english ) &&  strlen($shabbat_after_hebrew_date_format_english) > 0 ){
-				$params_a[23] =  array($shabbat_after_hebrew_date_format_english, 'String');
+				$params_a[23] =  [$shabbat_after_hebrew_date_format_english, 'String'];
 			}else{
-				$params_a[23] =  array( '', 'String' );
+				$params_a[23] =  [ '', 'String' ];
 			}
 			
 			
@@ -665,7 +665,7 @@ function insert_yahrzeit_record_into_temp_table($TempTableName,  $yahrzeit_type,
 
 function fillYahrzeitTempTable($tmpHebCal , $extended_date_table,  $TempTableName, $contact_ids ){
 	
-	$rtn_data = array(); 
+	$rtn_data = [];
 	
 	
 	//$extended_birth_date  = "";
@@ -674,11 +674,11 @@ function fillYahrzeitTempTable($tmpHebCal , $extended_date_table,  $TempTableNam
 	
 	
 	// Now get field name for date of death before sunset
-	$ed_result = civicrm_api3('CustomField', 'get', array(
+	$ed_result = civicrm_api3('CustomField', 'get', [
 			'sequential' => 1,
 			'custom_group_id' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_GROUP_NAME,
 			'name' => HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME ,
-	));
+	]);
 	
 	if($ed_result['is_error'] <> 0 || $ed_result['count'] == 0  ){
 		$rtn_data['error_message'] = "Could not find custom field: '".HebrewCalendar::EXTENDED_DATE_CUSTOM_FIELD_DEATH_NAME."' ";
@@ -719,12 +719,12 @@ function fillYahrzeitTempTable($tmpHebCal , $extended_date_table,  $TempTableNam
 	*/
 	
 	$extended_yahrzeit_table = ""; 
-	$result = civicrm_api3('CustomGroup', 'get', array(
+	$result = civicrm_api3('CustomGroup', 'get', [
 			'sequential' => 1,
 			'name' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME,
 			'extends' => 'Relationship', 
 		
-	));
+	]);
 	
 	if($result['is_error'] == 0 && $result['count'] > 0  ){	
 		//Yahrzeit_Details
@@ -741,11 +741,11 @@ function fillYahrzeitTempTable($tmpHebCal , $extended_date_table,  $TempTableNam
 	
 	
 	
-	$result = civicrm_api3('CustomField', 'get', array(
+	$result = civicrm_api3('CustomField', 'get', [
 			'sequential' => 1,
 			'custom_group_id' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_GROUP_NAME,
 			'name' => HebrewCalendar::YAH_RELATIONSHIPTYPE_CUSTOM_FIELD_NAME,
-	));
+	]);
 	
 	$yahrzeit_detail_column_name = ""; 
 	if($result['is_error'] == 0 && $result['count'] > 0  ){	
@@ -859,11 +859,11 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	}
 	 
 	// Get default yahrzeit setting for mourners with no preference (or no mourner)
-	$params = array(
+	$params = [
 	  'version' => 3,
 	  'sequential' => 1,
 	  'name' => 'Use_Hebrew_Calendar_to_Calculate_Yahrzeits',
-	);
+	];
 	$result = civicrm_api('CustomField', 'getsingle', $params);
 
     if( isset($result['id'])){
@@ -876,12 +876,12 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	 
 	
 
-	$params = array(
+	$params = [
 			'version' => 3,
 			'sequential' => 1,
 			'contact_sub_type' => 'primary_organization',
 			'return'  =>  $global_pref_field_name,
-	);
+	];
 	$result = civicrm_api('Contact', 'get', $params);
 	if(isset($result['values'])){
 		$values = $result['values'];
@@ -900,11 +900,11 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	
 	 
 	// Check of mourner preference should be ignored.
-	$params = array(
+	$params = [
 	  'version' => 3,
 	  'sequential' => 1,
 	  'name' => 'Use_The_Mourner_Preference_to_Calculate_Yahrzeits',
-	);
+	];
 	$result = civicrm_api('CustomField', 'getsingle', $params);
 
 	if(isset($result['id'])){
@@ -917,12 +917,12 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 	 
 
 
-	$params = array(
+	$params = [
 			'version' => 3,
 			'sequential' => 1,
 			'contact_sub_type' => 'primary_organization',
 			'return'  =>  $global_pref_field_name,
-	);
+	];
 	$result = civicrm_api('Contact', 'get', $params);
 	
 	if(isset($result['values'])){
@@ -981,10 +981,10 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 		if(	$is_contact_subtype_good <> "1"){
 		    // get all existing subtypes for this contact.
 		    
-		    $con_sub_result = civicrm_api3('Contact', 'get', array(
+		    $con_sub_result = civicrm_api3('Contact', 'get', [
 					'sequential' => 1,
 					'id' => $deceased_contact_id,
-			));  
+			]);
 			
 			
 			//$rtn_data['error_message'] = "subtypes for id $deceased_contact_id : is good? ".$is_contact_subtype_good;
@@ -996,11 +996,11 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 				
 				
 				
-				$clean_contact_subtypes = array();
+				$clean_contact_subtypes = [];
 				
 				if(is_array( $tmp_contact_subtypes ) == false && strlen( $tmp_contact_subtypes ) == 0 ){
 					// this is because there is no contact subtype yet.
-					$clean_contact_subtypes = array(); 
+					$clean_contact_subtypes = [];
 				}else if( is_array( $tmp_contact_subtypes ) == false && strlen( $tmp_contact_subtypes ) > 0 ){
 					
 					$tmp = $tmp_contact_subtypes;
@@ -1028,11 +1028,11 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 				//$rtn_data['error_message'] = "API Stuff: ".$subtypes_for_api;
 				//return $rtn_data;
 		  	
-			$con_update_result = civicrm_api3('Contact', 'create', array(
+			$con_update_result = civicrm_api3('Contact', 'create', [
 					'sequential' => 1,
 					'id' => $deceased_contact_id,
 					'contact_sub_type' => $subtypes_for_api,
-			));
+			]);
 			
 			if($con_update_result['is_error'] <> 0 ){
 			    
@@ -1112,7 +1112,7 @@ GROUP BY contact_a.id ) as mourner_count ON mourner_count.deceased_contact_id = 
 
 		$gregorian_date_format_plain = 'yyyy-mm-dd';
 
-		$yahr_years_to_get = array( 1, 2, 3, 4, -1, -2, -3, -4) ;      // 1=next yahr, 2=yahr after next, etc.  -1 previous yahr, -2, yahr before previous one, etc.
+		$yahr_years_to_get = [ 1, 2, 3, 4, -1, -2, -3, -4] ;      // 1=next yahr, 2=yahr after next, etc.  -1 previous yahr, -2, yahr before previous one, etc.
 		// //$prev_flag = 'prev',  'next';
 		//
 		//CRM_Core_Error::debug("About to loop through records", "");
